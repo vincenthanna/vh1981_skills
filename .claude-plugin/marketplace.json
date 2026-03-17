@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "vh1981_skills",
-      "source": "./plugins/vh1981_skills",
+      "source": ".",
       "description": "Complete development workflow: commit, PR, release, QA, testbranch, worklog, and more"
     }
   ]
