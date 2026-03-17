@@ -1,17 +1,20 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "vh1981_skills",
+  "description": "Development workflow skills for PLUSINSIGHT projects",
   "owner": {
     "name": "vh1981"
-  },
-  "metadata": {
-    "description": "Development workflow skills for PLUSINSIGHT projects",
-    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "worklog",
+      "description": "Manage session work logs as human-readable markdown files",
+      "version": "1.0.0",
+      "author": {
+        "name": "vh1981"
+      },
       "source": "./plugins/worklog",
-      "description": "Manage session work logs as human-readable markdown files"
+      "category": "productivity"
     }
   ]
 }
