@@ -1,0 +1,17 @@
+{
+  "name": "vh1981_skills",
+  "owner": {
+    "name": "vh1981"
+  },
+  "metadata": {
+    "description": "Development workflow skills for PLUSINSIGHT projects",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "vh1981_skills",
+      "source": "./plugins/vh1981_skills",
+      "description": "Complete development workflow: commit, PR, release, QA, testbranch, worklog, and more"
+    }
+  ]
+}
