@@ -6,9 +6,8 @@ description: Manage session work logs as human-readable markdown files in docs/h
 # Worklog Context
 
 - **Current branch**: !`git branch --show-current`
-- **JIRA tag from branch**: !`git branch --show-current | grep -oP 'PII-\d+' || echo "NONE"`
 - **Today**: !`date +%Y-%m-%d`
-- **Existing worklogs**: !`ls -d docs/history/*/ 2>/dev/null | sed 's|docs/history/||;s|/||' || echo "NONE"`
+- **Existing worklogs**: !`ls docs/history/`
 
 ---
 
