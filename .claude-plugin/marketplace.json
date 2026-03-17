@@ -9,9 +9,9 @@
   },
   "plugins": [
     {
-      "name": "vh1981_skills",
-      "source": "./",
-      "description": "Complete development workflow: commit, PR, release, QA, testbranch, worklog, and more"
+      "name": "worklog",
+      "source": "./plugins/worklog",
+      "description": "Manage session work logs as human-readable markdown files"
     }
   ]
 }

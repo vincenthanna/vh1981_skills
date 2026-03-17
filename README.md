@@ -19,30 +19,31 @@ Claude Code용 개발 워크플로우 스킬 플러그인입니다.
 
 ## 설치
 
-### 방법 1: Git 저장소에서 설치
+### 방법 1: Marketplace에서 설치
 
 Claude Code 세션 안에서 다음 명령어를 실행합니다:
 
 ```
 /plugin marketplace add git@github.com:vincenthanna/vh1981_skills.git
-/plugin install vh1981_skills
+/plugin install worklog
 ```
 
 ### 방법 2: 로컬 디렉토리에서 로드 (개발/테스트용)
 
 ```bash
-claude --plugin-dir /path/to/vh1981_skills
+git clone git@github.com:vincenthanna/vh1981_skills.git
+claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
 ```
 
 ## 사용법
 
-플러그인 설치 후, 네임스페이스를 포함하여 스킬을 호출합니다:
+플러그인 설치 후 스킬을 호출합니다:
 
 ```
-/vh1981_skills:worklog create my-project
-/vh1981_skills:worklog list
-/vh1981_skills:worklog select my-project
-/vh1981_skills:worklog update
+/worklog create my-project
+/worklog list
+/worklog select my-project
+/worklog update
 ```
 
 ### 유용한 명령어
@@ -51,6 +52,18 @@ claude --plugin-dir /path/to/vh1981_skills
 |------|------|
 | `/plugin` | 플러그인 매니저 열기 (설치 확인) |
 | `/reload-plugins` | 플러그인 변경 후 다시 로드 |
+
+## 디렉토리 구조
+
+```
+.claude-plugin/
+  marketplace.json          # Marketplace 정의
+plugins/worklog/
+  .claude-plugin/
+    plugin.json             # 플러그인 정의
+  skills/worklog/
+    SKILL.md                # 스킬 구현
+```
 
 ## 라이선스
 

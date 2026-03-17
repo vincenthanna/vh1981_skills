@@ -1,8 +1,0 @@
-{
-  "name": "vh1981_skills",
-  "description": "Development workflow skills: commit, PR, release, QA, testbranch, develop, worklog, review-claudemd, releasebranch",
-  "version": "1.0.0",
-  "author": {
-    "name": "vh1981"
-  }
-}
