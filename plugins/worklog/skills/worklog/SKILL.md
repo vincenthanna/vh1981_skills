@@ -7,7 +7,7 @@ description: Manage session work logs as human-readable markdown files in docs/h
 
 - **Current branch**: !`git branch --show-current`
 - **Today**: !`date +%Y-%m-%d`
-- **Existing worklogs**: !`ls docs/history/`
+- **Existing worklogs**: Check `docs/history/` directory when needed (may not exist yet)
 
 ---
 
