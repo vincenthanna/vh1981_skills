@@ -1,6 +1,6 @@
 ---
 name: prjdocs
-description: Investigate and document project topics with structured analysis reports. Supports create, select, and update commands. Reports are stored as markdown files in docs/projects/<project>/. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, document architecture decisions, evaluate risks, compare cross-repo implementations, or produce structured findings with tables and diagrams. Trigger phrases include "prjdocs", "investigate", "analyze this", "deep dive", "evaluate", "document findings", "create project doc", "update project doc". Do NOT use for git commits (use /commit), PR descriptions (use /pr), session work logs (use /worklog), or code changes (use /develop).
+description: Investigate and document project topics with structured analysis reports. Supports create, list, select, and update commands. Reports are stored as markdown files in docs/projects/<project>/. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, document architecture decisions, evaluate risks, compare cross-repo implementations, or produce structured findings with tables and diagrams. Trigger phrases include "prjdocs", "investigate", "analyze this", "deep dive", "evaluate", "document findings", "create project doc", "update project doc", "list project docs". Do NOT use for git commits (use /commit), PR descriptions (use /pr), session work logs (use /worklog), or code changes (use /develop).
 ---
 
 # Project Docs Context
@@ -18,6 +18,7 @@ Parse the arguments to determine which command to run:
 | Input | Command |
 |-------|---------|
 | `create <project>` | **Create** |
+| `list` | **List** |
 | `select <project>` | **Select** |
 | `update` | **Update** |
 | `update <instructions>` | **Update** with specific instructions |
@@ -80,6 +81,24 @@ If the argument does not match any command above, treat it as `create <argument>
 
 6. Output confirmation: "Created project doc `<project>` with `01_<topic-slug>.md`. This is now the active project for this session."
 7. **Set active project**: remember `<project>` as the active project for subsequent `/prjdocs update` calls in this session.
+
+---
+
+## Command: List
+
+### Steps
+
+1. Scan `docs/projects/*/` for subdirectories.
+2. For each project directory, count the `.md` files inside.
+3. Output a table:
+
+```
+Projects:
+  <project-1>  (3 entries)
+  <project-2>  (1 entry)
+```
+
+4. If no directories exist, output: "No project docs found. Use `/prjdocs create <project>` to start one."
 
 ---
 
