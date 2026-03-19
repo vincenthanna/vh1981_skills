@@ -1,8 +1,0 @@
-{
-  "name": "prjdocs",
-  "description": "Investigate and document project topics with structured analysis reports in docs/projects/<project>/",
-  "version": "1.0.0",
-  "author": {
-    "name": "vh1981"
-  }
-}

@@ -4,6 +4,8 @@ Claude Code용 개발 워크플로우 스킬 플러그인입니다.
 
 ## Skills
 
+`/plugin install worklog` 하나로 아래 2개 skill이 모두 설치됩니다.
+
 ### worklog
 
 세션 작업 기록을 `docs/history/<subject>/` 경로에 마크다운 파일로 관리합니다.
@@ -57,6 +59,10 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
 /worklog list
 /worklog select my-project
 /worklog update
+
+/prjdocs create cloud-mode
+/prjdocs select cloud-mode
+/prjdocs update "source_id 가드 분석"
 ```
 
 ### 유용한 명령어
@@ -73,14 +79,10 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
   marketplace.json          # Marketplace 정의
 plugins/worklog/
   .claude-plugin/
-    plugin.json             # 플러그인 정의
-  skills/worklog/
-    SKILL.md                # 스킬 구현
-plugins/prjdocs/
-  .claude-plugin/
-    plugin.json             # 플러그인 정의
-  skills/prjdocs/
-    SKILL.md                # 스킬 구현
+    plugin.json             # 플러그인 정의 (v1.1.0)
+  skills/
+    worklog/SKILL.md        # /worklog 스킬
+    prjdocs/SKILL.md        # /prjdocs 스킬
 ```
 
 ## 라이선스

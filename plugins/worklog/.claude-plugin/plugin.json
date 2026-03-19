@@ -1,7 +1,7 @@
 {
   "name": "worklog",
-  "description": "Manage session work logs as human-readable markdown files",
-  "version": "1.0.0",
+  "description": "Manage session work logs and project investigation docs as markdown files",
+  "version": "1.1.0",
   "author": {
     "name": "vh1981"
   }

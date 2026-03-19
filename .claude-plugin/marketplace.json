@@ -8,22 +8,12 @@
   "plugins": [
     {
       "name": "worklog",
-      "description": "Manage session work logs as human-readable markdown files",
-      "version": "1.0.0",
+      "description": "Manage session work logs and project investigation docs as markdown files",
+      "version": "1.1.0",
       "author": {
         "name": "vh1981"
       },
       "source": "./plugins/worklog",
-      "category": "productivity"
-    },
-    {
-      "name": "prjdocs",
-      "description": "Investigate and document project topics with structured analysis reports",
-      "version": "1.0.0",
-      "author": {
-        "name": "vh1981"
-      },
-      "source": "./plugins/prjdocs",
       "category": "productivity"
     }
   ]
