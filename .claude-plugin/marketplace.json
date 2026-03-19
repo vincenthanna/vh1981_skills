@@ -15,6 +15,16 @@
       },
       "source": "./plugins/worklog",
       "category": "productivity"
+    },
+    {
+      "name": "prjdocs",
+      "description": "Investigate and document project topics with structured analysis reports",
+      "version": "1.0.0",
+      "author": {
+        "name": "vh1981"
+      },
+      "source": "./plugins/prjdocs",
+      "category": "productivity"
     }
   ]
 }

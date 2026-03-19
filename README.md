@@ -17,6 +17,19 @@ Claude Code용 개발 워크플로우 스킬 플러그인입니다.
 | `/worklog select <subject>` | 작업 로그 선택 (활성화) |
 | `/worklog update` | 활성 작업 로그에 진행 내용 추가 |
 
+### prjdocs
+
+프로젝트 주제에 대한 심층 조사 결과를 `docs/projects/<project>/` 경로에 구조화된 분석 보고서로 관리합니다.
+
+**명령어:**
+
+| 명령 | 설명 |
+|------|------|
+| `/prjdocs create <project>` | 새 프로젝트 문서 생성 |
+| `/prjdocs select <project>` | 프로젝트 문서 선택 (활성화) |
+| `/prjdocs update` | 활성 프로젝트에 조사 결과 추가 |
+| `/prjdocs update <instructions>` | 지시사항에 따라 조사 수행 후 결과 추가 |
+
 ## 설치
 
 ### 방법 1: Marketplace에서 설치
@@ -62,6 +75,11 @@ plugins/worklog/
   .claude-plugin/
     plugin.json             # 플러그인 정의
   skills/worklog/
+    SKILL.md                # 스킬 구현
+plugins/prjdocs/
+  .claude-plugin/
+    plugin.json             # 플러그인 정의
+  skills/prjdocs/
     SKILL.md                # 스킬 구현
 ```
 
