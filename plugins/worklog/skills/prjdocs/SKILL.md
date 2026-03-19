@@ -72,6 +72,14 @@ If the argument does not match any command above, treat it as `create <argument>
 | Risk | Severity | Probability | Analysis |
 |------|----------|-------------|----------|
 
+## 진행 상태
+
+### 완료
+<What has been done — code changes, analysis completed, decisions made>
+
+### 미완료 / 다음 단계
+<What remains — prioritized with [Critical], [High], [Medium], [Low] tags>
+
 ## Conclusion
 <Design intent / problems found / recommendations with priority>
 
@@ -123,13 +131,28 @@ Projects:
 
 2. **Read existing entries**: read ALL `.md` files in `docs/projects/<project>/` sorted by filename.
 
-3. **Gather context for investigation**:
-   - Read the current conversation session for topics discussed, analysis performed, and conclusions reached
-   - Recent git activity: `git log --oneline -10`, `git diff --stat`
-   - If user provided specific instructions in the update command, follow those
+3. **Gather context — 3 mandatory steps**:
 
-4. **Investigate**: This is the core of the skill. Perform thorough analysis:
-   - **Search relevant code**: Use grep, glob, and mgrep to find all related files
+   **Step A: Code changes** — Search for code modifications related to the topic:
+   - `git diff --stat` and `git diff --name-status HEAD` for uncommitted changes
+   - `git log --oneline -20` for recent commits related to the topic
+   - Grep/glob for topic keywords in modified files
+   - Summarize what was changed, added, or removed in source code
+
+   **Step B: Related documents** — Collect ALL existing markdown/html docs related to the topic:
+   - Scan `docs/` directory recursively for related `.md` and `.html` files
+   - Scan `docs/history/` (worklogs) for related entries
+   - Read and extract relevant content from each document found
+   - Note any discrepancies between docs and actual code state
+
+   **Step C: Progress tracking** — Separate completed work from future work:
+   - **Completed**: What has been implemented, tested, analyzed, or decided
+   - **Next steps**: What remains to be done, prioritized with `[Critical]`, `[High]`, `[Medium]`, `[Low]` tags
+   - **Planned/Directional**: Designs or approaches that have been evaluated and deemed correct but not yet implemented
+
+   If user provided specific instructions in the update command, follow those in addition to the 3 steps above.
+
+4. **Investigate**: Perform thorough analysis based on gathered context:
    - **Read source files**: Read the full content of relevant files (use parallel agents for large scopes)
    - **Cross-repo comparison**: If applicable, compare implementations across repos
    - **Trace data flows**: Follow function call chains and data transformations
@@ -137,21 +160,25 @@ Projects:
    - **Calculate metrics**: Memory usage, FPS, CPU%, latency — when applicable
    - **Assess risks**: Severity/probability matrix when applicable
 
-5. **Determine topic continuity**: compare the last entry's topic with the current investigation.
+5. **Determine topic**: Identify what distinct topic(s) the current work covers.
 
-6. **If same topic** (investigation continues the same theme):
-   - Update the last `.md` file using Edit tool.
+6. **CRITICAL — One topic per file**: Each `.md` file must cover exactly ONE topic. Never merge multiple distinct topics into a single file.
+   - If the current work spans multiple topics, create separate files for each.
+   - Topic examples: architecture overview, specific subsystem analysis, performance optimization, risk assessment.
+
+7. **If topic already has a file** (same theme as existing entry):
+   - Update that `.md` file using Edit tool.
    - Update the `Period` end date to today.
    - Append new findings to relevant sections.
-   - Move resolved items from open questions to conclusions.
+   - Update `진행 상태` (completed items, next steps).
    - Be conservative: only remove content that is fully obsolete.
 
-7. **If different topic** (investigation shifted to a new theme):
-   - Determine the next sequence number (e.g., if last file is `02_xxx.md`, create `03_<new-topic>.md`).
+8. **If topic is new** (no existing file for this theme):
+   - Determine the next sequence number (e.g., if last file is `03_xxx.md`, create `04_<new-topic>.md`).
    - Create new file using the same template as Create.
    - Do NOT modify existing files unless correcting outdated information.
 
-8. Output summary of what was investigated, key findings, and what was updated or created.
+9. Output summary of what was investigated, key findings, and what was updated or created.
 
 ---
 
@@ -195,10 +222,13 @@ The depth of investigation should match the complexity of the topic and user's r
 
 ## Rules
 
+- **One topic per file**: NEVER merge multiple distinct topics into a single file. If analysis covers architecture + scaling + optimization, create 3 separate files. When in doubt, split.
 - **Never delete existing project doc files** — only edit or append.
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
 - **Topic slugs**: lowercase, hyphens, descriptive (e.g., `appsrc-scaling-analysis`, not `update-3`).
 - **Period field**: always update end date to today when editing.
 - **Read before writing**: Always read relevant source code before producing findings. Never guess.
+- **진행 상태 section is mandatory**: Every file must have `진행 상태` with `완료` and `미완료 / 다음 단계` subsections. Use priority tags: `[Critical]`, `[High]`, `[Medium]`, `[Low]`.
+- **3 mandatory gather steps**: When updating, always perform Step A (code changes), Step B (related docs), Step C (progress tracking) before writing.
 - **Active project is session-scoped**: it does not persist across Claude Code sessions. Users must `select` or `create` at the start of each session.
 - **This skill is read-only for source code**: It investigates and documents but does NOT modify application source code. If code changes are needed, recommend them in the Conclusion section.
