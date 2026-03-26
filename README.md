@@ -4,7 +4,30 @@ Claude Code용 개발 워크플로우 스킬 플러그인입니다.
 
 ## Skills
 
-`/plugin install worklog` 하나로 아래 2개 skill이 모두 설치됩니다.
+`/plugin install worklog` 하나로 아래 3개 skill이 모두 설치됩니다.
+
+### devlog (통합 스킬)
+
+프로젝트 조사 문서와 작업 기록을 `docs/devlog/<project>/`에 통합 관리합니다. worklog + prjdocs의 통합 버전입니다.
+
+**명령어:**
+
+| 명령 | 설명 |
+|------|------|
+| `/devlog create <project>` | 새 프로젝트 생성 (조사 문서 + 작업 기록 디렉토리) |
+| `/devlog list` | 프로젝트 목록 조회 |
+| `/devlog select <project>` | 프로젝트 선택 (활성화) |
+| `/devlog update` | 조사 문서 + 작업 기록 동시 갱신 |
+| `/devlog update <instructions>` | 지시사항에 따라 조사 수행 후 갱신 |
+
+**디렉토리 구조:**
+
+```
+docs/devlog/<project>/
+  01_<topic>.md          ← 조사/분석 문서
+  history/
+    01_<topic>.md        ← 작업 기록
+```
 
 ### worklog
 
@@ -79,8 +102,9 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
   marketplace.json          # Marketplace 정의
 plugins/worklog/
   .claude-plugin/
-    plugin.json             # 플러그인 정의 (v1.1.0)
+    plugin.json             # 플러그인 정의 (v1.2.0)
   skills/
+    devlog/SKILL.md         # /devlog 스킬 (통합)
     worklog/SKILL.md        # /worklog 스킬
     prjdocs/SKILL.md        # /prjdocs 스킬
 ```
