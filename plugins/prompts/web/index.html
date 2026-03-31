@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>프롬프트 저장소</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📝 프롬프트 저장소</h1>
+      <div class="header-actions">
+        <button id="addBtn" class="btn btn-primary">+ 새 프롬프트</button>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="검색...">
+      <select id="repoFilter">
+        <option value="">전체 Repo</option>
+      </select>
+      <select id="tagFilter">
+        <option value="">전체 태그</option>
+      </select>
+    </div>
+
+    <main>
+      <div id="promptList" class="prompt-list"></div>
+    </main>
+  </div>
+
+  <!-- 모달: 프롬프트 추가/편집 -->
+  <div id="promptModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">새 프롬프트</h2>
+        <span class="close">&times;</span>
+      </div>
+      <form id="promptForm">
+        <div class="form-group">
+          <label>제목</label>
+          <input type="text" id="promptTitle" required>
+        </div>
+        <div class="form-group">
+          <label>Repo</label>
+          <input type="text" id="promptRepo" placeholder="general" value="general">
+        </div>
+        <div class="form-group">
+          <label>태그 (쉼표로 구분)</label>
+          <input type="text" id="promptTags" placeholder="coding, refactoring">
+        </div>
+        <div class="form-group">
+          <label>내용</label>
+          <textarea id="promptContent" rows="10" required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">저장</button>
+          <button type="button" class="btn btn-secondary cancel">취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 모달: 프롬프트 보기 -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2 id="viewTitle">프롬프트 보기</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="view-meta" id="viewMeta"></div>
+      <div class="view-content" id="viewContent"></div>
+      <div class="view-actions">
+        <button id="editBtn" class="btn btn-secondary">편집</button>
+        <button id="copyBtn" class="btn btn-secondary">복사</button>
+        <button id="combineBtn" class="btn btn-secondary">결합</button>
+        <button id="templateBtn" class="btn btn-secondary">템플릿</button>
+        <button id="deleteBtn" class="btn btn-danger">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 모달: 프롬프트 결합 -->
+  <div id="combineModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>프롬프트 결합</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="combine-list" id="combineList"></div>
+      <div class="form-group">
+        <label>새 제목</label>
+        <input type="text" id="combineTitle" placeholder="결합된 프롬프트">
+      </div>
+      <div class="form-group">
+        <label>구분자</label>
+        <input type="text" id="combineSeparator" value="---">
+      </div>
+      <div class="form-actions">
+        <button id="doCombineBtn" class="btn btn-primary">결합하기</button>
+        <button class="btn btn-secondary cancel">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 모달: 템플릿 변수 치환 -->
+  <div id="templateModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>템플릿 변수 치환</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div id="templateVariables"></div>
+      <div class="form-actions">
+        <button id="doTemplateBtn" class="btn btn-primary">적용</button>
+        <button class="btn btn-secondary cancel">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

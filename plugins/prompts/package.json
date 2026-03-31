@@ -1,0 +1,20 @@
+{
+  "name": "prompts-storage",
+  "version": "1.0.0",
+  "description": "Claude Code 프롬프트 저장소 시스템",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "mcp": "node mcp-server.js"
+  },
+  "bin": {
+    "prompts-storage-mcp": "./mcp-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "dotenv": "^17.2.4",
+    "express": "^4.18.2",
+    "gray-matter": "^4.0.3"
+  }
+}
