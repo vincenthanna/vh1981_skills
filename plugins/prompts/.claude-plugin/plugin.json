@@ -1,35 +1,8 @@
 {
   "name": "prompts",
-  "displayName": "Prompts Storage",
   "description": "프롬프트 저장, 관리, 큐레이션 스킬 모음",
   "version": "1.0.0",
-  "skills": [
-    {
-      "name": "save-prompt",
-      "path": "skills/save-prompt/SKILL.md",
-      "description": "대화에서 프롬프트를 추출하여 서버에 저장"
-    },
-    {
-      "name": "curate-prompts",
-      "path": "skills/curate-prompts/SKILL.md",
-      "description": "저장된 프롬프트에서 재사용 가능한 템플릿 추출"
-    },
-    {
-      "name": "update-docs",
-      "path": "skills/update-docs/SKILL.md",
-      "description": "코드 변경사항 기반 문서 자동 업데이트"
-    }
-  ],
-  "config": {
-    "env": {
-      "PROMPT_SERVER_URL": {
-        "description": "프롬프트 저장 서버 URL",
-        "default": "http://localhost:24123"
-      },
-      "PROMPT_API_KEY": {
-        "description": "API 인증 키",
-        "required": true
-      }
-    }
+  "author": {
+    "name": "vh1981"
   }
 }
