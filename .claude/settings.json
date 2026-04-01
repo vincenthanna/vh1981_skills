@@ -6,5 +6,19 @@
         "path": "/home/yeonhui/workspace/vh1981_skills"
       }
     }
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/yeonhui/workspace/vh1981_skills/plugins/prompts/auto-save.js",
+            "async": true,
+            "statusMessage": "프롬프트 자동 저장 평가 중..."
+          }
+        ]
+      }
+    ]
   }
 }
