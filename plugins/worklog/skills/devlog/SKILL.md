@@ -50,8 +50,8 @@ If the argument does not match any command above, treat it as `create <argument>
 
 ### Steps
 
-1. Scan `docs/devlog/*/` for subdirectories.
-2. For each project directory, count `.md` files in root (docs) and in `history/` separately.
+1. Scan `docs/devlog/` for project subdirectories using `ls` (Glob cannot list directories). Example: `ls docs/devlog/`.
+2. For each project directory, count `.md` files in root (docs) using `docs/devlog/<project>/*.md` glob and in `history/` using `docs/devlog/<project>/history/*.md` glob separately.
 3. Output a table:
 
 ```
