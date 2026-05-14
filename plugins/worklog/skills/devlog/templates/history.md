@@ -15,6 +15,8 @@ citations belong in the investigation doc, not here.
 
 ## Changes
 <List of modified files, what changed, and why>
+<!-- Optional: a table (file | change | why) when several files changed.
+     Free-form prose is fine for config / discussion / decision changes. -->
 
 ## Decisions
 <Key decisions made and their rationale>

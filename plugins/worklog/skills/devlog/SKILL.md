@@ -177,7 +177,7 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 
    b. Determine what distinct topic(s) the current work covers.
 
-   c. **One topic per file**: Each `.md` file must cover exactly ONE topic. Never merge multiple distinct topics into a single file. If the current work spans multiple topics, create separate files for each.
+   c. **One topic per file**: each `.md` covers one topic. Apply the split-triggers rule in `Rules` — hard triggers create a new file, soft signals only suggest considering it; `01_<slug>.md` may stay a multi-finding overview.
 
    d. **If topic already has a file** (same theme as existing entry):
       - Update that `.md` file using Edit tool.
@@ -338,6 +338,9 @@ The depth of investigation should match the complexity of the topic and user's r
 - Mermaid diagrams
 - Comprehensive risk matrix
 
+### Output length
+Match output length to investigation depth — but there is **no hard line-count cap**. If a doc runs long relative to its depth: move measurement data and logs into a `data/` directory, split off any genuinely separate topic (see split triggers), and otherwise compress. Never truncate to hit a number — relocate instead.
+
 ---
 
 ## Output Quality Rules
@@ -353,7 +356,7 @@ The depth of investigation should match the complexity of the topic and user's r
 
 ## Rules
 
-- **One topic per file**: NEVER merge multiple distinct topics into a single file. If analysis covers architecture + scaling + optimization, create 3 separate files. When in doubt, split.
+- **One topic per file; split triggers**: each `.md` covers one topic. **Hard triggers** (act — create a new file): the user explicitly asks to split, OR non-prose artifacts (measurement data, logs) are getting mixed into prose analysis. **Soft signals** (only *consider* splitting, not automatic): a section dwarfs the rest of the file, the same finding is being augmented across multiple updates, or a finding starts growing its own Risk/Data-Flow subsections. **Create exception**: the first file `01_<slug>.md` may stay a multi-finding overview. When a split actually happens, say so in the output (one line). Entry points: new project → `Granularity decision`; one file growing too big → these split triggers; many related files → the subtopic-folder trigger in `Project layout`.
 - **Archive over delete**: never `rm` a devlog file. Edit or append in place; to remove an obsolete doc, use `reorg archive` — it moves the doc to `_archived/` with a logged reason.
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
 - **Topic slugs**: lowercase, hyphens, descriptive (e.g., `appsrc-scaling-analysis`, not `update-3`). For multi-phase work, slug the outcome/decision, not the journey. Project names follow the same rule — prefer the work's nature (`rtmp-stall-investigation`) over a bare JIRA ticket ID (`pii-2176`); a `<ticket>-<topic>` combination is fine.

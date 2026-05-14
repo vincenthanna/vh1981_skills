@@ -45,6 +45,9 @@ Copy the block below. Optional sections are marked — **omit the whole section
 
 ## Conclusion
 <Design intent / problems found / recommendations with priority>
+<!-- Optional richer form, when it helps: a one-line verdict, a priority table
+     (priority | item | why), and a constraints/caveats note. Not required —
+     plain prose is fine. -->
 
 ## References
 - `<file:line>` — <description>
