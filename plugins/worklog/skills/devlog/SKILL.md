@@ -26,6 +26,23 @@ Parse the arguments to determine which command to run:
 
 If the argument does not match any command above, treat it as `create <argument>` (assume user wants to create a new project with that name).
 
+### Chained invocation guard
+
+When `create` / `select` / `update` are invoked in immediate succession within the same response, do NOT re-execute work the prior command already did:
+
+- **`select` right after `create`** → no-op. The active project is already set; do NOT re-read all `.md` files. Just confirm.
+- **`update` right after `create`** → only append genuinely new information produced since creation. Do NOT re-run the full gather — the creation context is still fresh.
+
+---
+
+## Granularity decision (before `create`)
+
+Before creating a new project, decide the right granularity:
+
+- Same JIRA/PR, same component, continuation of prior work → prefer `update` on the existing project (add a new `NN_<topic>.md` if the topic genuinely differs).
+- New problem domain, or a deliberate pivot / abandonment of a prior approach → `create` a new project.
+- When unsure, prefer `update` with a new file over `create` — splitting one effort across projects fragments its history.
+
 ---
 
 ## Command: Create
@@ -33,16 +50,16 @@ If the argument does not match any command above, treat it as `create <argument>
 ### Steps
 
 1. Sanitize `<project>`: lowercase, hyphens for spaces, alphanumeric and hyphens only.
-2. Create directories: `docs/devlog/<project>/` and `docs/devlog/<project>/history/` (create parent dirs if they don't exist).
+2. Create directories: `docs/devlog/<project>/` and `docs/devlog/<project>/history/` (create parent dirs if they don't exist). Immediately after, run `git check-ignore docs/devlog/<project>`. If it is ignored, tell the user these devlog files are local-only (not committed) so they set expectations correctly. The skill does not commit anything.
 3. Analyze the current conversation context:
    - What has been discussed and investigated in this session
    - Current git branch and recent commits (`git log --oneline -10`)
    - Recent diff (`git diff --stat HEAD~5..HEAD 2>/dev/null || git diff --stat`)
 4. Determine a topic slug from the primary work/investigation theme (e.g., `cloud-mode-architecture`, `int8-model-support`).
-5. Create investigation doc `01_<topic-slug>.md` in `docs/devlog/<project>/` using the **Investigation Doc Template**.
-6. Create work history `history/01_<topic-slug>.md` using the **History Entry Template**.
-7. Output confirmation: "Created devlog `<project>` with `01_<topic-slug>.md` and `history/01_<topic-slug>.md`. This is now the active project for this session."
-8. **Set active project**: remember `<project>` as the active project for subsequent `/devlog update` calls in this session.
+5. Create investigation doc `01_<topic-slug>.md` in `docs/devlog/<project>/` — read `templates/investigation.md` (in this skill's directory) and follow it.
+6. Create work history `history/01_<topic-slug>.md` — read `templates/history.md` (in this skill's directory) and follow it.
+7. **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline). All subsequent `update` calls read this file first.
+8. Output confirmation: "Created devlog `<project>` with `01_<topic-slug>.md` and `history/01_<topic-slug>.md`." End the output with the active-project marker line: `[devlog/active: <project>]`.
 
 ---
 
@@ -72,8 +89,8 @@ Projects:
 2. If NOT found: scan `docs/devlog/*/` and output available projects — "Project `<project>` not found. Available: <list>. Use `/devlog create <project>` to start one."
 3. If found:
    - Read all `.md` files in the directory and `history/` to understand existing context.
-   - **Set active project**: remember `<project>` as the active project for this session.
-   - Output: "Selected devlog `<project>` as active. Use `/devlog update` to add new entries."
+   - **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline).
+   - Output: "Selected devlog `<project>` as active. Use `/devlog update` to add new entries." End the output with the marker line: `[devlog/active: <project>]`.
 
 ---
 
@@ -83,7 +100,7 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 
 ### Steps
 
-1. **Check active project**: if no project has been set via `create` or `select` in this session, output error — "No active project. Use `/devlog create <project>` or `/devlog select <project>` first."
+1. **Check active project**: read `docs/devlog/.active`. If the file is missing or empty, output the error — "No active project. Use `/devlog create <project>` or `/devlog select <project>` first."
 
 2. **Read existing entries**: read ALL `.md` files in `docs/devlog/<project>/` and `docs/devlog/<project>/history/` sorted by filename.
 
@@ -125,12 +142,12 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
       - Update that `.md` file using Edit tool.
       - Update the `Period` end date to today.
       - Append new findings to relevant sections.
-      - Update `진행 상태` (completed items, next steps).
+      - Update `Progress` (completed items, next steps).
       - Be conservative: only remove content that is fully obsolete.
 
    e. **If topic is new** (no existing file for this theme):
       - Determine the next sequence number (e.g., if last file is `03_xxx.md`, create `04_<new-topic>.md`).
-      - Create new file using the **Investigation Doc Template**.
+      - Create new file — read `templates/investigation.md` (in this skill's directory) and follow it.
       - Do NOT modify existing files unless correcting outdated information.
 
 5. **Part 2 — Work History** (`docs/devlog/<project>/history/`):
@@ -151,86 +168,29 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 
    d. **If different topic** (work shifted to a new theme):
       - Determine the next sequence number.
-      - Create new file using the **History Entry Template**.
+      - Create new file — read `templates/history.md` (in this skill's directory) and follow it.
       - Do NOT modify existing history files unless correcting outdated Next Steps.
 
-6. Output summary of what was investigated, key findings, and what was updated or created (in both docs and history).
+6. Output summary of what was investigated, key findings, and what was updated or created (in both docs and history). End the output with the marker line: `[devlog/active: <project>]`.
 
 ---
 
-## Investigation Doc Template
+## Investigation doc vs History entry — what goes where
 
-```markdown
-# <Descriptive Title>
-
-- **Branch**: <branch-name>
-- **Period**: <today> ~ <today>
-
-## Summary
-<1-3 line summary of the investigation/analysis>
-
-## Scope
-- **Files examined**: <count>
-- **Repos**: <list of repo paths if cross-repo>
-- **Depth**: <quick | medium | deep>
-
-## Findings
-
-### <Finding 1 Title>
-<Analysis content — tables, code references (file:line), data flows>
-
-### <Finding 2 Title>
-<Analysis content>
-
-## Data Flow
-<If applicable — trace how data moves through the system>
-
-## Risk Assessment
-<If applicable — risk table with severity, probability, analysis>
-
-| Risk | Severity | Probability | Analysis |
-|------|----------|-------------|----------|
-
-## 진행 상태
-
-### 완료
-<What has been done — code changes, analysis completed, decisions made>
-
-### 미완료 / 다음 단계
-<What remains — prioritized with [Critical], [High], [Medium], [Low] tags>
-
-## Conclusion
-<Design intent / problems found / recommendations with priority>
-
-## References
-- `<file:line>` — <description>
-```
+- **Investigation doc** = *durable knowledge* about the system: how it works, what was found, why decisions were made. Re-readable months later as a reference. No chronological narration of the work session.
+- **History entry** = *what happened this session*: commands run, commits made, problems hit — in chronological order. A disposable timeline.
+- **Never duplicate**: if a fact lives in the investigation doc, the history entry only references it ("see `02_xxx.md` Finding 2"), and vice versa. Give the two files different titles — the same title is a signal of duplication.
 
 ---
 
-## History Entry Template
+## Templates
 
-```markdown
-# <Descriptive Title>
+Two template files back the investigation docs and history entries. At the step that creates a NEW file, **read the relevant template from this skill's directory first**:
 
-- **Branch**: <branch-name or JIRA tag>
-- **Period**: <today> ~ <today>
+- **Investigation doc** → `templates/investigation.md` — for `docs/devlog/<project>/NN_<topic>.md`
+- **History entry** → `templates/history.md` — for `docs/devlog/<project>/history/NN_<topic>.md`
 
-## Summary
-<1-3 line summary of the work>
-
-## Changes
-<List of modified files, what changed, and why>
-
-## Decisions
-<Key decisions made and their rationale>
-
-## Issues & Blockers
-<Problems encountered, unresolved items>
-
-## Next Steps
-<Remaining work items>
-```
+**Language**: render section *headers* in the session's language, but keep field *keys* (`Branch`, `Period`, `Summary`) in English for grep-ability across mixed-language devlogs.
 
 ---
 
@@ -277,10 +237,10 @@ The depth of investigation should match the complexity of the topic and user's r
 - **One topic per file**: NEVER merge multiple distinct topics into a single file. If analysis covers architecture + scaling + optimization, create 3 separate files. When in doubt, split.
 - **Never delete existing files** — only edit or append.
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
-- **Topic slugs**: lowercase, hyphens, descriptive (e.g., `appsrc-scaling-analysis`, not `update-3`).
-- **Period field**: always update end date to today when editing.
+- **Topic slugs**: lowercase, hyphens, descriptive (e.g., `appsrc-scaling-analysis`, not `update-3`). For multi-phase work, slug the outcome/decision, not the journey. Project names follow the same rule — prefer the work's nature (`rtmp-stall-investigation`) over a bare JIRA ticket ID (`pii-2176`); a `<ticket>-<topic>` combination is fine.
+- **Period field**: the first-to-last date this doc was *edited* — not the calendar span of the underlying work. Always update the end date to today when editing, using the resolved `Today` from the context header (never a remembered or guessed date). If the work's calendar span matters, record it separately in the body.
 - **Read before writing**: Always read relevant source code before producing findings. Never guess.
-- **진행 상태 section is mandatory**: Every investigation doc must have `진행 상태` with `완료` and `미완료 / 다음 단계` subsections. Use priority tags: `[Critical]`, `[High]`, `[Medium]`, `[Low]`.
+- **Progress section is mandatory**: Every investigation doc must have a `Progress` section with `Done` and `Remaining / Next` subsections. Use priority tags: `[Critical]`, `[High]`, `[Medium]`, `[Low]`.
 - **3 mandatory gather steps**: When updating, always perform Step A (code changes), Step B (related docs), Step C (progress tracking) before writing.
-- **Active project is session-scoped**: it does not persist across Claude Code sessions. Users must `select` or `create` at the start of each session.
+- **Active project**: tracked via the `docs/devlog/.active` file (written by `create`/`select`, read by `update`). Every `create`/`select`/`update` output ends with the marker line `[devlog/active: <project>]` so the active project stays visible in context. A stale `.active` from a prior session should be re-confirmed with the user before use.
 - **This skill is read-only for source code**: It investigates and documents but does NOT modify application source code. If code changes are needed, recommend them in the Conclusion section.
