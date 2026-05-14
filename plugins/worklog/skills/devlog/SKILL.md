@@ -45,6 +45,34 @@ Before creating a new project, decide the right granularity:
 
 ---
 
+## Active Project
+
+The active project is tracked in `docs/devlog/.active` (one line, no trailing newline). `create` and `select` write it; `update` reads it. Every `create` / `select` / `update` output ends with the marker line `[devlog/active: <project>]`.
+
+### Resolving the active project
+
+When a command needs the active project and no name was given explicitly, resolve in this priority order — lower number first; if one level yields 2+ tied candidates, stop and ask the user:
+
+1. **Explicit `select` / `create`** in the current message — authoritative.
+2. **`docs/devlog/.active`** — if it points to an existing project directory.
+3. **Recent file activity** — a `docs/devlog/<X>/` file Read or Edited earlier in this session.
+4. **Conversation topic match** — a project whose `README` / `01_*.md` keywords match the recent conversation.
+5. None of the above → error: "No active project. Use `/devlog create <project>` or `/devlog select <project>` first."
+
+- Levels 1–2 proceed silently, then show `[devlog/active: <project>]`.
+- Levels 3–4 are inferences: proceed even with a single candidate, but the marker MUST flag it — `[devlog/active: <project> — inferred from file activity]`. With 2+ candidates at level 3–4, stop and ask.
+- **Stale `.active`**: if it points to a missing directory, or its mtime predates this session, treat it as a candidate to re-confirm with the user — not an authoritative answer.
+
+### Session re-entry
+
+On the FIRST `update` after a `select` (resuming prior-session work), read the latest history entry's `Next Steps` and the latest investigation doc's `Remaining / Next`, and print a 1–3 line "previous state" summary before gathering. Once per resumed session only.
+
+### Scoped read (single source of truth)
+
+This section is the ONLY definition of what `update` reads. `update` does NOT read every `.md` file. It reads: `docs/devlog/.active`, the latest history entry, the project `README.md` (if any), and the investigation docs whose slug matches the current topic. A full read of all entries happens only on the first `select` of a project in a session, or when the user explicitly asks for full context. (The gather-intensity table in `Command: Update` decides *how hard* to gather; this decides *what* to read.)
+
+---
+
 ## Command: Create
 
 ### Steps
@@ -100,11 +128,19 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 
 ### Steps
 
-1. **Check active project**: read `docs/devlog/.active`. If the file is missing or empty, output the error — "No active project. Use `/devlog create <project>` or `/devlog select <project>` first."
+1. **Check active project**: resolve it per the `## Active Project` section (priority order; error if level 5 is reached).
 
-2. **Read existing entries**: read ALL `.md` files in `docs/devlog/<project>/` and `docs/devlog/<project>/history/` sorted by filename.
+2. **Read existing entries (scoped)**: read only what `## Active Project` → "Scoped read" specifies — not every file. On the first `select` of this project in the session, do the full read instead.
 
-3. **Gather context — 3 mandatory steps**:
+3. **Gather context — intensity-scaled**:
+
+   Pick the gather intensity from observable signals (no subjective "little has changed"):
+
+   | Intensity | When | Scope |
+   |-----------|------|-------|
+   | **Light** | `git diff --stat` shows 0 changed files AND a prior `/devlog` call already ran in this same response | Step C only |
+   | **Normal** | 1–5 commits since the last history entry's `Period` end date | Step A full + Step B (keyword-scoped) + Step C |
+   | **Full** | 6+ such commits, OR `.active` is older than this session, OR uncertain | Step A + Step B + Step C, all full |
 
    **Step A: Code changes** — Search for code modifications related to the topic:
    - `git diff --stat` and `git diff --name-status HEAD` for uncommitted changes
@@ -112,8 +148,8 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
    - Grep/glob for topic keywords in modified files
    - Summarize what was changed, added, or removed in source code
 
-   **Step B: Related documents** — Collect ALL existing markdown/html docs related to the topic:
-   - Scan `docs/` directory recursively for related `.md` and `.html` files
+   **Step B: Related documents** — Collect existing markdown/html docs related to the topic:
+   - Scope by topic keywords, NOT a blind recursive walk. Use `grep -rl <keyword> docs/` to find candidates, then read only those.
    - Read and extract relevant content from each document found
    - Note any discrepancies between docs and actual code state
 
@@ -181,6 +217,18 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 - **History entry** = *what happened this session*: commands run, commits made, problems hit — in chronological order. A disposable timeline.
 - **Never duplicate**: if a fact lives in the investigation doc, the history entry only references it ("see `02_xxx.md` Finding 2"), and vice versa. Give the two files different titles — the same title is a signal of duplication.
 
+| Output of the work | Goes to |
+|--------------------|---------|
+| Code analysis / tracing result (with `file:line` refs) | Investigation doc |
+| Performance / measurement data (tables, metrics) | Investigation doc |
+| Architecture decision + its rationale | Investigation doc — `Conclusion` |
+| List of changed files + why each changed | History entry — `Changes` |
+| Commands / tests / builds run, problems hit | History entry |
+| Future work items | Both — but History keeps only a short pointer to the investigation doc's `Remaining / Next` |
+| Ambiguous / both seem to apply | Default to History as the primary record; the investigation doc references it ("see `history/NN`") |
+
+Do not print classification labels to the user — this table is an internal routing rule.
+
 ---
 
 ## Templates
@@ -241,6 +289,6 @@ The depth of investigation should match the complexity of the topic and user's r
 - **Period field**: the first-to-last date this doc was *edited* — not the calendar span of the underlying work. Always update the end date to today when editing, using the resolved `Today` from the context header (never a remembered or guessed date). If the work's calendar span matters, record it separately in the body.
 - **Read before writing**: Always read relevant source code before producing findings. Never guess.
 - **Progress section is mandatory**: Every investigation doc must have a `Progress` section with `Done` and `Remaining / Next` subsections. Use priority tags: `[Critical]`, `[High]`, `[Medium]`, `[Low]`.
-- **3 mandatory gather steps**: When updating, always perform Step A (code changes), Step B (related docs), Step C (progress tracking) before writing.
-- **Active project**: tracked via the `docs/devlog/.active` file (written by `create`/`select`, read by `update`). Every `create`/`select`/`update` output ends with the marker line `[devlog/active: <project>]` so the active project stays visible in context. A stale `.active` from a prior session should be re-confirmed with the user before use.
+- **Gather is intensity-scaled**: `update` picks Light / Normal / Full from observable signals (see the gather-intensity table in `Command: Update`). Step A/B/C are scaled to that intensity, not always run in full.
+- **Active project**: see the `## Active Project` section — tracked via `docs/devlog/.active`, resolved by the priority order there, and surfaced in every command output via the `[devlog/active: …]` marker.
 - **This skill is read-only for source code**: It investigates and documents but does NOT modify application source code. If code changes are needed, recommend them in the Conclusion section.
