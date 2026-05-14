@@ -1,6 +1,6 @@
 ---
 name: devlog
-description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, and update commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, or produce structured findings. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
+description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, and update commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, or produce structured findings. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
 ---
 
 # Devlog Context
@@ -24,9 +24,11 @@ Parse the arguments to determine which command to run:
 | `update <instructions>` | **Update** with specific instructions |
 | `reorg <action> [args]` | **Reorg** (rename / archive / cleanup / readme) |
 | `rename <old> <new>` | **Reorg** — alias for `reorg rename` |
+| `run <condition-name>` | **Validation** — register a measurement run |
+| `compare <condition> ...` | **Validation** — build/grow a comparison report |
 | *(no args)* | **Update** |
 
-If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
+If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `run`, `compare`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
 
 ### Chained invocation guard
 
@@ -232,6 +234,19 @@ Reorganization actions, grouped under one command. Routing: `reorg <action> [arg
 | `reorg move` | reserved — not yet implemented; tell the user it is unavailable |
 
 **Read `commands/reorg.md` (in this skill's directory) for the step-by-step procedure of the requested action.** Never `rm` a file directly — removal goes through `reorg archive`. Every reorg action is meta/housekeeping work: record it as one line in history, not as a new investigation doc.
+
+---
+
+## Command: Validation (run / compare)
+
+For validation/ablation campaigns — each measurement adds a *condition* to the active project rather than a new investigation topic.
+
+| Command | Purpose |
+|---------|---------|
+| `run <condition-name>` | register one measurement run — writes a manifest under `runs/<condition-name>/`. **`run` writes the manifest only; it does NOT execute the experiment.** |
+| `compare <condition> ...` | build or grow a side-by-side comparison under `comparisons/` — grows existing reports (adds columns/rows, dated supersede notes), never silently rewrites |
+
+**Read `commands/validation.md` (in this skill's directory) for the step-by-step procedure.** Run artifacts live in `docs/devlog/<project>/runs/<condition-name>/` and comparison reports in `docs/devlog/<project>/comparisons/` — not in ad-hoc date-stamped directories.
 
 ---
 
