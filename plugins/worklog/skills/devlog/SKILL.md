@@ -22,9 +22,11 @@ Parse the arguments to determine which command to run:
 | `select <project>` | **Select** |
 | `update` | **Update** |
 | `update <instructions>` | **Update** with specific instructions |
+| `reorg <action> [args]` | **Reorg** (rename / archive / cleanup / readme) |
+| `rename <old> <new>` | **Reorg** — alias for `reorg rename` |
 | *(no args)* | **Update** |
 
-If the argument does not match any command above, treat it as `create <argument>` (assume user wants to create a new project with that name).
+If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
 
 ### Chained invocation guard
 
@@ -86,8 +88,9 @@ This section is the ONLY definition of what `update` reads. `update` does NOT re
 4. Determine a topic slug from the primary work/investigation theme (e.g., `cloud-mode-architecture`, `int8-model-support`).
 5. Create investigation doc `01_<topic-slug>.md` in `docs/devlog/<project>/` — read `templates/investigation.md` (in this skill's directory) and follow it.
 6. Create work history `history/01_<topic-slug>.md` — read `templates/history.md` (in this skill's directory) and follow it.
-7. **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline). All subsequent `update` calls read this file first.
-8. Output confirmation: "Created devlog `<project>` with `01_<topic-slug>.md` and `history/01_<topic-slug>.md`." End the output with the active-project marker line: `[devlog/active: <project>]`.
+7. Create `docs/devlog/<project>/README.md` — read `templates/readme.md` (in this skill's directory) and follow it.
+8. **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline). All subsequent `update` calls read this file first.
+9. Output confirmation: "Created devlog `<project>` with `README.md`, `01_<topic-slug>.md`, and `history/01_<topic-slug>.md`." End the output with the active-project marker line: `[devlog/active: <project>]`.
 
 ---
 
@@ -207,7 +210,28 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
       - Create new file — read `templates/history.md` (in this skill's directory) and follow it.
       - Do NOT modify existing history files unless correcting outdated Next Steps.
 
-6. Output summary of what was investigated, key findings, and what was updated or created (in both docs and history). End the output with the marker line: `[devlog/active: <project>]`.
+6. **Part 3 — README maintenance** (`docs/devlog/<project>/README.md`, only if it exists):
+   - Always update the `Period` end date.
+   - If Part 2 created a NEW history file in this run, append its one-line row to the README `Entries` table inside the `<!-- AUTO-GENERATED -->` region.
+   - Do NOT rescan or fully regenerate the README here — that is `reorg readme`. Only the `<!-- AUTO-GENERATED -->` region is ever touched; everything else is user-owned.
+
+7. Output summary of what was investigated, key findings, and what was updated or created (in docs, history, and README). End the output with the marker line: `[devlog/active: <project>]`.
+
+---
+
+## Command: Reorg
+
+Reorganization actions, grouped under one command. Routing: `reorg <action> [args]`, plus `rename` as a top-level alias for `reorg rename`. If `reorg` is called with no action, list the available actions.
+
+| Action | Purpose |
+|--------|---------|
+| `reorg rename <old> <new>` | rename a project, fix all cross-references |
+| `reorg archive <path>` | isolate an obsolete doc/subtopic into `_archived/` |
+| `reorg cleanup` | propose hygiene fixes (duplicate `NN_`, broken refs, empty files) — proposal only, never auto-executes |
+| `reorg readme` | fully regenerate the README's `<!-- AUTO-GENERATED -->` region |
+| `reorg move` | reserved — not yet implemented; tell the user it is unavailable |
+
+**Read `commands/reorg.md` (in this skill's directory) for the step-by-step procedure of the requested action.** Never `rm` a file directly — removal goes through `reorg archive`. Every reorg action is meta/housekeeping work: record it as one line in history, not as a new investigation doc.
 
 ---
 
@@ -226,6 +250,18 @@ Do not create template-outside root files (`PII-XXXX-pr-summary.md`, raw prompt 
 **Subtopic folder trigger**: keep docs flat in the project root until investigation docs grow past roughly 5–6 AND at least 3 of them share a common topic-slug prefix (e.g. `clustering-eval`, `clustering-params`, `clustering-fps` → prefix `clustering`). Only then *consider* grouping those into a `<prefix>/` subtopic folder, and only if it clearly improves navigation. No preemptive foldering. When a folder is created or files are moved, say so in the output (one line).
 
 The full path/artifact-type reference table lives in `reference/layout.md` (read it only when reorganizing). Validation-campaign paths (`runs/`, `comparisons/`) are defined by the validation command, not here.
+
+---
+
+## Cross-references
+
+When a devlog doc references another devlog doc, use a single path form:
+
+- Always a repo-relative full path: `docs/devlog/<project>/NN_<slug>.md` (history and subtopic paths likewise, e.g. `docs/devlog/<project>/history/NN_<slug>.md`).
+- References outside devlog (memory files, repo source) — a repo-relative or absolute path plus a one-line note.
+- Never put a ticket ID or commit SHA in a path component — it breaks on rename/squash.
+
+This single form is what makes `reorg rename` and `reorg cleanup` reliable. **Premise**: file moves and renames go through `reorg` — it auto-substitutes cross-references and shows the match list for approval. Avoid manual `mv` of devlog files.
 
 ---
 
@@ -303,7 +339,7 @@ The depth of investigation should match the complexity of the topic and user's r
 ## Rules
 
 - **One topic per file**: NEVER merge multiple distinct topics into a single file. If analysis covers architecture + scaling + optimization, create 3 separate files. When in doubt, split.
-- **Never delete existing files** — only edit or append.
+- **Archive over delete**: never `rm` a devlog file. Edit or append in place; to remove an obsolete doc, use `reorg archive` — it moves the doc to `_archived/` with a logged reason.
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
 - **Topic slugs**: lowercase, hyphens, descriptive (e.g., `appsrc-scaling-analysis`, not `update-3`). For multi-phase work, slug the outcome/decision, not the journey. Project names follow the same rule — prefer the work's nature (`rtmp-stall-investigation`) over a bare JIRA ticket ID (`pii-2176`); a `<ticket>-<topic>` combination is fine.
 - **Period field**: the first-to-last date this doc was *edited* — not the calendar span of the underlying work. Always update the end date to today when editing, using the resolved `Today` from the context header (never a remembered or guessed date). If the work's calendar span matters, record it separately in the body.
