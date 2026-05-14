@@ -182,7 +182,7 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
       - Be conservative: only remove content that is fully obsolete.
 
    e. **If topic is new** (no existing file for this theme):
-      - Determine the next sequence number (e.g., if last file is `03_xxx.md`, create `04_<new-topic>.md`).
+      - Determine the next sequence number: actually list the directory's `.md` files, take the highest `NN_` prefix and add 1. If two files already share an `NN_`, report the collision. Never guess from memory.
       - Create new file — read `templates/investigation.md` (in this skill's directory) and follow it.
       - Do NOT modify existing files unless correcting outdated information.
 
@@ -203,11 +203,29 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
       - Be conservative: only remove content that is fully obsolete.
 
    d. **If different topic** (work shifted to a new theme):
-      - Determine the next sequence number.
+      - Determine the next sequence number the same way: list `history/`, take the highest `NN_` + 1, report any duplicate `NN_`. Never guess.
       - Create new file — read `templates/history.md` (in this skill's directory) and follow it.
       - Do NOT modify existing history files unless correcting outdated Next Steps.
 
 6. Output summary of what was investigated, key findings, and what was updated or created (in both docs and history). End the output with the marker line: `[devlog/active: <project>]`.
+
+---
+
+## Project layout
+
+A devlog project directory holds these path types:
+
+- `docs/devlog/<project>/NN_<topic>.md` — investigation docs (top level)
+- `docs/devlog/<project>/history/NN_<topic>.md` — history entries
+- `docs/devlog/<project>/<subtopic>/NN_<topic>.md` — investigation docs grouped under a subtopic folder (see trigger below)
+- `docs/devlog/<project>/_archived/` — superseded docs, kept for the record
+- `docs/devlog/<project>/README.md` — project index (see `Command: Create`)
+
+Do not create template-outside root files (`PII-XXXX-pr-summary.md`, raw prompt dumps, etc.) — absorb that content into an investigation doc or follow the `NN_<topic>.md` naming.
+
+**Subtopic folder trigger**: keep docs flat in the project root until investigation docs grow past roughly 5–6 AND at least 3 of them share a common topic-slug prefix (e.g. `clustering-eval`, `clustering-params`, `clustering-fps` → prefix `clustering`). Only then *consider* grouping those into a `<prefix>/` subtopic folder, and only if it clearly improves navigation. No preemptive foldering. When a folder is created or files are moved, say so in the output (one line).
+
+The full path/artifact-type reference table lives in `reference/layout.md` (read it only when reorganizing). Validation-campaign paths (`runs/`, `comparisons/`) are defined by the validation command, not here.
 
 ---
 
@@ -228,6 +246,8 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
 | Ambiguous / both seem to apply | Default to History as the primary record; the investigation doc references it ("see `history/NN`") |
 
 Do not print classification labels to the user — this table is an internal routing rule.
+
+**Meta / housekeeping work** — devlog's own tidying (rename, README refresh, cross-ref fixes, `NN_` renumbering, splitting/merging docs) does NOT get a new investigation doc. Record it as one line in the history `Changes` section, and if relevant one line in an investigation doc's `Done`. If investigation or implementation work is mixed in, record that normally too — the meta exemption applies only to pure tidying.
 
 ---
 
@@ -276,7 +296,7 @@ The depth of investigation should match the complexity of the topic and user's r
 - **Data flow notation**: Use `A → B → C` with annotations for describing pipelines and call chains.
 - **Quantitative over qualitative**: Prefer "32MB per view" over "significant memory usage".
 - **Conclusions must be actionable**: End with prioritized recommendations, not just observations.
-- **Korean or English**: Match the language the user has been using in the session.
+- **Language consistency**: one project, one language — follow the first doc's language (usually the session's). Section header *text* and prose go in the project language; field *keys* (`Branch`, `Period`, `Summary`), priority tags (`[Critical]` …), and code / `file:line` references stay in English. Do not force-migrate existing files to a different language.
 
 ---
 
