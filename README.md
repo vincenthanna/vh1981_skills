@@ -68,6 +68,7 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 | `/devlog select <project>` | 프로젝트 선택 (활성화) |
 | `/devlog update` | 조사 문서 + 작업 기록 동시 갱신 |
 | `/devlog update <instructions>` | 지시사항에 따라 조사 수행 후 갱신 |
+| `/devlog upload [<project>] [--to <path>]` | 외부 knowledge-base repo로 프로젝트 복사 (target 경로는 `docs/devlog/.upload-target`에 자동 저장) |
 
 **디렉토리 구조:**
 

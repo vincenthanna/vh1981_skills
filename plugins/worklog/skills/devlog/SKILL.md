@@ -1,6 +1,6 @@
 ---
 name: devlog
-description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, and update commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, or produce structured findings. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
+description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, update, and upload commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, produce structured findings, or publish a devlog project to an external knowledge-base repo. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "upload devlog", "publish to knowledge base", "sync to knowledge base", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
 ---
 
 # Devlog Context
@@ -26,9 +26,10 @@ Parse the arguments to determine which command to run:
 | `rename <old> <new>` | **Reorg** — alias for `reorg rename` |
 | `run <condition-name>` | **Validation** — register a measurement run |
 | `compare <condition> ...` | **Validation** — build/grow a comparison report |
+| `upload [<project>] [--to <path>]` | **Upload** — publish to an external knowledge-base repo |
 | *(no args)* | **Update** |
 
-If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `run`, `compare`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
+If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `run`, `compare`, `upload`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
 
 ### Chained invocation guard
 
@@ -247,6 +248,58 @@ For validation/ablation campaigns — each measurement adds a *condition* to the
 | `compare <condition> ...` | build or grow a side-by-side comparison under `comparisons/` — grows existing reports (adds columns/rows, dated supersede notes), never silently rewrites |
 
 **Read `commands/validation.md` (in this skill's directory) for the step-by-step procedure.** Run artifacts live in `docs/devlog/<project>/runs/<condition-name>/` and comparison reports in `docs/devlog/<project>/comparisons/` — not in ad-hoc date-stamped directories.
+
+---
+
+## Command: Upload
+
+Publish a devlog project to an external knowledge-base repo so the docs are visible alongside other projects.
+
+### Syntax
+
+| Form | Meaning |
+|------|---------|
+| `upload` | upload the active project to the saved target |
+| `upload <project>` | upload `<project>` to the saved target |
+| `upload --to <path>` | upload the active project to `<path>`, and save `<path>` as the new default |
+| `upload <project> --to <path>` | upload `<project>` to `<path>`, and save it as the new default |
+| `upload <project> <path>` | positional form — same as `upload <project> --to <path>` |
+
+`<path>` is the absolute or `~`-expanded path of a knowledge-base repo (e.g. `~/workspace/ds_knowledge_base`). Expand `~` before use.
+
+### Target-path resolution
+
+Resolve in this priority order, error out if all fail:
+
+1. Explicit `--to <path>` (or trailing positional) in the current command — and save it to `docs/devlog/.upload-target` for future calls.
+2. `docs/devlog/.upload-target` (single line, repo absolute path) — written by a prior `upload` call.
+3. Error: "No upload target. Use `/devlog upload <project> --to <path>` first."
+
+### Steps
+
+1. Parse `<project>` and `<path>`. If `<project>` was not given, resolve the active project per the `## Active Project` rules.
+2. Resolve the target path as described above. If level 1 supplied a new path, write it (single line, no trailing newline) to `docs/devlog/.upload-target`.
+3. Validate target:
+   - Target directory exists. If not, ask the user before creating it — do not silently `mkdir` an external repo.
+   - If `<target>/projects/` exists, use `<target>/projects/<project>/` as the destination root (knowledge-base convention).
+   - Otherwise, default to `<target>/<project>/` and warn the user in the output that the target lacks a `projects/` directory.
+4. `mkdir -p <dest>` if it doesn't exist.
+5. Copy `docs/devlog/<project>/` recursively into `<dest>`, overwriting same-named files. Files that exist only in the destination are left untouched (no delete sync). The copy includes everything under the project directory — investigation docs, `history/`, `runs/`, `comparisons/`, `_archived/`, `README.md`.
+   - Use `cp -a docs/devlog/<project>/. <dest>/` (the trailing `/.` copies contents into `<dest>` directly).
+   - Do NOT copy `docs/devlog/.active` or `docs/devlog/.upload-target` — those are not inside the project directory anyway, but verify with `ls -A docs/devlog/<project>/` before the copy.
+6. Count copied files (`find <dest> -type f -newer ...` is overkill — just count source files: `find docs/devlog/<project>/ -type f | wc -l`).
+7. Output a one-line summary in the form:
+   ```
+   Uploaded <project> → <dest>  (N files)
+   ```
+   If step 2 wrote a new `.upload-target`, add a second line: `Saved target to docs/devlog/.upload-target`. If the destination layout was non-standard (no `projects/`), add a warning line. End with the marker `[devlog/active: <project>]`.
+
+### Notes
+
+- `upload` does NOT git-commit anything in the target repo. The user runs `cd <target> && git add . && git commit` themselves.
+- `upload` is read-only against the source devlog — it only writes to the destination and to `docs/devlog/.upload-target`.
+- This is a bulk copy, not a merge. Hand-edits in the destination that diverge from the source will be overwritten.
+- `.upload-target` lives at `docs/devlog/.upload-target` (one path per repo, shared across all projects in this repo). To change the target, pass `--to <new-path>` and it will be overwritten.
 
 ---
 
