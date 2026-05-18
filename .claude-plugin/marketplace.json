@@ -15,6 +15,16 @@
       },
       "source": "./plugins/worklog",
       "category": "productivity"
+    },
+    {
+      "name": "prompts-pack",
+      "description": "Curated agents and slash commands (debugger, code-reviewer, bug-fix, pr-audit, ...) for Claude Code",
+      "version": "0.1.0",
+      "author": {
+        "name": "vh1981"
+      },
+      "source": "./plugins/prompts-pack",
+      "category": "productivity"
     }
   ]
 }

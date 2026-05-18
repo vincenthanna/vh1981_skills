@@ -1,8 +1,55 @@
 # vh1981_skills
 
-Claude Code용 개발 워크플로우 스킬 플러그인입니다.
+Claude Code용 개발 워크플로우 스킬 / 프롬프트 묶음입니다.
+
+## 빠른 시작 — 다른 Claude Code 인스턴스에서 사용하기
+
+이 레포의 prompts를 다른 Claude Code 인스턴스에서 쓰는 방법은 두 가지입니다.
+
+**1) Plugin marketplace로 설치 (권장)**
+
+Claude Code 세션 안에서:
+
+```
+/plugin marketplace add git@github.com:vincenthanna/vh1981_skills.git
+/plugin install prompts-pack      # agents + commands 일괄 설치
+/plugin install worklog           # devlog / worklog / prjdocs skill
+```
+
+`prompts-pack` 설치 후:
+
+- `prompts/agents/*.md`의 subagent들이 자동 등록되어 Agent 도구에서 호출 가능 (`debugger`, `code-reviewer`, `backend-architect` 등)
+- `prompts/commands/*.md`의 slash command를 바로 사용 (`/bug-fix`, `/pr-audit`, `/verify`, `/analyze`, `/improve-prompt`, `/search-prompt`, `/write-report`)
+
+**2) Clone 후 수동 참조**
+
+플러그인 없이 파일만 참조하고 싶다면:
+
+```bash
+git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
+```
+
+- 프롬프트 본문에서 `@~/repos/vh1981_skills/prompts/baseline.md` 처럼 직접 첨부
+- 또는 개별 agent를 사용자 레벨로 활성화:
+  ```bash
+  mkdir -p ~/.claude/agents
+  ln -s ~/repos/vh1981_skills/plugins/prompts-pack/agents/debugger.md ~/.claude/agents/debugger.md
+  ```
+- AI 참고 문서 (`prompts/ai-reference/`, `prompts/baseline.md`, `prompts/commit_rules.md`, `prompts/translate_to_kr.md`, `prompts/code_visualization.md`)는 plugin에 포함되지 않으므로 이 방식으로 참조합니다.
 
 ## Plugins
+
+### prompts-pack
+
+`prompts/agents/`와 `prompts/commands/`를 하나의 플러그인으로 묶은 것입니다. 디렉토리 구조상 `plugins/prompts-pack/agents`, `plugins/prompts-pack/commands`가 원본이며, 호환을 위해 `prompts/agents`와 `prompts/commands`는 해당 위치로의 심볼릭 링크입니다.
+
+포함된 agent (`/agents` 또는 Agent 도구로 호출):
+
+`api-documenter`, `backend-architect`, `bash-pro`, `cloud-architect`, `code-reviewer`, `data-engineer`, `database-architect`, `database-optimizer`, `debugger`, `deployment-engineer`, `docs-architect`, `error-detective`, `fastapi-pro`, `frontend-developer`, `kubernetes-architect`, `observability-engineer`, `performance-engineer`, `python-pro`, `security-auditor`, `test-automator`, `typescript-pro`
+
+포함된 slash command:
+
+`/analyze`, `/bug-fix`, `/improve-prompt`, `/pr-audit`, `/search-prompt`, `/verify`, `/write-report`
 
 ### worklog
 
@@ -82,6 +129,7 @@ Claude Code 세션 안에서 다음 명령어를 실행합니다:
 
 ```
 /plugin marketplace add git@github.com:vincenthanna/vh1981_skills.git
+/plugin install prompts-pack
 /plugin install worklog
 ```
 
@@ -90,6 +138,7 @@ Claude Code 세션 안에서 다음 명령어를 실행합니다:
 ```bash
 git clone git@github.com:vincenthanna/vh1981_skills.git
 claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
+claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 ```
 
 ## 사용법
@@ -121,14 +170,23 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
   marketplace.json          # Marketplace 정의
 plugins/
   worklog/
-    .claude-plugin/
-      plugin.json           # 플러그인 정의 (v1.2.0)
+    .claude-plugin/plugin.json
     skills/
       devlog/SKILL.md       # /devlog 스킬 (통합)
       worklog/SKILL.md      # /worklog 스킬
       prjdocs/SKILL.md      # /prjdocs 스킬
-docs/
+  prompts-pack/
+    .claude-plugin/plugin.json
+    agents/                 # debugger, code-reviewer, ...
+    commands/               # /bug-fix, /pr-audit, ...
+prompts/
+  agents -> ../plugins/prompts-pack/agents     # symlink
+  commands -> ../plugins/prompts-pack/commands # symlink
   ai-reference/             # AI 참조 문서 (SDK, 튜토리얼 등)
+  baseline.md               # 기본 작업 규칙
+  commit_rules.md
+  translate_to_kr.md
+  code_visualization.md
 ```
 
 ## 라이선스
