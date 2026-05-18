@@ -57,18 +57,6 @@ docs/devlog/<project>/
 | `/prjdocs update` | 활성 프로젝트에 조사 결과 추가 |
 | `/prjdocs update <instructions>` | 지시사항에 따라 조사 수행 후 결과 추가 |
 
-### prompts
-
-`/plugin install prompts`로 설치합니다. 프롬프트 저장, 관리, 큐레이션 스킬 모음입니다.
-
-**명령어:**
-
-| 명령 | 설명 |
-|------|------|
-| `/save-prompt` | 대화에서 프롬프트를 추출하여 서버에 저장 |
-| `/curate-prompts` | 저장된 프롬프트에서 재사용 가능한 템플릿 추출 |
-| `/update-docs` | 코드 변경사항 기반 문서 자동 업데이트 |
-
 ## AI 참조 문서
 
 `docs/ai-reference/` 경로에 AI가 참고할 수 있는 Claude SDK, 튜토리얼, 연구자료 등이 정리되어 있습니다.
@@ -139,13 +127,6 @@ plugins/
       devlog/SKILL.md       # /devlog 스킬 (통합)
       worklog/SKILL.md      # /worklog 스킬
       prjdocs/SKILL.md      # /prjdocs 스킬
-  prompts/
-    .claude-plugin/
-      plugin.json           # 플러그인 정의 (v1.0.0)
-    skills/
-      save-prompt/SKILL.md  # /save-prompt 스킬
-      curate-prompts/SKILL.md # /curate-prompts 스킬
-      update-docs/SKILL.md  # /update-docs 스킬
 docs/
   ai-reference/             # AI 참조 문서 (SDK, 튜토리얼 등)
 ```
