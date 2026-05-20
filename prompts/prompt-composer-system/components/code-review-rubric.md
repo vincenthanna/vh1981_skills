@@ -1,10 +1,8 @@
 # Code Review Rubric
 
-> Code change (PR / patch / commit series)를 **architect × review** 와 **security-researcher × evidence-checker** lens로 평가하는 rubric.
->
-> 평가 결과는 (a) PR 채택/차단 결정, (b) 추가 검증 요구, (c) reviewer feedback comment 의 1차 자료로 사용.
->
-> **시리즈 위치**: composer Phase 4 (Assembly)에서 component로 활성화, Phase 5 / 7 에서 자체 채점에도 활용. `prompt-evaluation-rubric.md`와 별개 — 그쪽은 *composed prompt*를 평가, 본 rubric은 *코드 변경*을 평가.
+> **무엇**: Code change(PR/patch/commit series)를 architect×review, security-researcher×evidence-checker lens로 평가하는 rubric.
+> **용도**: PR 채택/차단 결정, 추가 검증 요구, reviewer feedback comment의 1차 자료로 사용.
+> **시리즈 위치**: composer Phase 4 (Assembly)에서 component로 활성화, Phase 5/7 자체 채점에도 활용. `prompt-evaluation-rubric.md`(=composed prompt 평가)와 별개로 본 rubric은 *코드 변경*을 평가.
 
 ---
 

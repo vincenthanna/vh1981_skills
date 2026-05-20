@@ -1,9 +1,7 @@
 # Prompt Evaluation Rubric
 
-> Composed prompt(실행 전) + 실행 결과(실행 후) **양쪽**을 평가하는 rubric.
->
-> **Pre-execution**: 실행해도 되는가? **Post-execution**: 결과를 채택 가능한가?
->
+> **무엇**: Composed prompt(실행 전) + 실행 결과(실행 후) 양쪽을 평가하는 rubric. Pre: 실행해도 되는가? Post: 결과를 채택 가능한가?
+> **용도**: 잘못 조합된 prompt의 실행/silent failure를 막고 결과 채택 여부를 판정. component 개선 loop로 환류.
 > **시리즈 위치**: composer Phase 5(pre)와 Phase 7(post)에서 호출.
 
 ---

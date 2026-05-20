@@ -1,9 +1,7 @@
 # Context Injection Patterns
 
-> User / project / environment context를 composed prompt에 **안전하고 효과적으로** 주입하는 방법.
->
-> 핵심 원칙: **right context, right place, redacted form.**
->
+> **무엇**: User/project/environment context를 composed prompt에 안전하고 효과적으로 주입하는 방법. 핵심 원칙: right context, right place, redacted form.
+> **용도**: composed prompt에 외부 context를 넣을 때 무엇을·어디에·어떻게(redacted) 넣을지 결정.
 > **시리즈 위치**: composer Phase 3에서 호출. router가 활성화 결정 후 실제 주입 메커니즘 담당.
 
 ---

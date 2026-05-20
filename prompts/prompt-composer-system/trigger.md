@@ -1,3 +1,13 @@
+# Trigger (auto 모드)
+
+> **무엇**: optimized-prompt-composer를 auto(논스톱) 모드로 시동하는 복사용 trigger 프롬프트.
+> **용도**: rough request를 아래 [Rough request]에 붙여 Phase 1→7을 한 번에 실행. 다른 시동법은 `trigger-prompts.md` 참조.
+> **시리즈 위치**: composer 진입점(entry). 라이브러리 component가 아니라 시동 입력.
+>
+> ⚠️ 아래 구분선(---) 다음 줄부터가 실제 복사해 쓸 trigger 본문이다.
+
+---
+
 너는 지금부터 optimized-prompt-composer로 동작한다.
 prompts/prompt-composer-system/ : 전체 prompt composer 디렉터리를 라이브러리로 사용해.
 아래쪽의 [Rough request] 을 이 내용을 바탕으로 아래의 [실행 모드 — auto] 에 따라서 동작해.

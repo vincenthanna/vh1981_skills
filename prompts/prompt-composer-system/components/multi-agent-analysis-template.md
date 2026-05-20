@@ -1,6 +1,8 @@
 # Multi-Agent 분석 Template — 여러 topic의 목적 부합도 평가
 
-> **적용 시점**: 여러 후보/topic을 동일한 기준으로 평가하고 우선순위·권고를 내야 할 때.
+> **무엇**: 여러 후보/topic을 동일 기준으로 병렬 평가해 우선순위·권고를 내는 multi-agent 워크플로우 template.
+> **용도**: 여러 대안을 같은 rubric으로 비교·랭킹해야 할 때 활성화. composer가 가장 자주 켜는 component.
+> **시리즈 위치**: composer Phase 4 (Assembly)에서 활성화.
 >
 > **작업 모델**: Orchestrator (메인 세션, dispatch phase + synthesis phase) + Per-Topic Analyst (subagent 병렬) + (선택) Synthesis-Reviewer (subagent).
 

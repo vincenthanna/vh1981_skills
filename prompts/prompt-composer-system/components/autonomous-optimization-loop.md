@@ -1,12 +1,12 @@
 # Autonomous Optimization Loop
 
-> 측정 가능한 단일 스칼라 지표를 가진 태스크를 **고정 예산 · 단일 변수 · keep-or-revert**로 에이전트가 무인 반복 개선하게 만드는 워크플로우 template.
+> **무엇**: 측정 가능한 단일 스칼라 지표를 가진 태스크를 고정 예산·단일 변수·keep-or-revert로 에이전트가 무인 반복 개선하게 만드는 워크플로우 template.
+> **용도**: 측정가능 지표를 자동 탐색·최적화해 best config를 찾아야 할 때 활성화.
+> **시리즈 위치**: composer Phase 4 (Assembly). `experiment-design-template.md`가 단일 *가설의 통계적 검증*이라면 본 template은 *자동 탐색 최적화* — 둘은 순차 결합(본 template으로 best config 발견 → experiment-template으로 효과 검증).
 >
 > 산출물: slot 정의 → baseline → 반복 trial 로그 → best config + 학습 요약.
 >
 > 출처 아이디어: karpathy/autoresearch `program.md` (ML 학습 코드 야간 자율 최적화)를 도메인 무관 형태로 추상화. `[ASSUMPTION canonical URL: https://github.com/karpathy/autoresearch 검증 방법: web fetch + tier=community 확인]`
->
-> **시리즈 위치**: composer Phase 4 (Assembly)에서 활성화. `experiment-design-template.md`가 단일 *가설의 통계적 검증*이라면, 본 template은 측정가능 지표의 *자동 탐색 최적화*. 둘은 순차 결합 — 본 template으로 best config 발견 → experiment-template으로 그 효과를 검증.
 
 ---
 

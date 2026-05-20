@@ -1,11 +1,10 @@
 # Task Specification Template
 
-> rough request → 구조화된 task spec으로 변환하는 input form.
-> 모든 prompt composition은 이 spec을 입력으로 한다.
+> **무엇**: rough request → 구조화된 task spec으로 변환하는 input form. 모든 prompt composition의 입력.
+> **용도**: composition을 시작하기 전 task를 A-E 등 필드로 구조화할 때 작성.
+> **시리즈 위치**: composer Phase 1에서 호출. router / context-injection / evaluation-rubric / composer와 함께 동작.
 >
 > **참고 영향**: DSPy의 Signature (task의 input/output 선언), Anthropic Skills의 trigger description.
->
-> **시리즈 위치**: `prompt-component-router.md` / `context-injection-patterns.md` / `prompt-evaluation-rubric.md` / `optimized-prompt-composer.md` 와 함께 동작. composer가 Phase 1에서 이 template을 호출.
 
 ---
 

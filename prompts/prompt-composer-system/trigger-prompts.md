@@ -1,7 +1,8 @@
 # Trigger Prompts — 시스템 가동용 입력
 
-> optimized-prompt-composer 시스템을 실제로 돌리기 위한 entry prompt 모음.
-> 컴포넌트 라이브러리 7개 md 파일은 별도. 이 파일은 *어떻게 시동을 거는가*만 다룬다.
+> **무엇**: optimized-prompt-composer 시스템을 실제로 돌리기 위한 entry prompt 모음. *어떻게 시동을 거는가*만 다룬다(component 라이브러리는 별도).
+> **용도**: composer를 step-by-step 또는 auto 모드로 시동할 때 복사해 쓸 입력을 고를 때 참조.
+> **시리즈 위치**: composer 진입점(entry). 라이브러리 component가 아니라 시동 입력.
 >
 > **Changelog**:
 > - v1.1 (2026-05-19): 방법 A에 `auto` 모드 추가. step-by-step (default) 외에 논스톱 자동 진행 모드.

@@ -1,9 +1,8 @@
 # Optimized Prompt Composer
 
-> **rough request + prompt component library → 실행 가능한 optimized prompt** 를 만드는 메타 orchestrator.
->
-> 이 파일 자체가 "조합을 통한 optimized prompt 생성 시 활용할 수 있는 prompt"다.
-> Claude / Claude Code의 메인 세션 prompt로 활용한다.
+> **무엇**: rough request + prompt component library → 실행 가능한 optimized prompt를 만드는 메타 orchestrator. 이 파일 자체가 조합용 prompt다.
+> **용도**: Claude / Claude Code 메인 세션의 prompt로 붙여 Phase 1→7로 prompt를 조립·평가할 때 사용.
+> **시리즈 위치**: composer 본체(Phase 1~7 전체 진행). 아래 component들을 호출.
 >
 > **시리즈 구성** (모두 같이 사용):
 > 1. `task-spec-template.md` — Phase 1 입력 형식

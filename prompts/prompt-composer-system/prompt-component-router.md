@@ -1,10 +1,10 @@
 # Prompt Component Router
 
-> Task Spec을 받아 어떤 component를 어떤 조합으로 활성화할지 결정하는 routing logic.
+> **무엇**: Task Spec을 받아 어떤 component를 어떤 조합으로 활성화할지 결정하는 routing logic.
+> **용도**: composer가 spec에 맞는 component 집합을 고를 때 사용.
+> **시리즈 위치**: composer Phase 2에서 호출. 입력은 `task-spec-template.md`로 작성된 spec.
 >
 > **참고 영향**: Anthropic Skills의 description-based auto-loading (Claude가 SKILL.md를 자동 선택하는 메커니즘), DSPy의 module selection.
->
-> **시리즈 위치**: composer Phase 2에서 호출. 입력은 `task-spec-template.md`로 작성된 spec.
 
 ---
 

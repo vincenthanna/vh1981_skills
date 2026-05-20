@@ -1,10 +1,10 @@
 # RFC / Design Doc Writing Template
 
-> RFC, ADR, design doc 같은 *팀/외부 audience 대상 설계 문서*를 **pedagogy-reviewer × proposer** + **consistency-checker** lens로 작성하는 워크플로우 template.
+> **무엇**: RFC/ADR/design doc 같은 팀·외부 audience 대상 설계 문서를 pedagogy-reviewer×proposer + consistency-checker lens로 작성하는 워크플로우 template.
+> **용도**: 설계 결정을 문서화하고 이해당사자 합의를 끌어내야 할 때 활성화.
+> **시리즈 위치**: composer Phase 4 (Assembly). `experiment-design-template.md`가 *실험 검증*이라면 본 template은 *설계 문서화 + 합의*.
 >
 > 산출물: motivation → alternatives → design → tradeoffs → rollout → stakeholder feedback → final document.
->
-> **시리즈 위치**: composer Phase 4 (Assembly)에서 활성화. `experiment-design-template.md`가 *실험 검증*을 다룬다면, 본 template은 *설계 결정의 문서화 + 이해당사자 합의*.
 
 ---
 

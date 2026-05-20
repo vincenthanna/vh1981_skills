@@ -1,7 +1,8 @@
 # Agent Role Dictionary
 
-> Multi-agent 작업(특히 토론·리뷰·합성)에서 sub-agent에 부여할 수 있는 role들의 사전.
-> 각 role은 (a) 목적 (b) 핵심 prompt 패턴 (c) 입력 (d) 출력 (e) 어울리는 LLM 특성으로 정의.
+> **무엇**: Multi-agent 작업(토론·리뷰·합성)에서 sub-agent에 부여할 role들의 사전. 각 role은 목적·핵심 prompt 패턴·입력·출력·어울리는 LLM 특성으로 정의.
+> **용도**: composer가 multi-agent 계열 component를 조립할 때 각 sub-agent의 역할을 선택·부여하기 위한 카탈로그로 참조.
+> **시리즈 위치**: composer Phase 4 (Assembly)에서 multi-agent template과 함께 활성화.
 >
 > 출처: Society of Minds (Du et al. 2023), Multi-Persona MAD (Liang et al. 2023), DEBATE (Kim et al. ACL 2024), D3 (2024), Free-MAD (2025), Claude Code subagent best practices (VoltAgent, Shipyard, stevekinney, mindstudio), metaswarm.
 

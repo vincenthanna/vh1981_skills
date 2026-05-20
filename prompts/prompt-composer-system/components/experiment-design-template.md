@@ -1,10 +1,10 @@
 # Experiment Design Template
 
-> ML / systems / HCI 실험을 **ml-researcher × proposer** + **ml-researcher × devils-advocate** lens로 설계·실행·분석하는 워크플로우 template.
+> **무엇**: ML/systems/HCI 실험을 ml-researcher×proposer + ml-researcher×devils-advocate lens로 설계·실행·분석하는 워크플로우 template.
+> **용도**: 단일 가설을 통계적으로 검증해야 할 때 활성화.
+> **시리즈 위치**: composer Phase 4 (Assembly). `multi-agent-analysis-template.md`가 다수 *대안* 비교라면 본 template은 단일 *가설* 검증 — 둘 다 켜면 over-scoping이므로 분리 사용.
 >
 > 산출물: research question → hypothesis → 실험 protocol → 결과 분석 → 재현 가능한 write-up.
->
-> **시리즈 위치**: composer Phase 4 (Assembly)에서 활성화. `multi-agent-analysis-template.md`가 다수 *대안* 비교라면, 본 template은 단일 *가설*의 검증. 둘 다 활성화하면 over-scoping — 분리 사용.
 
 ---
 
