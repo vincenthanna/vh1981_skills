@@ -33,6 +33,7 @@
 | `code-review-rubric.md` | spec.B=Review + spec.H에 PR/diff + spec.L=security-researcher/backend-engineer/frontend-engineer | diff + 변경 파일 list | 8축 점수 + 차단 결정 + reviewer comment draft | Low (~600 발췌 / ~2.5k full) | `multi-agent-analysis-template` (over-scope) |
 | `experiment-design-template.md` | spec.B=Analysis + spec.L=ml/systems/hci-researcher + 실험/baseline 키워드 | research question + dataset + baseline 후보 | 실험 protocol + ablation + 결과 분석 + 재현 manifest | Medium (~2k 발췌 / ~12k full) | `multi-agent-analysis-template`(대안 비교 vs 가설 검증), `code-review-rubric` (영역 다름) |
 | `rfc-writing-template.md` | spec.B=Generation + spec.F=team/external + RFC/ADR/design doc 키워드 | 결정 대상 + motivation + stakeholder list | RFC markdown + stakeholder feedback log + decision status | Medium (~1.5k 발췌 / ~10k full) | `experiment-design-template`(영역 다름 — 실험 vs 설계 문서) |
+| `autonomous-optimization-loop.md` | spec.B=Analysis + 단일 스칼라 지표 minimize/maximize + 측정 자동화 가능 + 반복 탐색 의도 + spec.G=REVERSIBLE | objective metric+direction, editable/frozen surface, budget, measure command, stop condition | 누적 trial 로그 + best commit + 개선 요약 + 학습 메모 | Medium (~1.5k 발췌 / ~9k full, 실비용은 trial수×measure 지배) | `experiment-design-template`(탐색 vs 검증 — 순차), `multi-agent-analysis-template`(자동 탐색 vs 대안 비교) |
 | `optimized-prompt-composer.md` | 메인 orchestrator — 본인 | spec + components + context | optimized prompt | Medium (~2k) | — |
 
 ### 1.1 Catalog 메타 (의무)
@@ -55,6 +56,7 @@
    ├─ Decision (multi-topic) → multi-agent-template 후보 → 3으로
    ├─ Analysis →
    │    ├─ multi-topic 비교 → multi-agent-template → 3으로
+   │    ├─ 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE → autonomous-optimization-loop → 5
    │    └─ spec.L=ml/systems/hci-researcher + 가설/baseline 의도 → experiment-design-template → 5
    ├─ Generation / Transformation →
    │    ├─ spec.F=team/external + RFC/ADR/design doc 의도 → rfc-writing-template + role-dict(pedagogy-reviewer×proposer, consistency-checker) → 5
@@ -184,6 +186,10 @@ B=Review + spec.H에 diff/PR + spec.L=security-researcher/backend-engineer/front
 B=Analysis + spec.L=ml-researcher + 가설/baseline/ablation 의도
 → [task-spec, experiment-design-template, role-dict(ml-researcher×proposer + ml-researcher×devils-advocate), eval-rubric]
   multi-agent-template은 *후보 선정* 단계에서만 (sequential, 가설 검증 시 BYPASS)
+
+B=Analysis + 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE
+→ [task-spec, autonomous-optimization-loop, role-dict(systems-researcher×proposer + systems-researcher×devils-advocate 또는 risk-auditor)]
+  experiment-design-template은 best config 발견 후 *검증* 단계에서 순차 활성화 (탐색≠검증)
 
 B=Generation + spec.F=team/external + RFC/ADR/design doc 의도
 → [task-spec, rfc-writing-template, role-dict(pedagogy-reviewer×proposer + consistency-checker), context-injection]

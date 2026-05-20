@@ -109,10 +109,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 - non-goal: <자주 오해될 수 있는 인접 문제와의 경계>
 ```
 
-**G0 통과 조건**:
-- motivation 의 *문제*가 관찰 가능한 사실 (impression 금지 — `[VERIFIED:*]` tag 권장).
-- scope / out-of-scope / non-goal 3종 모두 명시.
-- 본 RFC가 답할 질문 1-2개 식별.
+**Gate**: G0 (조건·실패 처리는 §4 SSOT).
 
 ### Step 1 — Alternatives considered
 
@@ -138,7 +135,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 
 > **"Do nothing" 의무** — 현 상태 유지의 cost를 명시하지 않으면 RFC 전체가 *change for change's sake* 인지 검증 불가.
 
-**G1 통과 조건**: 대안 ≥ 3개 (Do nothing 포함) + 각 대안에 Pros + Cons + 평가 명시.
+**Gate**: G1 (조건·실패 처리는 §4 SSOT).
 
 ### Step 2 — Proposed design
 
@@ -167,10 +164,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 - **<용어 2>**: <정의>
 ```
 
-**G2 통과 조건**:
-- 상세 design 의 모든 component 가 §4.3 Decision 으로 추적 가능.
-- 새 용어는 §4.4 정의 표에 있고, 본문은 정의 후 사용.
-- 외부 의존 (다른 RFC / paper / docs) 은 `[VERIFIED:webfetch <tier> <URL>]` 또는 `[VERIFIED:static <path>]` tag.
+**Gate**: G2 (조건·실패 처리는 §4 SSOT).
 
 ### Step 3 — Tradeoffs / drawbacks / open questions
 
@@ -195,10 +189,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 
 > Devil's advocate review 는 본인이 아닌 별도 reviewer 의 input 의무 — anchoring 방지.
 
-**G3 통과 조건**:
-- tradeoffs ≥ 2개 (단순 "tradeoff 없음" 금지 — 모든 결정은 something 을 희생).
-- devil's advocate review ≥ 1 round (별도 reviewer).
-- open question 의 검증 방법 명시.
+**Gate**: G3 (조건·실패 처리는 §4 SSOT).
 
 ### Step 4 — Rollout plan
 
@@ -225,11 +216,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 - 측정 가능 metric (가능하면 dashboard URL 또는 query)
 ```
 
-**G4 통과 조건**:
-- migration 의 각 phase에 reversibility tag.
-- backward compat 영향 list + deprecation timeline.
-- rollback plan + 한계 명시.
-- success metric 측정 가능 (`[VERIFIED:empirical <env> / <metric source>]` 형식).
+**Gate**: G4 (조건·실패 처리는 §4 SSOT).
 
 ### Step 5 — Stakeholder review
 
@@ -255,10 +242,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 - 결과: <0건 / N건 (수정 완료) / N건 (미해결)>
 ```
 
-**G5 통과 조건**:
-- approver-역할 reviewer ≥ 1명 명시.
-- consistency-check 에서 Critical / Major 0건.
-- feedback에 각각 author response 1줄 이상.
+**Gate**: G5 (조건·실패 처리는 §4 SSOT).
 
 ### Step 6 — Final + Glossary + Status
 
@@ -279,14 +263,13 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 | <date> | 1.0 | Accepted | <name> |
 ```
 
-**G6 통과 조건**:
-- Glossary 의 모든 항목이 본문에 실제 등장.
-- references 모두 evidence-tagged.
-- status 가 명시 (Draft / Review / Accepted / Rejected / Superseded).
+**Gate**: G6 (조건·실패 처리는 §4 SSOT).
 
 ---
 
-## 4. Quality Gates (G0 ~ G6 통합)
+## 4. Quality Gates (G0 ~ G6 통합) — SSOT
+
+> 이 표가 Gate 정의의 **단일 출처(SSOT)**다. §3 각 Step은 해당 Gate를 포인터로만 참조한다 (조건 중복 금지 — drift 방지).
 
 | Gate | 조건 | 실패 시 처리 |
 |---|---|---|

@@ -90,7 +90,7 @@
 - 어떤 결과가 나오면 "yes / no / inconclusive" 인가?
 ```
 
-**G0 통과 조건**: question 한 문장 + falsifiability 확보 + 답이 사용자 결정에 *어떻게* 영향을 주는지 명시.
+**Gate**: G0 (조건·실패 처리는 §4 SSOT).
 
 ### Step 1 — Baseline 선정
 
@@ -110,6 +110,8 @@
 ```
 
 **Anti-pattern**: weak baseline 선택 (자기 안이 잘 보이도록). `agent-role-dictionary §5.8 ml-researcher` "baseline 적절성" 룰 위반.
+
+**Gate**: G1 (조건·실패 처리는 §4 SSOT).
 
 ### Step 2 — Hypothesis + 측정 metric 결정
 
@@ -144,7 +146,7 @@
 - confound 후보 list: <data leak / spurious correlation / population shift / ...>
 ```
 
-**G2 통과 조건**: primary metric 1개 단일 정의 + statistical test 선택 정당화 + devils-advocate review 완료.
+**Gate**: G2 (조건·실패 처리는 §4 SSOT).
 
 ### Step 3 — Ablation 설계
 
@@ -165,7 +167,7 @@
 - 각 ablation 의 *예상 결과*가 명시? (post-hoc rationalization 차단)
 ```
 
-**G3 통과 조건**: ablation 최소 2개 (intervention 자체 + 1개 ablation), 예상 결과 사전 명시.
+**Gate**: G3 (조건·실패 처리는 §4 SSOT).
 
 ### Step 4 — 실험 실행
 
@@ -194,7 +196,7 @@ manifest.json 의무 필드:
 }
 ```
 
-**G4 통과 조건**: manifest 모든 필드 채워짐 + seed 최소 3개 (single-seed = bias risk) + 각 condition 동일 hw/sw.
+**Gate**: G4 (조건·실패 처리는 §4 SSOT).
 
 ### Step 5 — 결과 분석
 
@@ -223,7 +225,7 @@ manifest.json 의무 필드:
 - 새로 발견된 leak: <list>
 ```
 
-**G5 통과 조건**: primary metric에 mean + CI + p-value + effect size 4종 모두 보고 + devils-advocate review 완료 + 다중 비교 보정 (≥2 secondary metric 시).
+**Gate**: G5 (조건·실패 처리는 §4 SSOT).
 
 ### Step 6 — Write-up + 재현 manifest
 
@@ -252,11 +254,13 @@ manifest.json 의무 필드:
 4. expected output: <hash 또는 metric range>
 ```
 
-**G6 통과 조건**: TL;DR 2-3 줄 + limitation 섹션 ≥ 3 항목 + repro instruction 가 third-party가 따라할 수 있는 형태.
+**Gate**: G6 (조건·실패 처리는 §4 SSOT).
 
 ---
 
-## 4. Quality Gates (G0 ~ G6 통합)
+## 4. Quality Gates (G0 ~ G6 통합) — SSOT
+
+> 이 표가 Gate 정의의 **단일 출처(SSOT)**다. §3 각 Step은 해당 Gate를 포인터로만 참조한다 (조건 중복 금지 — drift 방지).
 
 | Gate | 조건 | 실패 시 처리 |
 |---|---|---|

@@ -15,7 +15,8 @@
 > 7. `code-review-rubric.md` — PR/diff 평가 (Review task)
 > 8. `experiment-design-template.md` — 실험 설계·실행·분석 (Analysis + ml-researcher lens)
 > 9. `rfc-writing-template.md` — RFC/ADR/design doc 작성 (Generation + team audience)
-> 10. **`optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
+> 10. `autonomous-optimization-loop.md` — 측정가능 지표의 자동 반복 최적화 (Analysis + 탐색, REVERSIBLE)
+> 11. **`optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
 
 ---
 
@@ -230,6 +231,7 @@ Composed prompt를 다음 layout으로 작성:
 - `code-review-rubric.md`: §2 (8축 정의), §3 (채점), §4 (통과/차단 조건). spec.B=Review 일 때.
 - `experiment-design-template.md`: §3 (Step 0-6 절차) 중 task에 필요한 step만, §4 (Quality Gates). spec.L=ml-researcher 일 때.
 - `rfc-writing-template.md`: §3 (Step 0-6 절차), §4 (Quality Gates). spec.F=team/external + design doc 의도일 때. ADR 변형은 §1.3 참조.
+- `autonomous-optimization-loop.md`: §3 (Step 0-5 절차), §4 (Quality Gates), §6 (anti-patterns). 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE 일 때. experiment-design과 순차(탐색→검증).
 
 ### Gate G4 (Assembly → Pre-validation)
 - [ ] composed prompt가 §1-§7 모두 있음
@@ -354,7 +356,7 @@ composed prompt를 system + user messages로 분할:
 - **DSPy** (Stanford NLP, 2024+): declarative composition framework. 본 composer는 DSPy의 Signature/Module/Optimizer 개념을 markdown-based로 단순화한 형태. Compilation 기반 최적화는 본 시스템 범위 외 (manual composition).
 - **Anthropic Skills** (2025+): SKILL.md folder-based component. 본 composer는 skill 등록 호환 (§0 frontmatter). Anthropic 내부 운영 사례 (수백 개의 skill, 9-category framework)를 design philosophy로 반영.
 - **multi-agent-analysis-template.md / agent-role-dictionary.md**: 이 composer가 가장 자주 활성화하는 두 component. 두 파일의 evidence tagging / reversibility / confidence 룰을 composed prompt에도 자동 전파.
-- **code-review-rubric.md / experiment-design-template.md / rfc-writing-template.md**: 도메인 특화 컴포넌트. 각각 Review / Analysis(가설) / Generation(설계 문서) 분기에서 활성화. router catalog §1 표에 등록되어 있어 spec.B/L/F 신호로 자동 매핑.
+- **code-review-rubric.md / experiment-design-template.md / rfc-writing-template.md / autonomous-optimization-loop.md**: 도메인 특화 컴포넌트. 각각 Review / Analysis(가설 검증) / Generation(설계 문서) / Analysis(자동 탐색 최적화) 분기에서 활성화. router catalog §1 표에 등록되어 있어 spec.B/L/F/G 신호로 자동 매핑. optimization-loop은 experiment-design과 탐색→검증 순차 관계.
 - **agentskills.io**: skills의 open standard. composer의 §0 frontmatter는 이 표준 호환을 시도.
 
 ---
