@@ -15,7 +15,7 @@
 | 항목 | 값 |
 |---|---|
 | component name | `code-review-rubric.md` |
-| trigger signals | spec.B = Review, spec.H 에 PR/commit/diff 경로 존재, spec.L 에 `code-reviewer` 또는 `security-researcher` |
+| trigger signals | spec.B = Review, spec.H 에 PR/commit/diff 경로 존재, spec.L 에 `security-researcher` / `backend-engineer` / `frontend-engineer` 등 코드 도메인 lens (role-dict §5 실재 lens) |
 | inputs | diff (unified or git format), 변경 대상 파일 경로 list, (선택) PR description / 이슈 link |
 | outputs | 8축 점수 + axis별 발견 사항 + 차단 조건 통과 여부 + reviewer comment draft |
 | cost (rough tokens) | Low (~600 발췌 / ~2.5k full) |
@@ -171,8 +171,11 @@
 4. 평가 결과 (가상):
    - A1=4, A2=3 (위협 모델 누락), A3=4, A4=3 (refresh token rotation test 없음), A5=4, A6=3, A7=4, A8=4.
    - 평균 = 3.6
-   - A2 = 3 < 4 (security 변경인데 위협 모델 없음) → §4.3 "조건부 통과" 분기 + spec.G 조건 미충족.
-5. 결정: **조건부 통과, 위협 모델 보강 + refresh rotation test 추가 후 재검토**.
+   - 판정 분기:
+     - §4.1 통과 조건의 "보안 변경 시 A2 ≥ 4" 인데 A2=3 → **통과 불가**.
+     - spec.G=`[COSTLY-TO-REVERSE]`의 §4.4 추가 조건(A1·A4 ≥ 4)에서 A4=3 → **미충족**.
+     - 평균 3.6 + A2/A4 ≥ 3 이므로 §4.2 **조건부 통과**로 분류. 단 위 두 미충족 항목(A2 위협 모델, A4 rotation test)은 **차단성 필수 fix**.
+5. 결정: **조건부 통과 (차단성 fix 2건) — 위협 모델 보강(A2 → ≥4) + refresh rotation test 추가(A4 → ≥4) 후 재검토. 두 fix 전에는 merge 금지.**
 
 ### 출력 sample (요약)
 
@@ -180,11 +183,11 @@
 ### Review summary
 - 평균: 3.6/5
 - 최저 축: A2 (Security) = 3
-- 결정: 조건부 통과
+- 결정: 조건부 통과 (차단성 fix 2건, merge 전 필수)
 
-### 차단 / 조건부 fix list
-- [ ] auth/middleware.py: refresh token rotation 시나리오의 위협 모델 명시 (현재 PR description 미포함)
-- [ ] tests/auth/test_jwt_rotation.py: rotation race condition test 추가
+### 차단성 fix list (merge 전 필수)
+- [ ] auth/middleware.py: refresh token rotation 시나리오의 위협 모델 명시 (A2 → ≥4)
+- [ ] tests/auth/test_jwt_rotation.py: rotation race condition test 추가 (A4 → ≥4)
 ```
 
 ---

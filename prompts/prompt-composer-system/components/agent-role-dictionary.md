@@ -54,19 +54,21 @@ Role을 부여할 때는 **두 가지 관점**이 직교(orthogonal)로 작동�
 
 ---
 
-### 1.2 `domain-specialist` — 도메인 전문가
+### 1.2 `domain-specialist` — 도메인 전문가 (review/검토 stance)
 
 **목적**: 특정 도메인 관점에서 검토·기여. 같은 문서를 다른 lens로 본다.
 
-**Variants** (필요에 따라 선택):
-- `architect` — 시스템 설계, 모듈 경계, 확장성
-- `security-auditor` — 위협 모델, 권한, 데이터 노출
-- `performance-engineer` — 비용, latency, throughput
-- `reliability-engineer` — 장애 모드, 재현성, rollback
-- `pedagogy-reviewer` — 학습 곡선, 명확성, 예시의 적절성
-- `pm-reviewer` — 사용자 요구, ROI, 우선순위
-- `compliance-reviewer` — 규제, 라이선스, 데이터 거버넌스
-- `ux-reviewer` — UX, 접근성, 인지 부하
+> ⚠️ **도메인 lens 자체의 정본(SSOT)은 §5 Domain-Based Roles다.** `domain-specialist`는 그 lens를 *review stance*와 결합한 형태(`<§5 도메인> × review`)다. 아래 variant 중 §5에 실재하는 도메인은 §5를 참조로 대체하고, §5에 없는 *review-전용* lens만 여기 고유로 둔다.
+
+**Variants**:
+- `architect` — 시스템 설계, 모듈 경계, 확장성 (→ §5.1 `backend-engineer` / §5.10 `systems-researcher` lens 재사용)
+- `security-auditor` — 위협 모델, 권한, 데이터 노출 (→ §5.9 `security-researcher` 와 **통합** — 중복, §5.9 사용 권장)
+- `reliability-engineer` — 장애 모드, 재현성, rollback (→ §5.4 `devops-sre` lens 재사용)
+- `ux-reviewer` — UX, 접근성, 인지 부하 (→ §5.11 `hci-researcher` lens 재사용)
+- `performance-engineer` — 비용, latency, throughput *(§5 없음 — review-전용 고유)*
+- `pedagogy-reviewer` — 학습 곡선, 명확성, 예시의 적절성 *(§5 없음 — review-전용 고유)*
+- `pm-reviewer` — 사용자 요구, ROI, 우선순위 *(§5 없음 — review-전용 고유)*
+- `compliance-reviewer` — 규제, 라이선스, 데이터 거버넌스 *(§5 없음 — review-전용 고유)*
 
 **Prompt 패턴**:
 ```
@@ -337,32 +339,7 @@ straw man 금지. steel man — 반대 입장이 가질 수 있는 최선의 형
 
 ---
 
-### 4.2 `cli-bridge` — 외부 CLI 호출 다리
-
-**목적**: Bash로 다른 LLM CLI(`codex exec`, `gemini -p`)를 호출하는 wrapper subagent.
-
-**구현 예** (`codex-bridge.md`):
-```markdown
----
-name: codex-bridge
-description: Codex CLI를 통해 외부 LLM(Codex)에 prompt를 전송하고 결과를 받아 파일로 저장한다. multi-LLM 토론 시 Codex 측 의견 수집에 사용.
-tools: Bash, Read, Write
-model: sonnet
----
-입력으로 받은 (role_prompt, context_files, out_path)를 사용하여:
-
-1. prompt 파일을 임시 디렉토리에 만든다
-2. `codex exec --sandbox read-only --skip-git-repo-check --json - < /tmp/prompt.md > {out_path}` 실행
-3. exit code 검사. 실패 시 1회 재시도. 두 번째도 실패면 error report
-4. 결과 파일 경로만 메인에 반환
-
-⚠️ Codex의 답변을 해석하거나 요약하지 마라. 그대로 파일에 저장.
-⚠️ `--sandbox read-only --ephemeral` 사용. write 권한 절대 부여 금지.
-```
-
----
-
-### 4.3 `audit-logger` — 감사 기록자
+### 4.2 `audit-logger` — 감사 기록자
 
 **목적**: 모든 round의 입력/출력을 timestamp + agent ID와 함께 기록. 재현성 확보.
 
