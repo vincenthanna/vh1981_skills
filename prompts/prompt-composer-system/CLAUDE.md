@@ -63,8 +63,8 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 ## v1.2 default flow
 
 ```
-[Conversation 1: Compose]  A-2 (compose-only auto) → composed prompt artifact (.composed.md)
-        ↓ 저장/복사
+[Conversation 1: Compose]  A-2 (compose-only auto) → composed prompt artifact (.composed.md) **필수 저장**
+        ↓ 저장 완료
 [Conversation 2: Execute]  fresh context + 필요 tool → C-6 + artifact → task result (.result.md)
         ↓
 [Conversation 3: Evaluate] (또는 Conv 2 이어서) C-7 + spec.E + result → 5축 점수 + 개선 권고
@@ -72,7 +72,7 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 ```
 
 - A-2 = compose-only auto (default), A-3 = full-auto smoke test (warning, production 금지)
-- artifact 저장 권고: `.specs/<task-id>.composed.md` / `.result.md` / `.log`(routing log + 점수)
+- artifact 저장: composed prompt는 `.specs/<task-id>.composed.md`로 **항상 저장**(필수, bypass 없음 — composer §5 Phase 4 / Gate G4). `.result.md`(실행 결과) / `.log`(routing log + 점수)는 해당 단계에서 저장.
 
 ## 컴포넌트 라이브러리
 

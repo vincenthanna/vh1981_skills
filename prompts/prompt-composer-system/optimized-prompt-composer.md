@@ -232,11 +232,22 @@ Composed prompt를 다음 layout으로 작성:
 - `rfc-writing-template.md`: §3 (Step 0-6 절차), §4 (Quality Gates). spec.F=team/external + design doc 의도일 때. ADR 변형은 §1.3 참조.
 - `autonomous-optimization-loop.md`: §3 (Step 0-5 절차), §4 (Quality Gates), §6 (anti-patterns). 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE 일 때. experiment-design과 순차(탐색→검증).
 
+### 산출물 저장 (필수)
+
+composed prompt는 **항상 markdown 파일로 저장**한다 — bypass 없는 불변 규칙.
+
+- 저장 경로: `.specs/<task-id>.composed.md` (task-id는 Phase 1에서 정한 kebab-case).
+- 저장 시점: Phase 4에서 작성 직후 1차 저장. Phase 5 pre-validation이 Phase 4로 회귀시켜 수정하면 **최종 통과본으로 덮어쓰기**(파일은 항상 최신 통과본을 반영).
+- 저장 수단: Claude Code는 Write 도구로 직접 기록. claude.ai/chat 등 파일 쓰기가 불가한 환경이면 markdown 블록으로 출력 + "이 내용을 `.specs/<task-id>.composed.md`로 저장하라"고 명시 안내 (저장 책임을 사용자에게 위임하되 경로·파일명 고정).
+- 파일 내용: §1~§7 전체 composed prompt + 말미에 routing log(§7) 포함. 별도 routing log는 기존대로 `.specs/<task-id>.log`에도 유지.
+- 저장에 실패하면 그 사실을 산출물에 명시하고 Gate G4 미통과로 처리.
+
 ### Gate G4 (Assembly → Pre-validation)
 - [ ] composed prompt가 §1-§7 모두 있음
 - [ ] 발췌 출처 명시됨
 - [ ] 모순 해소됨 (또는 우선순위 명시)
 - [ ] §4 component 수 ≤ 4
+- [ ] composed prompt가 `.specs/<task-id>.composed.md`로 저장됨 (또는 파일 쓰기 불가 환경에서 경로 지정 저장 안내 완료)
 
 ---
 
@@ -282,7 +293,7 @@ composed prompt를 system + user messages로 분할:
 - §3-§7 → user message
 - API 호출 (Anthropic API), 결과 받음.
 
-각 mode에서 **routing log + context manifest를 함께 보존** (`.specs/<task-id>.log`).
+각 mode에서 **routing log + context manifest를 함께 보존** (`.specs/<task-id>.log`). composed prompt 자체는 Phase 4에서 이미 `.specs/<task-id>.composed.md`로 저장됨 — 실행은 이 파일을 입력으로 삼는다.
 
 ---
 

@@ -96,7 +96,7 @@ Phase 1부터 Phase 5까지 단계별로 진행하며 각 phase 종료 시 사�
 <여기에 실제 요청>
 
 [실행 모드 — compose-only auto]
-Phase 1 → 5를 중간 확인 없이 논스톱으로 진행하고, **Phase 5 종료 시 composed prompt artifact를 최종 산출물로 출력 후 종료**.
+Phase 1 → 5를 중간 확인 없이 논스톱으로 진행하고, **Phase 5 종료 시 composed prompt artifact를 `.specs/<task-id>.composed.md`로 저장한 뒤 최종 산출물로 출력하고 종료**.
 Phase 6 (실행)과 Phase 7 (평가)은 진행하지 않음.
 
 다음 4가지 경우에만 멈추고 사용자 입력 대기:
@@ -112,9 +112,9 @@ Phase 6 (실행)과 Phase 7 (평가)은 진행하지 않음.
 - 모든 phase를 한 응답 안에 누적
 
 최종 산출물 (Phase 5 통과 후):
-1. composed prompt를 별도 markdown 코드블록으로 강조 출력
-2. 다음 단계 안내: "이 prompt를 새 conversation에서 실행하세요. 실행 결과를 평가하려면 trigger-prompts.md C-7 사용."
-3. (선택) artifact를 `.specs/<task-id>.composed.md`로 저장 권고
+1. composed prompt를 `.specs/<task-id>.composed.md` 파일로 **반드시 저장** (Claude Code: Write 도구 / claude.ai: 저장 위치 안내). 저장 실패 시 그 사실을 명시.
+2. composed prompt를 별도 markdown 코드블록으로 강조 출력
+3. 다음 단계 안내: "이 prompt(`.specs/<task-id>.composed.md`)를 새 conversation에서 실행하세요. 실행 결과를 평가하려면 trigger-prompts.md C-7 사용."
 
 ⚠️ 같은 세션에서 절대 Phase 6 (composed prompt 실행)을 진행하지 말 것. self-eval bias 및 context contamination 발생.
 ```
@@ -340,8 +340,8 @@ P1~P5 중 하나라도 실패면 사용 금지 권고. P6~P7은 warning.
 [conversation 1: Compose session]
   ↓ A-2 trigger paste
   ↓ Phase 1-5 자동 진행
+  ↓ artifact를 .specs/<task-id>.composed.md 로 저장 (필수)
   ↓ composed prompt artifact 출력
-  ↓ artifact를 .specs/<task-id>.composed.md 로 저장 (또는 클립보드 복사)
 
 [conversation 2: Execute session]
   ↓ 새 conversation 시작
