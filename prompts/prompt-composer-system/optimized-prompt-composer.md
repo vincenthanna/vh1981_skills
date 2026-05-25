@@ -15,7 +15,8 @@
 > 8. `experiment-design-template.md` — 실험 설계·실행·분석 (Analysis + ml-researcher lens)
 > 9. `rfc-writing-template.md` — RFC/ADR/design doc 작성 (Generation + team audience)
 > 10. `autonomous-optimization-loop.md` — 측정가능 지표의 자동 반복 최적화 (Analysis + 탐색, REVERSIBLE)
-> 11. **`optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
+> 11. `speckit-spec-generation.md` — speckit(github/spec-kit) 기반 spec/plan/tasks 생성 (Generation + planning/SDD, REVERSIBLE; rfc-writing-template과 상호 배타)
+> 12. **`optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
 
 ---
 
@@ -231,6 +232,7 @@ Composed prompt를 다음 layout으로 작성:
 - `experiment-design-template.md`: §3 (Step 0-6 절차) 중 task에 필요한 step만, §4 (Quality Gates). spec.L=ml-researcher 일 때.
 - `rfc-writing-template.md`: §3 (Step 0-6 절차), §4 (Quality Gates). spec.F=team/external + design doc 의도일 때. ADR 변형은 §1.3 참조.
 - `autonomous-optimization-loop.md`: §3 (Step 0-5 절차), §4 (Quality Gates), §6 (anti-patterns). 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE 일 때. experiment-design과 순차(탐색→검증).
+- `speckit-spec-generation.md`: §2 (CLI/slash surface), §3 (Step 0–5), §4 (Quality Gates SSOT), §6 (anti-patterns). spec.B=Generation + spec.A에 spec/plan/tasks/SDD/spec-driven/speckit 키워드 + spec.G=REVERSIBLE 일 때. `rfc-writing-template`과 상호 배타.
 
 ### 산출물 저장 (필수)
 

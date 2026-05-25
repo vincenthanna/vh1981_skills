@@ -51,7 +51,7 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 1. **Compose / Execute / Evaluate 세션 분리** — prompt 생성(Phase 1-5)과 실행(Phase 6)은 **반드시 다른 conversation**에서. 위반 시 ① self-eval bias(점수 1-2점 부풀림) ② context contamination(fresh-start 가정 붕괴 → role priming 무효) ③ tool 환경 불일치(simulation 전락). smoke test 예외만 같은 세션 허용하되 production 사용 금지. → `trigger-prompts.md` A-2(compose) / C-6(execute) / C-7(evaluate).
 2. **G1 (Intake gate) 면제 불가** — Phase 1 종료 시 A-E 5필수 필드 충족 + Purpose 단일 goal(compound 분리) + Success Criteria 측정 가능, 셋 다 우회 금지. 면제하면 garbage routing 직결.
 3. **컴포넌트 발췌만 인용, 전체 복사 금지** — 조합 prompt에 component 본문 전체 복사 금지, `§-숫자` ref로만 발췌. (토큰 비용 + anchoring 방지 + 무관 룰 오염 방지)
-4. **레이어 분리 유지** — 조합 인프라(새 5개)와 분석 컨텐츠(기존 2개: multi-agent-template, agent-role-dictionary)를 섞지 말 것. 분석 룰(evidence tagging, reversibility 등)은 기존 2개에 유지. 혼합 시 drift + 중복.
+4. **레이어 분리 유지** — 컴포넌트는 3축 중 하나로 명시 분류: ① 조합 인프라(5개) ② 분석 컨텐츠(2개: multi-agent-template, agent-role-dictionary) ③ domain content(rfc-writing / experiment-design / code-review-rubric / autonomous-optimization-loop / speckit-spec-generation 등 도메인 특화). 다른 layer를 섞지 말 것 — 분석 룰(evidence tagging, reversibility 등)은 기존 2개에 유지. 같은 layer 안에서 *상호 배타* 표시된 component(예: rfc-writing-template ↔ speckit-spec-generation)는 동시 활성 금지. 각 component §0 metadata의 `layer` 필드와 router §1.1 정의가 SSOT.
 
 ## Mandatory safeguards (Invariant 외 추가 보호)
 
@@ -76,6 +76,8 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 
 ## 컴포넌트 라이브러리
 
-- **조합 인프라(새 5)**: `optimized-prompt-composer.md`(7-phase orchestrator, 메인 진입점), `task-spec-template.md`(Phase 1), `prompt-component-router.md`(Phase 2), `context-injection-patterns.md`(Phase 3), `prompt-evaluation-rubric.md`(Phase 5/7)
-- **분석 컨텐츠(기존 2)**: `multi-agent-analysis-template.md`(다각도 평가), `agent-role-dictionary.md`(stance × domain 카탈로그)
+- **조합 인프라(5)**: `optimized-prompt-composer.md`(7-phase orchestrator, 메인 진입점), `task-spec-template.md`(Phase 1), `prompt-component-router.md`(Phase 2), `context-injection-patterns.md`(Phase 3), `prompt-evaluation-rubric.md`(Phase 5/7)
+- **분석 컨텐츠(2)**: `multi-agent-analysis-template.md`(다각도 평가), `agent-role-dictionary.md`(stance × domain 카탈로그)
+- **domain content(도메인 특화)**: `code-review-rubric.md`(Review/PR), `experiment-design-template.md`(Analysis/가설 검증), `rfc-writing-template.md`(Generation/자유 형식 설계 문서), `autonomous-optimization-loop.md`(Analysis/스칼라 자동 탐색), `speckit-spec-generation.md`(Generation/구조화 spec — rfc-writing과 상호 배타)
 - **인터페이스**: `trigger-prompts.md`(시동 입력, v1.2: 3 mode + C-6/C-7)
+- **라이브러리 성장(component 발굴 2단 파이프라인)**: `component-discovery-collect.md`(stage 1 — 외부 발굴→ledger append, 무인 주기 구동 가능) → `component-discovery-approve.md`(stage 2 — 사람 batch 승인→component 생성·router/composer 반영·commit), 공유 상태 `component-discovery-ledger.md`. 거버넌스는 `self_upgrade.md` 준수. 조합 인프라/분석 컨텐츠 레이어와 별개(component를 *만드는* 메타 도구이지 routable component 아님 — router catalog 미등록).

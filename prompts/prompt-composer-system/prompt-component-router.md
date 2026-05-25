@@ -34,6 +34,7 @@
 | `experiment-design-template.md` | spec.B=Analysis + spec.L=ml/systems/hci-researcher + 실험/baseline 키워드 | research question + dataset + baseline 후보 | 실험 protocol + ablation + 결과 분석 + 재현 manifest | Medium (~2k 발췌 / ~12k full) | `multi-agent-analysis-template`(대안 비교 vs 가설 검증), `code-review-rubric` (영역 다름) |
 | `rfc-writing-template.md` | spec.B=Generation + spec.F=team/external + RFC/ADR/design doc 키워드 | 결정 대상 + motivation + stakeholder list | RFC markdown + stakeholder feedback log + decision status | Medium (~1.5k 발췌 / ~10k full) | `experiment-design-template`(영역 다름 — 실험 vs 설계 문서) |
 | `autonomous-optimization-loop.md` | spec.B=Analysis + 단일 스칼라 지표 minimize/maximize + 측정 자동화 가능 + 반복 탐색 의도 + spec.G=REVERSIBLE | objective metric+direction, editable/frozen surface, budget, measure command, stop condition | 누적 trial 로그 + best commit + 개선 요약 + 학습 메모 | Medium (~1.5k 발췌 / ~9k full, 실비용은 trial수×measure 지배) | `experiment-design-template`(탐색 vs 검증 — 순차), `multi-agent-analysis-template`(자동 탐색 vs 대안 비교) |
+| `speckit-spec-generation.md` | spec.B=Generation + spec.A에 spec/plan/tasks/SDD/spec-driven/speckit 키워드 + spec.G=REVERSIBLE | feature description(자연어) + 기존 spec.md(선택) + repo root | specs/<feature>/{spec,plan,tasks}.md path 목록 + G0–G5 통과 표 | Low (~1.5k 발췌 / ~5–6k full) | `rfc-writing-template.md`(자유 형식 vs 구조화 spec — **상호 배타**) |
 | `optimized-prompt-composer.md` | 메인 orchestrator — 본인 | spec + components + context | optimized prompt | Medium (~2k) | — |
 
 ### 1.1 Catalog 메타 (의무)
@@ -42,6 +43,7 @@
 - `last_modified`: component 파일의 git mtime — composer가 stale catalog 감지에 사용
 - `version`: semantic version (호환성 깨지는 변경 시 major↑)
 - `owner`: 유지보수 책임자 (team 공유 시)
+- `layer`: 분류 축 — `조합 인프라` / `분석 컨텐츠` / `domain content` 중 하나. CLAUDE.md "컴포넌트 라이브러리" 절 정의와 일치. layer가 다르면 동일 spec에서 동시 활성이 보통 over-scoping 신호 (예: `rfc-writing-template`(domain) ↔ `speckit-spec-generation`(domain) 상호 배타).
 
 ---
 
@@ -59,6 +61,8 @@
    │    ├─ 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE → autonomous-optimization-loop → 5
    │    └─ spec.L=ml/systems/hci-researcher + 가설/baseline 의도 → experiment-design-template → 5
    ├─ Generation / Transformation →
+   │    ├─ spec.A에 "spec/plan/tasks/SDD/spec-driven/speckit" 키워드 + spec.G=REVERSIBLE → speckit-spec-generation + role-dict(consistency-checker) → 5
+   │    │       (rfc-writing-template과 상호 배타 — 키워드 우선)
    │    ├─ spec.F=team/external + RFC/ADR/design doc 의도 → rfc-writing-template + role-dict(pedagogy-reviewer×proposer, consistency-checker) → 5
    │    └─ 기본 → role-dictionary만 (proposer + domain lens) → 5
    ├─ Review →
@@ -193,6 +197,10 @@ B=Analysis + 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE
 
 B=Generation + spec.F=team/external + RFC/ADR/design doc 의도
 → [task-spec, rfc-writing-template, role-dict(pedagogy-reviewer×proposer + consistency-checker), context-injection]
+
+B=Generation + spec.A에 "spec/plan/tasks/SDD/spec-driven/speckit" + G=REVERSIBLE
+→ [task-spec, speckit-spec-generation, role-dict(domain×proposer + consistency-checker), context-injection]
+  rfc-writing-template은 BYPASS (over-scoping 회피 — 상호 배타)
 
 B=Mixed
 → ABORT, sub-task 분리 요청
