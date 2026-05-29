@@ -51,12 +51,12 @@ ledger의 `proposed` 후보를 **batch로 사람에게 제시**(승인/기각/�
 - (동적) §5 `<domain>` lens — 후보 주제 분야가 명확하면 결합.
 > §0-2: proposer와 consistency/evidence-checker는 분리 pass(자기 초안 자기검증 금지).
 
-### 4.2 `prompt-evaluation-rubric.md` — 새 component 품질 게이트
+### 4.2 `builder/prompt-evaluation-rubric.md` — 새 component 품질 게이트
 - §1 Pre-execution Checklist P1–P7을 "새 component가 잘 설계됐는가"로 적응: P1 spec coverage / P2 출력형식 / P3 gate·종료조건 / P4 충돌없음 / P5 민감정보 / P6 토큰 / P7 정말 필요한가.
 - §2 smell(Redundancy/Contradiction/Vague gate/Over-scoping).
 - (권장) self_upgrade §B4 블라인드 독립 채점.
 
-### 4.3 `context-injection-patterns.md` + `self_upgrade.md` 거버넌스
+### 4.3 `builder/context-injection-patterns.md` + `self_upgrade.md` 거버넌스
 - 기존 components/router/CLAUDE.md는 §2.3 Reference로 읽되 **읽지 못하면 abort**(hallucinate 금지).
 - self_upgrade 4 실패모드 방어: drift→rubric 점수, 웹노이즈→화이트리스트, 무제한 scope→1회1대상+작은 diff, self-eval 편향→블라인드 채점+승인 게이트.
 
@@ -65,8 +65,8 @@ ledger의 `proposed` 후보를 **batch로 사람에게 제시**(승인/기각/�
 - ledger(필수, status 갱신 대상): `prompts/prompt-composer-system/component-discovery-ledger.md`
 - 기존 component: `prompts/prompt-composer-system/components/*.md` — 구조 exemplar 겸 중복 baseline
 - component 규약: `prompts/prompt-composer-system/CLAUDE.md`
-- router(catalog §1·decision tree §2·§6 갱신절차·§7 매핑): `prompts/prompt-composer-system/prompt-component-router.md`
-- composer(시리즈 목록·발췌 가이드): `prompts/prompt-composer-system/optimized-prompt-composer.md`
+- router(catalog §1·decision tree §2·§6 갱신절차·§7 매핑): `prompts/prompt-composer-system/builder/prompt-component-router.md`
+- composer(시리즈 목록·발췌 가이드): `prompts/prompt-composer-system/builder/optimized-prompt-composer.md`
 - 거버넌스: `self_upgrade.md` / changelog: `self_upgrade-changelog.md`
 
 ## 6. 작업 절차 (Stage 0–5) + Output Gates

@@ -176,11 +176,11 @@ description: Rough request를 받아 prompt component library에서 적절한 �
 
 FRONTMATTER
 
-cat optimized-prompt-composer.md >> .claude/skills/prompt-composer/SKILL.md
+cat builder/optimized-prompt-composer.md >> .claude/skills/prompt-composer/SKILL.md
 
-cp task-spec-template.md prompt-component-router.md \
-   context-injection-patterns.md prompt-evaluation-rubric.md \
-   multi-agent-analysis-template.md agent-role-dictionary.md \
+cp builder/task-spec-template.md builder/prompt-component-router.md \
+   builder/context-injection-patterns.md builder/prompt-evaluation-rubric.md \
+   components/multi-agent-analysis-template.md components/agent-role-dictionary.md \
    .claude/skills/prompt-composer/refs/
 
 cat >> .claude/skills/prompt-composer/SKILL.md << 'EOF'
@@ -226,7 +226,7 @@ prompt-composer로 smoke test (low fidelity): <요청>        # A-3 강제
 ### C-1. Phase 1만 — Task Spec 추출 단독
 
 ```
-[task-spec-template.md attach 또는 prompts/prompt-composer-system/task-spec-template.md Read]
+[builder/task-spec-template.md attach 또는 prompts/prompt-composer-system/builder/task-spec-template.md Read]
 
 위 template을 사용해 아래 rough request에서 Task Spec을 추출해.
 
@@ -258,7 +258,7 @@ prompt-composer로 smoke test (low fidelity): <요청>        # A-3 강제
 ### C-3. Phase 3만 — context injection plan
 
 ```
-[context-injection-patterns.md + spec attach/read]
+[builder/context-injection-patterns.md + spec attach/read]
 
 위 patterns로 첨부 spec에 대한 context injection plan을 작성.
 
@@ -285,7 +285,7 @@ prompt-composer로 smoke test (low fidelity): <요청>        # A-3 강제
 ### C-5. Phase 5만 — 사전 검증 (Pre-validation)
 
 ```
-[prompt-evaluation-rubric.md + 검증할 composed prompt attach/read]
+[builder/prompt-evaluation-rubric.md + 검증할 composed prompt attach/read]
 
 위 rubric의 사전 P1~P7 체크리스트로 첨부 prompt 평가.
 
@@ -317,7 +317,7 @@ P1~P5 중 하나라도 실패면 사용 금지 권고. P6~P7은 warning.
 ### C-7. Phase 7 — 사후 평가 (Evaluate)
 
 ```
-[prompt-evaluation-rubric.md + spec.E (Success Criteria) + 실행 결과 attach]
+[builder/prompt-evaluation-rubric.md + spec.E (Success Criteria) + 실행 결과 attach]
 
 위 rubric §3의 5축으로 실행 결과를 평가.
 

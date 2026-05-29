@@ -13,7 +13,7 @@ Claude Code 세션 안에서:
 ```
 /plugin marketplace add git@github.com:vincenthanna/vh1981_skills.git
 /plugin install prompts-pack      # agents + commands 일괄 설치
-/plugin install worklog           # devlog / worklog / prjdocs skill
+/plugin install vh1981            # devlog / worklog / prjdocs skill
 ```
 
 `prompts-pack` 설치 후:
@@ -49,11 +49,13 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 
 포함된 slash command:
 
-`/analyze`, `/bug-fix`, `/improve-prompt`, `/pr-audit`, `/search-prompt`, `/verify`, `/write-report`
+`/analyze`, `/bug-fix`, `/build_prompt`, `/improve-prompt`, `/pr-audit`, `/search-prompt`, `/verify`, `/write-report`
 
-### worklog
+`/build_prompt <요청사항>` — `prompts/prompt-composer-system/trigger.md` 본문을 그대로 실행하면서 `<요청사항>`을 `[Rough request]` 아래에 자동으로 붙입니다.
 
-`/plugin install worklog` 하나로 아래 3개 skill이 모두 설치됩니다.
+### vh1981
+
+`/plugin install vh1981` 하나로 아래 3개 skill이 모두 설치됩니다.
 
 ### devlog (통합 스킬)
 
@@ -131,14 +133,14 @@ Claude Code 세션 안에서 다음 명령어를 실행합니다:
 ```
 /plugin marketplace add git@github.com:vincenthanna/vh1981_skills.git
 /plugin install prompts-pack
-/plugin install worklog
+/plugin install vh1981
 ```
 
 ### 방법 2: 로컬 디렉토리에서 로드 (개발/테스트용)
 
 ```bash
 git clone git@github.com:vincenthanna/vh1981_skills.git
-claude --plugin-dir /path/to/vh1981_skills/plugins/worklog
+claude --plugin-dir /path/to/vh1981_skills/plugins/vh1981
 claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 ```
 
@@ -170,8 +172,8 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 .claude-plugin/
   marketplace.json          # Marketplace 정의
 plugins/
-  worklog/
-    .claude-plugin/plugin.json
+  vh1981/
+    .claude-plugin/plugin.json   # name: vh1981 (plugin namespace)
     skills/
       devlog/SKILL.md       # /devlog 스킬 (통합)
       worklog/SKILL.md      # /worklog 스킬

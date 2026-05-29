@@ -2,13 +2,13 @@
 
 > **무엇**: Code change(PR/patch/commit series)를 architect×review, security-researcher×evidence-checker lens로 평가하는 rubric.
 > **용도**: PR 채택/차단 결정, 추가 검증 요구, reviewer feedback comment의 1차 자료로 사용.
-> **시리즈 위치**: composer Phase 4 (Assembly)에서 component로 활성화, Phase 5/7 자체 채점에도 활용. `prompt-evaluation-rubric.md`(=composed prompt 평가)와 별개로 본 rubric은 *코드 변경*을 평가.
+> **시리즈 위치**: composer Phase 4 (Assembly)에서 component로 활성화, Phase 5/7 자체 채점에도 활용. `../builder/prompt-evaluation-rubric.md`(=composed prompt 평가)와 별개로 본 rubric은 *코드 변경*을 평가.
 
 ---
 
 ## 0. Router 등록 metadata
 
-`prompt-component-router.md §1` 표에 등록될 정보:
+`../builder/prompt-component-router.md §1` 표에 등록될 정보:
 
 | 항목 | 값 |
 |---|---|
@@ -207,7 +207,7 @@
 
 ### 8.1 내부 (라이브러리 내)
 
-- `prompt-evaluation-rubric.md` — composed prompt 자체의 5축 평가 (Phase 5/7). 본 rubric과 영역 다름. `[VERIFIED:static prompts/prompt-composer-system/prompt-evaluation-rubric.md]`
+- `../builder/prompt-evaluation-rubric.md` — composed prompt 자체의 5축 평가 (Phase 5/7). 본 rubric과 영역 다름. `[VERIFIED:static prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md]`
 - `agent-role-dictionary.md` §1.2 `architect`, §5.9 `security-researcher`, §2.5 `evidence-checker` — 본 rubric의 lens 출처. `[VERIFIED:static prompts/prompt-composer-system/agent-role-dictionary.md:57,571,202]`
 - `multi-agent-analysis-template.md` §2.1 evidence tagging, §2.2 reversibility — A8 / §4.4 조건의 원칙. `[VERIFIED:static prompts/prompt-composer-system/multi-agent-analysis-template.md]`
 

@@ -15,7 +15,7 @@
 ## 0. 비등록 선언 (Router 등록 metadata 미사용)
 
 - 본 파일은 router `§1 Component Catalog` / `§2 Routing decision tree` / `§7 빠른 매핑` 어디에도 **등록 금지**.
-- composer `optimized-prompt-composer.md` 머리말 "시리즈 구성" 목록에 **등록 금지**.
+- composer `builder/optimized-prompt-composer.md` 머리말 "시리즈 구성" 목록에 **등록 금지**.
 - `## 0. Router 등록 metadata` section을 *의도적으로* 두지 않는다 — 자동 catalog 스캐너의 등록 후보 인식 회피.
 - 본 파일은 *진단 도구 layer* (CLAUDE.md "진단 도구 (build 흐름과 분리, router 미등록)" 카테고리 — 4번째 축).
 - 본 파일을 호출하는 trigger 입력은 user-직접 입력만 허용. composer Phase 2 routing 결과로 자동 활성화 금지.
@@ -69,7 +69,7 @@
 ### 3.4 A.2.4 상충 (component 간 / Role vs Gate vs Activated)
 - §1 Role · §6 Output Gates vs §4 Activated 우선순위 일관성.
 - `rfc-writing-template ↔ speckit-spec-generation` 상호 배타 4-SSOT 정합성:
-  - 자동 검사: `grep -l "rfc-writing-template" prompts/prompt-composer-system/components/speckit-spec-generation.md prompts/prompt-composer-system/CLAUDE.md prompts/prompt-composer-system/prompt-component-router.md` → 3 hit 기대.
+  - 자동 검사: `grep -l "rfc-writing-template" prompts/prompt-composer-system/components/speckit-spec-generation.md prompts/prompt-composer-system/CLAUDE.md prompts/prompt-composer-system/builder/prompt-component-router.md` → 3 hit 기대.
 - 각 component metadata의 `layer` 필드 echo 여부:
   - 자동 검사: `grep -L "^| layer |" prompts/prompt-composer-system/components/*.md` → 0 hit 기대 (모두 layer 필드 보유).
 
@@ -81,7 +81,7 @@
 | # | 항목 | 검사 명령 (PASS 조건) |
 |---|---|---|
 | S1 | `## 0. Router 등록 metadata` section 미보유 | `grep -c "^## 0\. Router 등록 metadata" prompts/prompt-composer-system/audit-composer-system.md` == 0 |
-| S2 | router §1/§2/§7/composer 시리즈 등록 0건 | `grep -l "audit-composer-system" prompts/prompt-composer-system/prompt-component-router.md prompts/prompt-composer-system/optimized-prompt-composer.md` == 0 hit |
+| S2 | router §1/§2/§7/composer 시리즈 등록 0건 | `grep -l "audit-composer-system" prompts/prompt-composer-system/builder/prompt-component-router.md prompts/prompt-composer-system/builder/optimized-prompt-composer.md` == 0 hit |
 | S3 | 머리말 ⚠️ 경고 보유 | `head -10 prompts/prompt-composer-system/audit-composer-system.md \| grep -c "⚠️"` ≥ 2 |
 | S4 | self-eval 경고 명시 | `grep -c "self-eval 경고\|블라인드 독립 채점" prompts/prompt-composer-system/audit-composer-system.md` ≥ 2 |
 | S5 | Step 0-5 + §6 SSOT 표 보유 | `grep -cE "^- \*\*Step [0-5]\|^\| Gate \|^\| \*\*G[0-5]\*\*" prompts/prompt-composer-system/audit-composer-system.md` ≥ 10 |
@@ -106,7 +106,7 @@ repo 선정 정책 (매 audit마다 새로 선정 — stale 방지):
 
 ## 4. Activated Components (발췌 — 원본 §ref, 전체 복사 금지)
 
-### 4.1 `prompts/prompt-composer-system/prompt-evaluation-rubric.md` (audit criteria SSOT)
+### 4.1 `prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md` (audit criteria SSOT)
 - §1 P1-P7 (Pre-execution Checklist, blocking P1-P5 + warning P6-P7) — 3 test built-prompt 평가 게이트.
 - §2.1 Redundancy / §2.2 Contradictions / §2.3 Vague gates / §2.4 Missing fallback / §2.5 Anchoring / §2.6 Over-scoping — 6 smell.
 - §3 5축 (Relevance / Evidence / Reasoning / Completeness / Actionability) — post-eval 매트릭스 axis.
@@ -139,11 +139,11 @@ repo 선정 정책 (매 audit마다 새로 선정 — stale 방지):
 
 ### 5.1 Repo 내부 SSOT
 - `prompts/prompt-composer-system/CLAUDE.md`
-- `prompts/prompt-composer-system/optimized-prompt-composer.md`
-- `prompts/prompt-composer-system/prompt-component-router.md`
-- `prompts/prompt-composer-system/task-spec-template.md`
-- `prompts/prompt-composer-system/context-injection-patterns.md`
-- `prompts/prompt-composer-system/prompt-evaluation-rubric.md`
+- `prompts/prompt-composer-system/builder/optimized-prompt-composer.md`
+- `prompts/prompt-composer-system/builder/prompt-component-router.md`
+- `prompts/prompt-composer-system/builder/task-spec-template.md`
+- `prompts/prompt-composer-system/builder/context-injection-patterns.md`
+- `prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md`
 - `prompts/prompt-composer-system/trigger-prompts.md`
 - `prompts/prompt-composer-system/trigger.md` (인터페이스 변형)
 - `prompts/prompt-composer-system/component-discovery-{collect,approve,ledger}.md`
@@ -170,7 +170,7 @@ repo 선정 정책 (매 audit마다 새로 선정 — stale 방지):
 | **G1** | 4-checklist (§3.1-§3.4) 각각 근거 인용 ≥ 1 + 발견 사항 ≥ 0 (0이어도 명시) | 보고서 §A.2.1-§A.2.4에 `[VERIFIED:...]` 인용 ≥ 4 (수동 확인) | 근거 인용 누락 → 회귀 |
 | **G2** | 3 mock built-prompt trace + P1-P7+smell 매트릭스 + multi-agent synthesis 1단락 | 보고서 §A.3에 3 row × 13 column 매트릭스 + synthesis 단락 1개 (수동 확인) | test < 3 또는 매트릭스 결손 → 회귀 |
 | **G3** | 본 audit prompt §3.5 5항목(S1-S5) 모두 PASS | §3.5 표의 5 grep 명령 실행 → 5/5 PASS | 1개 실패 → 즉시 회귀 (자동 등록 위험 또는 audit 구조 손상) |
-| **G4** | CLAUDE.md "진단 도구" 카테고리 echo + diff ≤ 5줄 + router §1/§2/§7/composer 시리즈 등록 0건 | `grep -c "audit-composer-system" prompts/prompt-composer-system/CLAUDE.md` ≥ 1 AND `grep -l "audit-composer-system" prompts/prompt-composer-system/prompt-component-router.md prompts/prompt-composer-system/optimized-prompt-composer.md` == 0 hit | 등록 1자라도 발견 시 즉시 abort |
+| **G4** | CLAUDE.md "진단 도구" 카테고리 echo + diff ≤ 5줄 + router §1/§2/§7/composer 시리즈 등록 0건 | `grep -c "audit-composer-system" prompts/prompt-composer-system/CLAUDE.md` ≥ 1 AND `grep -l "audit-composer-system" prompts/prompt-composer-system/builder/prompt-component-router.md prompts/prompt-composer-system/builder/optimized-prompt-composer.md` == 0 hit | 등록 1자라도 발견 시 즉시 abort |
 | **G5** | 8항목 형식(A/B/C/priority/PR 제안/eval/출처/위험) 최종 보고 출력 + 사람 승인 전 mutation 0건 | `git status --short prompts/prompt-composer-system/ docs/projects/composer-system-audit/` 결과가 read-only 산출만 (audit 보고서 신규 + 디렉토리 mkdir만) | mutation 발생 시 rollback + 사유 보고 |
 
 ### 절차 (Step 0-5)

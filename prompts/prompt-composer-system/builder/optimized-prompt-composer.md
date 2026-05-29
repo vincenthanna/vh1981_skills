@@ -4,19 +4,23 @@
 > **용도**: Claude / Claude Code 메인 세션의 prompt로 붙여 Phase 1→7로 prompt를 조립·평가할 때 사용.
 > **시리즈 위치**: composer 본체(Phase 1~7 전체 진행). 아래 component들을 호출.
 >
-> **시리즈 구성** (모두 같이 사용):
-> 1. `task-spec-template.md` — Phase 1 입력 형식
-> 2. `prompt-component-router.md` — Phase 2 routing 로직
-> 3. `context-injection-patterns.md` — Phase 3 context 주입 패턴
-> 4. `prompt-evaluation-rubric.md` — Phase 5, 7 평가 기준
-> 5. `multi-agent-analysis-template.md` — 가장 자주 활성화하는 component (multi-topic 분석)
-> 6. `agent-role-dictionary.md` — role 정의 카탈로그
-> 7. `code-review-rubric.md` — PR/diff 평가 (Review task)
-> 8. `experiment-design-template.md` — 실험 설계·실행·분석 (Analysis + ml-researcher lens)
-> 9. `rfc-writing-template.md` — RFC/ADR/design doc 작성 (Generation + team audience)
-> 10. `autonomous-optimization-loop.md` — 측정가능 지표의 자동 반복 최적화 (Analysis + 탐색, REVERSIBLE)
-> 11. `speckit-spec-generation.md` — speckit(github/spec-kit) 기반 spec/plan/tasks 생성 (Generation + planning/SDD, REVERSIBLE; rfc-writing-template과 상호 배타)
-> 12. **`optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
+> **시리즈 구성** (모두 같이 사용 — 파일 path는 `prompts/prompt-composer-system/` 기준 상대 경로):
+>
+> **조합 인프라 — `builder/` 디렉토리**:
+> 1. `builder/task-spec-template.md` — Phase 1 입력 형식
+> 2. `builder/prompt-component-router.md` — Phase 2 routing 로직
+> 3. `builder/context-injection-patterns.md` — Phase 3 context 주입 패턴
+> 4. `builder/prompt-evaluation-rubric.md` — Phase 5, 7 평가 기준
+> 12. **`builder/optimized-prompt-composer.md`** ← 이 파일 (orchestrator)
+>
+> **컴포넌트 — `components/` 디렉토리**:
+> 5. `components/multi-agent-analysis-template.md` — 가장 자주 활성화하는 component (multi-topic 분석)
+> 6. `components/agent-role-dictionary.md` — role 정의 카탈로그
+> 7. `components/code-review-rubric.md` — PR/diff 평가 (Review task)
+> 8. `components/experiment-design-template.md` — 실험 설계·실행·분석 (Analysis + ml-researcher lens)
+> 9. `components/rfc-writing-template.md` — RFC/ADR/design doc 작성 (Generation + team audience)
+> 10. `components/autonomous-optimization-loop.md` — 측정가능 지표의 자동 반복 최적화 (Analysis + 탐색, REVERSIBLE)
+> 11. `components/speckit-spec-generation.md` — speckit(github/spec-kit) 기반 spec/plan/tasks 생성 (Generation + planning/SDD, REVERSIBLE; rfc-writing-template과 상호 배타)
 
 ---
 

@@ -1,8 +1,0 @@
-{
-  "name": "worklog",
-  "description": "Manage session work logs and project investigation docs as markdown files",
-  "version": "1.3.0",
-  "author": {
-    "name": "vh1981"
-  }
-}

@@ -49,7 +49,7 @@
 - §2.1 `devils-advocate` — 각 후보에 "기존 component와 중복/불필요" 강한 반론. 살아남는 것만 ledger에.
 > §0-2: 발굴 자세와 검증 자세를 분리 pass로 적용.
 
-### 4.2 `prompt-evaluation-rubric.md` — 후보 적격성 게이트(경량)
+### 4.2 `builder/prompt-evaluation-rubric.md` — 후보 적격성 게이트(경량)
 - P7(정말 필요한가 = 기존 component로 충분하지 않은가) + §2 Redundancy/Over-scoping smell만 후보 단계에 적응 적용. 전체 P1–P7은 approve run에서.
 
 ### 4.3 `self_upgrade.md` 거버넌스
@@ -60,7 +60,7 @@
 - ledger(필수, 쓰기 대상): `prompts/prompt-composer-system/component-discovery-ledger.md` — 없으면 §0 형식으로 신규 생성 후 진행.
 - 기존 component: `prompts/prompt-composer-system/components/*.md` — 중복 판정 baseline.
 - component 규약: `prompts/prompt-composer-system/CLAUDE.md`
-- router catalog: `prompts/prompt-composer-system/prompt-component-router.md` (어떤 분기가 이미 차 있는지)
+- router catalog: `prompts/prompt-composer-system/builder/prompt-component-router.md` (어떤 분기가 이미 차 있는지)
 - 거버넌스: `self_upgrade.md`
 
 ## 6. 작업 절차 (Stage 0–4) + Output Gates

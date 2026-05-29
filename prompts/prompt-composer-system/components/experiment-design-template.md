@@ -338,7 +338,7 @@ manifest.json 의무 필드:
 
 - `agent-role-dictionary.md` §5.8 `ml-researcher`, §5.10 `systems-researcher`, §5.11 `hci-researcher` — 본 template의 lens 출처. `[VERIFIED:static prompts/prompt-composer-system/agent-role-dictionary.md:548,596,618]`
 - `multi-agent-analysis-template.md` §2.1 evidence tagging, §2.3 confidence — 본 template의 G2/G5 결과 보고 형식의 기반. `[VERIFIED:static prompts/prompt-composer-system/multi-agent-analysis-template.md]`
-- `prompt-evaluation-rubric.md` §5 메타 평가 — 본 template으로 실행한 실험들의 누적 품질을 분기별 검토. `[VERIFIED:static prompts/prompt-composer-system/prompt-evaluation-rubric.md]`
+- `../builder/prompt-evaluation-rubric.md` §5 메타 평가 — 본 template으로 실행한 실험들의 누적 품질을 분기별 검토. `[VERIFIED:static prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md]`
 
 ### 8.2 외부 (도메인별)
 

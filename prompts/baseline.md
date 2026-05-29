@@ -64,9 +64,9 @@
 
 | Skill | 용도 |
 |-------|------|
-| `worklog:devlog` | 통합 작업 로그 + 조사 보고서 (`docs/devlog/<project>/`) |
-| `worklog:worklog` | 세션 작업 히스토리 (`docs/history/<subject>/`) |
-| `worklog:prjdocs` | 프로젝트 조사/분석 보고서 (`docs/projects/<project>/`) |
+| `vh1981:devlog` | 통합 작업 로그 + 조사 보고서 (`docs/devlog/<project>/`) |
+| `vh1981:worklog` | 세션 작업 히스토리 (`docs/history/<subject>/`) |
+| `vh1981:prjdocs` | 프로젝트 조사/분석 보고서 (`docs/projects/<project>/`) |
 | `bug-fix` | 분석 → 방향 제시 → 승인 후 구현의 3단계 버그 수정 |
 | `analyze` | 코드 수정 없이 분석만 |
 | `verify` | 검증-수정 반복 사이클 |
@@ -74,6 +74,7 @@
 | `improve-prompt` | prompt를 Claude Code용으로 개선 |
 | `search-prompt` | prompt 자연어 검색 |
 | `pr-audit` | 현재 branch PR 수정 내용 감사 |
+| `build_prompt` | `/build_prompt <요청>` — composer trigger.md를 실행하면서 `<요청>`을 `[Rough request]` 아래에 자동 삽입 |
 
 ---
 

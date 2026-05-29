@@ -32,7 +32,7 @@
 1. `# 제목` + 표준 3필드 머리말 작성 (이 규약대로)
 2. component라면 `## 0. Router 등록 metadata` 섹션 포함 — `prompt-component-router.md`가 인식하도록
 3. `시리즈 위치` 필드에 어느 Phase에서 호출되는지 명시
-4. 필요 시 `optimized-prompt-composer.md`의 시리즈 구성 목록에 추가
+4. 필요 시 `builder/optimized-prompt-composer.md`의 시리즈 구성 목록에 추가
 
 ---
 
@@ -76,7 +76,7 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 
 ## 컴포넌트 라이브러리
 
-- **조합 인프라(5)**: `optimized-prompt-composer.md`(7-phase orchestrator, 메인 진입점), `task-spec-template.md`(Phase 1), `prompt-component-router.md`(Phase 2), `context-injection-patterns.md`(Phase 3), `prompt-evaluation-rubric.md`(Phase 5/7)
+- **조합 인프라(5) — `builder/` 디렉토리**: `builder/optimized-prompt-composer.md`(7-phase orchestrator, 메인 진입점), `builder/task-spec-template.md`(Phase 1), `builder/prompt-component-router.md`(Phase 2), `builder/context-injection-patterns.md`(Phase 3), `builder/prompt-evaluation-rubric.md`(Phase 5/7)
 - **분석 컨텐츠(2)**: `multi-agent-analysis-template.md`(다각도 평가), `agent-role-dictionary.md`(stance × domain 카탈로그)
 - **domain content(도메인 특화)**: `code-review-rubric.md`(Review/PR), `experiment-design-template.md`(Analysis/가설 검증), `rfc-writing-template.md`(Generation/자유 형식 설계 문서), `autonomous-optimization-loop.md`(Analysis/스칼라 자동 탐색), `speckit-spec-generation.md`(Generation/구조화 spec — rfc-writing과 상호 배타)
 - **인터페이스**: `trigger-prompts.md`(시동 입력, v1.2: 3 mode + C-6/C-7)

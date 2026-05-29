@@ -4,7 +4,7 @@
 >
 > 핵심 원칙: 이 프롬프트는 새 능력을 만들지 않는다. 이미 있는 부품을 잇는다.
 > - 지식 소스: `prompts/ai-reference/` (anthropic 공식 repo 큐레이션, 갱신 절차는 `META.md §6`)
-> - 적합도 함수: `prompts/prompt-composer-system/prompt-evaluation-rubric.md` (pre/post 평가)
+> - 적합도 함수: `prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md` (pre/post 평가)
 > - 개선 단계: `plugins/prompts-pack/commands/improve-prompt.md`
 > - 버전/롤백: git
 
@@ -117,14 +117,14 @@ self-eval 편향을 깨기 위해, **개선을 만든 주체와 점수를 매기
 3. **자가 채점** — 위 둘 다 불가할 때만. 점수에 `[self-eval 경고]` 필수.
 
 **채점자에게 넘기는 입력 (개선 의도·근거는 숨긴다):**
-- rubric 파일: `prompts/prompt-composer-system/prompt-evaluation-rubric.md`
+- rubric 파일: `prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md`
 - 개선 전 프롬프트, 개선 후 프롬프트 (라벨을 A/B로 가려 어느 쪽이 "개선본"인지 알리지 않는다 — 블라인드)
 - 채점 지시: "rubric 5축으로 A와 B를 각각 채점하고, 축별 점수와 1줄 근거만 출력하라. 어느 쪽이 개선본인지 추측하지 마라."
 
 **호출 예 (gemini-bridge 경유):**
 
 ```
-role_prompt = prompts/prompt-composer-system/prompt-evaluation-rubric.md + 위 블라인드 채점 지시
+role_prompt = prompts/prompt-composer-system/builder/prompt-evaluation-rubric.md + 위 블라인드 채점 지시
 context_files = [<before>.md, <after>.md]
 out_path = .eval/self_upgrade/<대상>_<날짜>_gemini.md
 → Agent(gemini-bridge) 호출, 결과 파일을 그대로 받아 게이트 출력에 인용

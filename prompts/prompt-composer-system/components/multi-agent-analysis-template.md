@@ -10,7 +10,7 @@
 
 ## 0. Router 등록 metadata
 
-`prompt-component-router.md §1` 표에 등록될 정보:
+`../builder/prompt-component-router.md §1` 표에 등록될 정보:
 
 | 항목 | 값 |
 |---|---|

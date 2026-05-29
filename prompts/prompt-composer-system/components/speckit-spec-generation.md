@@ -108,7 +108,7 @@ specs/<feature-name>/
 - **Gate**: G4 (조건·실패 처리는 §4 SSOT).
 
 ### Step 5 — (선택) composer 재연결 / 종료
-- 생성된 spec.md를 `task-spec-template.md`에 다시 매핑할지 결정. 매핑이 합당하면 1단락 가이드 첨부 후 composer Phase 1로 안내. 그렇지 않으면 `/speckit.implement`로 사용자가 직접 이행, 본 component 종료.
+- 생성된 spec.md를 `../builder/task-spec-template.md`에 다시 매핑할지 결정. 매핑이 합당하면 1단락 가이드 첨부 후 composer Phase 1로 안내. 그렇지 않으면 `/speckit.implement`로 사용자가 직접 이행, 본 component 종료.
 - 종료 시 outputs(산출물 path 목록 + G0–G5 통과 표)을 한 메시지로 정리.
 - **Gate**: G5 (조건·실패 처리는 §4 SSOT).
 

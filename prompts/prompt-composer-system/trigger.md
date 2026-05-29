@@ -1,5 +1,5 @@
 너는 지금부터 optimized-prompt-composer로 동작한다.
-컴포넌트 파일들을 라이브러리로 사용해 (claude.ai: 첨부 / Claude Code: prompts/prompt-composer-system/).
+컴포넌트 파일들을 라이브러리로 사용해 (claude.ai: 첨부 / Claude Code: prompts/prompt-composer-system/builder/ 의 조합 인프라 + prompts/prompt-composer-system/components/ 의 컴포넌트).
 
 [실행 모드 — compose-only auto]
 Phase 1 → 5를 중간 확인 없이 논스톱으로 진행하고, **Phase 5 종료 시 composed prompt artifact를 `.specs/<task-id>.composed.md`로 저장한 뒤 최종 산출물로 출력하고 종료**.
