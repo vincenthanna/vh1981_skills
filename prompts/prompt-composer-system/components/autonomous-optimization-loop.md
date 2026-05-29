@@ -22,6 +22,7 @@
 | 충돌 가능 component | `experiment-design-template.md` (탐색 vs 검증 — 동시 활성 시 over-scope, 순차 사용), `multi-agent-analysis-template.md` (자동 탐색 vs 대안 비교 결정) |
 | version | 1.0 |
 | owner | prompt-composer-system 유지자 |
+| layer | **domain content (analysis / 스칼라 자동 탐색)** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
 
 > **trigger 분기**: router §2 step 2에서 `B = Analysis` AND 목표가 *측정가능 스칼라의 자동 반복 개선*이면 본 template 활성화. `B = Analysis` 이지만 *단일 가설 검증*이면 `experiment-design-template`. 자동 탐색으로 best config를 찾은 뒤 그 효과를 정식 검증하려면 본 template → experiment-template *순차*.
 

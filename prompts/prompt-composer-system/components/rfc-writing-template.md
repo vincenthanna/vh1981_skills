@@ -20,6 +20,7 @@
 | 충돌 가능 component | `experiment-design-template.md` (영역 다름 — 실험 vs 설계 문서화. 함께 쓰면 over-scope) |
 | version | 1.0 |
 | owner | prompt-composer-system 유지자 |
+| layer | **domain content (generation / 자유 형식 설계 문서)** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
 
 > **trigger 분기**: router §2 step 2에서 `B = Generation` AND `F = 외부/팀` AND 결정 영향 범위 ≥ 다수 → 본 template 활성화. 1인 노트/메모는 bypass.
 

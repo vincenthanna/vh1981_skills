@@ -20,6 +20,7 @@
 | 충돌 가능 component | `multi-agent-analysis-template.md` (multi-topic 비교가 아닌 단일 변경 평가, 함께 쓰면 over-scoping) |
 | version | 1.0 |
 | owner | prompt-composer-system 유지자 |
+| layer | **domain content (review)** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
 
 > **trigger 분기 추가** (router §2 decision tree): step 2에서 `spec.B = Review` 분기 시 `role-dictionary(devils-advocate + evidence-checker)` 대신 또는 추가로 이 rubric을 활성화.
 

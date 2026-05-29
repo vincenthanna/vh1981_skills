@@ -20,6 +20,7 @@
 | 충돌 가능 component | `multi-agent-analysis-template.md` (대안 비교 vs 가설 검증 — 둘 다 활성 시 over-scope), `code-review-rubric.md` (영역 다름) |
 | version | 1.0 |
 | owner | prompt-composer-system 유지자 |
+| layer | **domain content (analysis / 가설 검증)** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
 
 > **trigger 분기**: router §2 step 2에서 `B = Analysis` AND `L 1순위 = ml/systems/hci-researcher` 인 경우 본 template 활성화. spec.C topic_count 가 N개 baseline 비교이면 multi-agent-template과 본 template *순차* 사용 (multi-agent로 후보 선정 → 본 template으로 검증).
 
