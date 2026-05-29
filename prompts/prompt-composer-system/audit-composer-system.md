@@ -84,7 +84,7 @@
 | S2 | router §1/§2/§7/composer 시리즈 등록 0건 | `grep -l "audit-composer-system" prompts/prompt-composer-system/prompt-component-router.md prompts/prompt-composer-system/optimized-prompt-composer.md` == 0 hit |
 | S3 | 머리말 ⚠️ 경고 보유 | `head -10 prompts/prompt-composer-system/audit-composer-system.md \| grep -c "⚠️"` ≥ 2 |
 | S4 | self-eval 경고 명시 | `grep -c "self-eval 경고\|블라인드 독립 채점" prompts/prompt-composer-system/audit-composer-system.md` ≥ 2 |
-| S5 | Step 0-5 + §6 SSOT 표 보유 | `grep -c "^### Step [0-5]\|^| Gate \|^| \*\*G[0-5]\*\*" prompts/prompt-composer-system/audit-composer-system.md` ≥ 10 |
+| S5 | Step 0-5 + §6 SSOT 표 보유 | `grep -cE "^- \*\*Step [0-5]\|^\| Gate \|^\| \*\*G[0-5]\*\*" prompts/prompt-composer-system/audit-composer-system.md` ≥ 10 |
 
 5항목 중 1개라도 FAIL → 즉시 회귀 (자동 등록 위험 또는 audit 구조 손상).
 
