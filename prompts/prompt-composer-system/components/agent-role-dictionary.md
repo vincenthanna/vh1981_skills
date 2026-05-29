@@ -6,7 +6,25 @@
 >
 > 출처: Society of Minds (Du et al. 2023), Multi-Persona MAD (Liang et al. 2023), DEBATE (Kim et al. ACL 2024), D3 (2024), Free-MAD (2025), Claude Code subagent best practices (VoltAgent, Shipyard, stevekinney, mindstudio), metaswarm.
 
-## 두 가지 Role Perspective (직교 axis)
+## 0. Router 등록 metadata
+
+`prompt-component-router.md §1` 표에 등록될 정보:
+
+| 항목 | 값 |
+|---|---|
+| component name | `agent-role-dictionary.md` |
+| trigger signals | role 다양화 필요, critique/judge 단계, multi-perspective 검토 — 보통 `multi-agent-analysis-template`/`code-review-rubric` 등과 함께 활성화 |
+| inputs | role names list (stance × domain 조합) |
+| outputs | role별 sub-agent prompt 골격 (stance + domain lens) |
+| cost (rough tokens) | Medium (per-role 200-400 발췌; 전체 ~33k full) |
+| 충돌 가능 component | — (부속 카탈로그 성격, 단독 충돌 없음) |
+| version | 1.0 |
+| owner | prompt-composer-system 유지자 |
+| layer | **분석 컨텐츠** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
+
+---
+
+## 0.1 두 가지 Role Perspective (직교 axis)
 
 Role을 부여할 때는 **두 가지 관점**이 직교(orthogonal)로 작동한다 — 둘을 조합해 사용한다:
 
@@ -21,7 +39,7 @@ Role을 부여할 때는 **두 가지 관점**이 직교(orthogonal)로 작동�
 
 ---
 
-## 0. Role 선택 원칙
+## 0.2 Role 선택 원칙
 
 1. **Heterogeneity**: 같은 작업이라도 서로 다른 role을 가진 여러 agent가 다른 결과를 낸다. Diversity가 핵심. **두 perspective (stance + domain)를 동시에 다양화하면 효과가 곱셈으로 커진다.**
 2. **Role separation = anchoring 방지**: 생성한 agent가 자기 결과를 비판하면 anchoring bias. Critic은 반드시 별도 agent.

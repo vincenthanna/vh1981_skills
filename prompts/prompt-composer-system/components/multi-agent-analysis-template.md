@@ -8,7 +8,25 @@
 
 ---
 
-## 0. 이 Template이 풀어주는 문제
+## 0. Router 등록 metadata
+
+`prompt-component-router.md §1` 표에 등록될 정보:
+
+| 항목 | 값 |
+|---|---|
+| component name | `multi-agent-analysis-template.md` |
+| trigger signals | topic ≥ 3, 동일 criteria로 비교, decision output (spec.B=Decision 또는 Analysis + multi-topic 비교) |
+| inputs | topic list, criteria, baseline (선택) |
+| outputs | per-topic 분석 + ranked decision + cross-topic matrix + synthesis |
+| cost (rough tokens) | High (발췌 3-5k / full ~30k; subagent dispatch 비용 별도) |
+| 충돌 가능 component | direct-prompting bypass (topic=1-2면 over-scope), `experiment-design-template`(대안 비교 vs 가설 검증 분리), `autonomous-optimization-loop`(자동 탐색은 대안 비교 아님) |
+| version | 1.0 |
+| owner | prompt-composer-system 유지자 |
+| layer | **분석 컨텐츠** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
+
+---
+
+## 0.1 이 Template이 풀어주는 문제
 
 다음과 같은 작업에 그대로 적용 가능:
 

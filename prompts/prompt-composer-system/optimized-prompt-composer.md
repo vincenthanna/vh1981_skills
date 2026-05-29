@@ -226,7 +226,7 @@ Composed prompt를 다음 layout으로 작성:
 ### 발췌 가이드 (자주 쓰는 §)
 
 - `multi-agent-template.md`: §2 (framework), §3.1 (topic-analyst 입력 contract), §4 (workflow), §7 (gates), §8 (anti-patterns)
-- `agent-role-dictionary.md`: §0 (선택 원칙), §5 (해당 domain), §6 (조합 패턴 1개)
+- `agent-role-dictionary.md`: §0.2 (선택 원칙), §5 (해당 domain), §6 (조합 패턴 1개)
 - `task-spec-template.md`: 발췌 안 함 (Phase 1에서 이미 사용)
 - `code-review-rubric.md`: §2 (8축 정의), §3 (채점), §4 (통과/차단 조건). spec.B=Review 일 때.
 - `experiment-design-template.md`: §3 (Step 0-6 절차) 중 task에 필요한 step만, §4 (Quality Gates). spec.L=ml-researcher 일 때.
