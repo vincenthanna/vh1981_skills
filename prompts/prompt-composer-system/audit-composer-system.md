@@ -166,7 +166,7 @@ repo 선정 정책 (매 audit마다 새로 선정 — stale 방지):
 
 | Gate | 조건 | 자동 검증 명령 (PASS 조건) | 실패 시 처리 |
 |---|---|---|---|
-| **G0** | SSOT 11파일 + components/ 7파일 read 0 실패 + 인벤토리 표 산출 | `ls prompts/prompt-composer-system/*.md prompts/prompt-composer-system/components/*.md \| wc -l` ≥ 18 | 1개라도 실패 → abort + 사용자 보고 |
+| **G0** | SSOT 11파일 + components/ 7파일 read 0 실패 + 인벤토리 표 산출 | `ls prompts/prompt-composer-system/*.md prompts/prompt-composer-system/components/*.md \| wc -l` ≥ 18 | **1파일 read 실패** → 그 파일 path를 사용자에 보고 + audit 결과에 `[ASSUMPTION:<file> 미read]` 격하 (graceful degradation, 진행 계속). **2파일 이상 실패** → audit 자체 abort + 사용자 보고 + 차기 run 권고 |
 | **G1** | 4-checklist (§3.1-§3.4) 각각 근거 인용 ≥ 1 + 발견 사항 ≥ 0 (0이어도 명시) | 보고서 §A.2.1-§A.2.4에 `[VERIFIED:...]` 인용 ≥ 4 (수동 확인) | 근거 인용 누락 → 회귀 |
 | **G2** | 3 mock built-prompt trace + P1-P7+smell 매트릭스 + multi-agent synthesis 1단락 | 보고서 §A.3에 3 row × 13 column 매트릭스 + synthesis 단락 1개 (수동 확인) | test < 3 또는 매트릭스 결손 → 회귀 |
 | **G3** | 본 audit prompt §3.5 5항목(S1-S5) 모두 PASS | §3.5 표의 5 grep 명령 실행 → 5/5 PASS | 1개 실패 → 즉시 회귀 (자동 등록 위험 또는 audit 구조 손상) |
