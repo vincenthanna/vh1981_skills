@@ -13,12 +13,12 @@
 | 항목 | 값 |
 |---|---|
 | component name | `code-review-rubric.md` |
-| trigger signals | spec.B = Review, spec.H 에 PR/commit/diff 경로 존재, spec.L 에 `security-researcher` / `backend-engineer` / `frontend-engineer` 등 코드 도메인 lens (role-dict §5 실재 lens) |
-| inputs | diff (unified or git format), 변경 대상 파일 경로 list, (선택) PR description / 이슈 link |
-| outputs | 8축 점수 + axis별 발견 사항 + 차단 조건 통과 여부 + reviewer comment draft |
-| cost (rough tokens) | Low (~600 발췌 / ~2.5k full) |
+| trigger signals | spec.B = Review, spec.H 에 PR/commit/diff 경로 존재, spec.L 에 `security-researcher` / `backend-engineer` / `frontend-engineer` 등 코드 도메인 lens (role-dict §5 실재 lens). (+ repo-local 리뷰 규칙 파일 존재 → §9; changeset 1000+LOC 또는 5+파일 cross-cutting → §10) |
+| inputs | diff (unified or git format), 변경 대상 파일 경로 list, (선택) PR description / 이슈 link, (선택) repo-local 규칙 파일 (§9) |
+| outputs | 8축 점수 + axis별 발견 사항 + 차단 조건 통과 여부 + reviewer comment draft + (해당 시) 적용된 repo-local rule 출처 + bundle 분할 plan |
+| cost (rough tokens) | Low-Medium (~600 발췌 / ~3k full; §10 분할 시 bundle 수에 비례) |
 | 충돌 가능 component | `multi-agent-analysis-template.md` (multi-topic 비교가 아닌 단일 변경 평가, 함께 쓰면 over-scoping) |
-| version | 1.0 |
+| version | 1.1 |
 | owner | prompt-composer-system 유지자 |
 | layer | **domain content (review)** — CLAUDE.md "조합 인프라(5) / 분석 컨텐츠(2) / domain content" 3축 분류. router §1.1 metadata 정의 참조. |
 
@@ -36,7 +36,7 @@
   - 보안 surface 변경 (auth, crypto, network, secret 처리)
   - DB 스키마 migration
   - 분산 시스템 invariant 변경 (consistency, ordering, idempotency)
-  - 1000+ LOC 변경 또는 5+ 파일 cross-cutting
+  - 1000+ LOC 변경 또는 5+ 파일 cross-cutting → **§10 스코핑/번들링으로 분할 리뷰**
 - Reviewer가 *왜 통과/차단*인지 evidence-backed 근거를 남겨야 할 때.
 
 ### 1.2 비사용 시점 (bypass)
@@ -51,6 +51,8 @@
 ## 2. 평가 축 정의 (8축)
 
 각 축은 *무엇을 보는가*와 *어디서 근거를 찾는가*를 명시.
+
+> repo-local 컨벤션 규칙이 있으면 **§9 custom rule layer**로 해당 축의 통과 임계를 강화·추가한다 (8축은 embedded 기본층).
 
 | 축 ID | 축 이름 | Lens | 무엇을 보는가 | 근거 위치 |
 |---|---|---|---|---|
@@ -146,9 +148,19 @@
 ### Author 자기검증 요청 (선택)
 
 - [ ] <A8 evidence 부족 항목>에 대해 author가 추가 검증
+
+### 적용된 repo-local rule (§9, 해당 시)
+
+- <layer/path> → <rule 요약> → <영향 축/차단 조건>  (예: `project .review-rules.json` `auth/**` → A2 임계 ≥4)
+
+### Bundle별 발견 / cross-cutting (§10, 대형 changeset 시)
+
+- **Bundle <이름>** (<파일 목록>): <축별 발견 요약>
+- **Cross-cutting** (bundle 경계 넘는 invariant): <발견 + 근거>
 ```
 
 이 draft는 PR comment에 그대로 paste 가능한 markdown. 단, *자동 게시 금지* — reviewer가 1회 검토 후 게시.
+§9 적용 시 "적용된 repo-local rule" 절, §10 적용 시 "Bundle별 발견 / cross-cutting" 절을 포함한다(미적용 시 생략).
 
 ---
 
@@ -218,3 +230,117 @@
 - "Best Kept Secrets of Peer Code Review" (SmartBear) — 코드 리뷰 best practice에 대한 산업 가이드 (line-by-line ≤ 400 LOC, ≤ 60 min 등 measurable threshold 권고). `[ASSUMPTION canonical URL: smartbear.com/learn/code-review/ 검증 방법: web fetch + tier=vendor 확인]`
 
 > ⚠️ 외부 reference의 URL은 라이브러리 작성 시점(2026-05-19)에 web fetch 미수행. 첫 운영 시 composer Phase 5 P5 단계 또는 `evidence-checker` role에서 `[VERIFIED:webfetch <tier> <URL> accessed:<date> version:<v>]`로 격상 의무.
+
+> **§ 배치 참고**: §9·§10은 §8(참고) *뒤에* 추가됐다 — 기존 §1~§8 번호와 cross-ref(§4.3/§5/§8.2 등)를 깨지 않기 위한 의도적 선택(no-renumber). 참고 절이 마지막이 아닌 점은 알려진 경미한 양식 편차. (출처: alibaba/open-code-review `[VERIFIED:webfetch tier4 https://github.com/alibaba/open-code-review accessed:2026-06-07]`에서 착안, v1.1 추가.)
+
+---
+
+## 9. Custom rule layer (repo-local 규칙 계층)
+
+> v1.1 추가. §2의 8축(embedded 기본층) 위에 repo 고유 컨벤션 규칙을 우선순위로 얹는 *추가 강화층*. 8축을 대체하지 않는다.
+
+### 9.1 왜 필요한가
+
+§2의 8축은 **범용 embedded 기본층**이다. 그러나 repo마다 고유 컨벤션이 있다 — `auth/**`는 위협 모델 필수, `migrations/`는 reversible 필수, `*mapper*.xml`은 SQLi 점검. 이를 매 리뷰 instruction에 수동 주입하면 (a) 누락 (b) reviewer마다 drift. → **선언적 규칙 파일로 SSOT화**하고 8축 위에 얹는다.
+
+> `context-injection-patterns.md`(Phase 3)가 일반 context 주입을 제공하지만, §9는 그 위에 *구조화 schema(`.review-rules.json`) + 우선순위 체인*을 얹는 점이 다르다(ad-hoc 주입 ≠ 패턴-스코프 규칙 + precedence).
+
+### 9.2 우선순위 계층 (높은 쪽 우선, layer당 first-match)
+
+`[VERIFIED:webfetch tier4 README-described https://raw.githubusercontent.com/alibaba/open-code-review/main/README.md accessed:2026-06-07]` open-code-review 4계층 rule chain 착안 (단, rule-processing 구현은 비공개 — README 기술 기준):
+
+| 우선순위 | layer | 위치 | 비고 |
+|---|---|---|---|
+| 1 (최우선) | 호출 인라인 규칙 | spec/CLI에서 직접 준 rule | 1회성 override |
+| 2 | 프로젝트 규칙 | `<repo>/.review-rules.json`(또는 기존 컨벤션 파일) | 팀 공유 SSOT |
+| 3 | 사용자/전역 규칙 | `~/.review-rules.json` | 개인 기본 |
+| 4 (기본) | embedded | 본 rubric §2 8축 | 항상 존재 |
+
+> layer당 첫 매칭 path가 이긴다(first-match). `[VERIFIED README-stated, 구현 미검증]` — 상위 layer가 매칭되면 하위 동일 path 규칙은 무시.
+
+### 9.3 규칙 형식 (path glob → rule text)
+
+`[VERIFIED:webfetch tier4 README-described — `rule.json` 파일 미독립 fetch]` schema(`{path, rule}`, `**` 재귀 glob + `{a,b}` brace 확장):
+
+```json
+{
+  "rules": [
+    { "path": "auth/**/*.{py,go}", "rule": "신규/변경 엔드포인트는 위협 모델 명시 — A2 Security 통과 임계를 ≥4로 강제" },
+    { "path": "**/migrations/*",   "rule": "down-migration 존재 + reversible 확인 — 없으면 §4.3 차단" },
+    { "path": "**/*mapper*.xml",   "rule": "SQL injection / 파라미터 오류 / 미닫힘 태그 점검 (A2)" }
+  ]
+}
+```
+
+### 9.4 규칙 ↔ 8축 매핑 `[INFERRED]`
+
+custom rule은 8축을 **대체하지 않고 강화/추가**한다. 각 rule은 둘 중 하나로 해석:
+
+- (a) **임계 상향**: 특정 축의 통과 점수를 올림 (예: `A2 ≥ 4 강제`).
+- (b) **신규 차단 조건**: §4.3 차단 목록에 rule-derived 항목 추가 (예: down-migration 없음 → 차단).
+
+충돌 시: §9.2 우선순위 + **"더 엄격한 쪽 우선"**(보수적). reviewer가 1줄 근거로 판정.
+
+> **§4 hard floor 불가침**: custom rule은 §4의 hard floor(예: A2 ≤ 2 → 무조건 차단, A8 = 1 → 평가 무효)를 *낮추지 못한다* — 오직 추가·상향만 가능. 상위 layer가 더 느슨해도 §4 floor는 그대로 적용.
+
+### 9.5 적용 절차
+
+1. 변경 파일 경로 각각을 규칙 path와 매칭(layer 1→4, first-match).
+2. 매칭된 rule을 해당 축 평가에 주입(임계 상향 또는 차단 조건).
+3. **§5의 "적용된 repo-local rule" 절**에 어느 rule이 어디서(layer/path) 적용됐는지 출처 명시.
+
+### 9.6 Anti-patterns
+
+- ❌ 규칙 파일을 못 읽었는데 "규칙 없음"으로 진행 → **abort 또는 embedded(§2)만 사용임을 §5에 명시**(silent 누락 금지).
+- ❌ rule 텍스트만 믿고 8축 평가 skip — custom rule은 *추가층*, 8축은 항상 평가.
+- ❌ rule이 8축/§4 floor와 모순될 때 임의 선택 — §9.2 우선순위 + §9.4 hard floor 불가침 따름.
+- ❌ rule path가 광범위(`**/*`)해 모든 파일에 무차별 적용 → 과적용, scope 좁힌 path 권고.
+
+---
+
+## 10. 대형 changeset 스코핑 & 파일 번들링
+
+> v1.1 추가. §1.1의 "1000+LOC / 5+파일" 트리거에 대응하는 *분할 방법론*. 동시성/병렬 실행 tooling은 범위 밖.
+
+### 10.1 왜 필요한가
+
+§1.1은 `1000+ LOC / 5+ 파일`을 *사용 시점*으로만 명시하고 **어떻게 분할하나**는 비움. 대형 changeset을 한 컨텍스트에 통째로 넣으면 (a) 컨텍스트 한도 초과 (b) 후반 파일 attention 저하 (c) **파일 간(cross-file) 결함 누락**. → 관련 파일을 **리뷰 단위(bundle)**로 묶어 분할하고, bundle별 평가 후 cross-cutting 합산.
+
+### 10.2 번들 휴리스틱 (관련 파일을 한 단위로)
+
+`[VERIFIED:webfetch tier4 https://github.com/alibaba/open-code-review accessed:2026-06-07]` divide-and-conquer 파일 번들링 + i18n 쌍 예시. 그 외 휴리스틱은 `[INFERRED]`(일반 알고리즘 비공개) + 일반 코드리뷰 관행:
+
+| 번들 유형 | 묶는 파일 | 이유 |
+|---|---|---|
+| 인터페이스+구현 | `*.proto`+생성물 / interface+impl | 계약과 구현을 함께 봐야 정합 판정 |
+| 스키마+마이그레이션 | model/entity + migration | 스키마 변경의 reversible·정합 |
+| 코드+테스트 | `src/foo` + 대응 `test/foo` | A4 Test quality를 같은 단위에서 |
+| 호출자+피호출자 | API 시그니처 변경 + 호출부 | backward-compat·누락 호출부 |
+| i18n/설정 쌍 | `message_en.*`+`message_zh.*` | 키 누락·불일치 (open-code-review 예시 `[VERIFIED]`) |
+| 파일명/경로 유사도 | 같은 디렉토리·유사 stem | 응집된 변경 단위 |
+
+> 한 bundle은 한 컨텍스트에서 독립 리뷰 가능한 크기로(§8.2 SmartBear ≤400 LOC 권고와 정합).
+
+### 10.3 cross-cutting invariant 보존 (분할의 핵심 위험 방어) `[INFERRED]`
+
+분할은 **파일 간 결함을 못 보게** 만들 수 있다. 방어:
+
+1. **분할 전** — changeset 전체의 *cross-cutting 관심사 목록* 작성: 공유 상태/락, API contract, 트랜잭션 경계, 보안 surface, 전역 invariant. 각 bundle 리뷰 시 이 목록을 헤더로 주입.
+2. **분할 후** — bundle별 finding을 모은 뒤 **cross-cutting pass**: bundle 경계를 넘는 가정(예: bundle A가 bundle B의 lock/ordering을 가정) 확인. 이 pass 없이는 §4 판정 금지.
+
+### 10.4 적용 절차
+
+1. trigger 확인(§1.1: 1000+LOC 또는 5+파일 cross-cutting).
+2. cross-cutting 관심사 목록 작성(§10.3-1).
+3. §10.2 휴리스틱으로 partition → bundle 목록. **깨끗한 partition을 못 찾으면 단일 bundle로 처리하되 §10.3 cross-cutting pass는 필수.**
+4. bundle별 §2 8축 + (해당 시) §9 custom rule 평가.
+5. §10.3-2 cross-cutting pass.
+6. **§5의 "Bundle별 발견 / cross-cutting" 절**에 bundle별 발견 + cross-cutting 통합 발견 기재.
+
+### 10.5 Anti-patterns
+
+- ❌ 토큰 채우려 **무관 파일**을 한 bundle에 — bundle 응집 깨짐.
+- ❌ cross-cutting 목록 없이 분할 → 파일 간 결함 누락(분할의 최대 실패모드).
+- ❌ bundle을 완전 독립이라 가정하고 cross-cutting pass skip.
+- ❌ partition 안 되는 changeset을 무리하게 쪼갬 → §10.4-3 단일 bundle fallback 사용.
+- ❌ **동시성/병렬 실행 엔진** 세부(타임아웃·worker 수)를 여기서 규정 — 본 §는 *분할 방법론*만, 실행 tooling은 범위 밖.

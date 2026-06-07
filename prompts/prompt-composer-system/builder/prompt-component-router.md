@@ -30,7 +30,7 @@
 | `agent-role-dictionary.md` | role 다양화 필요, critique/judge 단계, multi-perspective 검토 | role names list (stance × domain) | role prompts | Medium (per-role 200-400) | — |
 | `context-injection-patterns.md` | 프로젝트 / user 맥락이 결정에 영향 | context sources list | injection plan | Low (~500) | — |
 | `prompt-evaluation-rubric.md` | 산출물 품질 보장 필요, irreversible 권고 | composed prompt + output | pass/fail + improvement list | Low (~500) | — |
-| `code-review-rubric.md` | spec.B=Review + spec.H에 PR/diff + spec.L=security-researcher/backend-engineer/frontend-engineer | diff + 변경 파일 list | 8축 점수 + 차단 결정 + reviewer comment draft | Low (~600 발췌 / ~2.5k full) | `multi-agent-analysis-template` (over-scope) |
+| `code-review-rubric.md` | spec.B=Review + spec.H에 PR/diff + spec.L=security-researcher/backend-engineer/frontend-engineer (+ repo-local 규칙 파일 → §9 / 1000+LOC·5+파일 → §10) | diff + 변경 파일 list + (선택) repo-local 규칙 파일 | 8축 점수 + 차단 결정 + reviewer comment draft + (해당 시) 적용 rule 출처 + bundle plan | Low-Medium (~600 발췌 / ~3k full; 분할 시 bundle 수 비례) | `multi-agent-analysis-template` (over-scope) |
 | `experiment-design-template.md` | spec.B=Analysis + spec.L=ml/systems/hci-researcher + 실험/baseline 키워드 | research question + dataset + baseline 후보 | 실험 protocol + ablation + 결과 분석 + 재현 manifest | Medium (~2k 발췌 / ~12k full) | `multi-agent-analysis-template`(대안 비교 vs 가설 검증), `code-review-rubric` (영역 다름) |
 | `rfc-writing-template.md` | spec.B=Generation + spec.F=team/external + RFC/ADR/design doc 키워드 | 결정 대상 + motivation + stakeholder list | RFC markdown + stakeholder feedback log + decision status | Medium (~1.5k 발췌 / ~10k full) | `experiment-design-template`(영역 다름 — 실험 vs 설계 문서) |
 | `autonomous-optimization-loop.md` | spec.B=Analysis + 단일 스칼라 지표 minimize/maximize + 측정 자동화 가능 + 반복 탐색 의도 + spec.G=REVERSIBLE | objective metric+direction, editable/frozen surface, budget, measure command, stop condition | 누적 trial 로그 + best commit + 개선 요약 + 학습 메모 | Medium (~1.5k 발췌 / ~9k full, 실비용은 trial수×measure 지배) | `experiment-design-template`(탐색 vs 검증 — 순차), `multi-agent-analysis-template`(자동 탐색 vs 대안 비교) |
@@ -67,6 +67,7 @@
    │    └─ 기본 → role-dictionary만 (proposer + domain lens) → 5
    ├─ Review →
    │    ├─ spec.H에 PR/diff/commit → code-review-rubric + role-dict(architect, security-researcher) → 5
+   │    │       (repo-local 규칙 파일 있으면 rubric §9 custom rule layer / changeset 1000+LOC·5+파일이면 rubric §10 번들링 — 같은 component 내부 분기, 별도 component 아님)
    │    └─ 기본 → role-dictionary (devils-advocate + evidence-checker) → 5
    └─ Mixed → ❌ task 분할 권고 (composition abort)
 

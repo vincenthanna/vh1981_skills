@@ -232,7 +232,7 @@ Composed prompt를 다음 layout으로 작성:
 - `multi-agent-template.md`: §2 (framework), §3.1 (topic-analyst 입력 contract), §4 (workflow), §7 (gates), §8 (anti-patterns)
 - `agent-role-dictionary.md`: §0.2 (선택 원칙), §5 (해당 domain), §6 (조합 패턴 1개)
 - `task-spec-template.md`: 발췌 안 함 (Phase 1에서 이미 사용)
-- `code-review-rubric.md`: §2 (8축 정의), §3 (채점), §4 (통과/차단 조건). spec.B=Review 일 때.
+- `code-review-rubric.md`: §2 (8축 정의), §3 (채점), §4 (통과/차단 조건). spec.B=Review 일 때. (repo-local 규칙 있으면 §9 custom rule layer, 대형 changeset이면 §10 스코핑/번들링 추가 발췌.)
 - `experiment-design-template.md`: §3 (Step 0-6 절차) 중 task에 필요한 step만, §4 (Quality Gates). spec.L=ml-researcher 일 때.
 - `rfc-writing-template.md`: §3 (Step 0-6 절차), §4 (Quality Gates). spec.F=team/external + design doc 의도일 때. ADR 변형은 §1.3 참조.
 - `autonomous-optimization-loop.md`: §3 (Step 0-5 절차), §4 (Quality Gates), §6 (anti-patterns). 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE 일 때. experiment-design과 순차(탐색→검증).
