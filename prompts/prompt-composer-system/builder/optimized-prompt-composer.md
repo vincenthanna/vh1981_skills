@@ -65,7 +65,8 @@ Phase 6: Execution       — composed prompt 실행 (또는 사용자에게 반�
 Phase 7: Post-eval       — 결과 평가 + 개선 loop
 ```
 
-**각 phase 사이에 명시적 gate (G1-G7).** 이전 phase 미통과 시 다음으로 진행 금지.
+**각 phase 사이에 명시적 gate (G1-G6).** 이전 phase 미통과 시 다음으로 진행 금지.
+(Gate 매핑: G1 Intake→Routing, G2 Routing→Context, G3 Context→Assembly, G4 Assembly→Pre-validation, G5 Pre-validation→Execution, G6 Post-eval Loop 종료. **Phase 6 Execution 뒤 별도 phase gate 없음** — lifecycle 메타 평가(`prompt-evaluation-rubric.md §5`)는 phase gate가 아닌 분기 cycle. ⚠ G7은 존재하지 않음 — eval-rubric §7 표 SSOT와 일치.)
 
 ---
 
@@ -225,6 +226,7 @@ Composed prompt를 다음 layout으로 작성:
 - **한 component에서 본문 전체 복사 금지.** 핵심 § 만 발췌 (예: 입력 contract / workflow / gates).
 - **발췌 부분에 원본 path + § 명시** — 사용자가 deeper read 가능하도록.
 - **모순 발견 시**: §1 (Role) 또는 §6 (Output Gates)에서 우선순위 결정.
+- **failure-mode fallback 절도 함께 발췌** — 각 component의 "도구/Read 실패 시 abort·회귀" 절(예: multi-agent §3.1 abort-on-fetch-fail, autonomous §3 measure 실패 revert, code-review §9.6/§10.4-3 fallback)을 발췌에서 누락하지 말 것. (누락 시 eval-rubric §2.4 Missing fallback smell — 반복 audit 발견 B6.)
 - **메인 component 1개 + 부속 component 1-3개** 구조 권장 (예: multi-agent-template이 메인, role-dict가 부속).
 
 ### 발췌 가이드 (자주 쓰는 §)
@@ -244,6 +246,7 @@ composed prompt는 **항상 markdown 파일로 저장**한다 — bypass 없는 
 
 - 저장 경로: `.specs/<task-id>.composed.md` (task-id는 Phase 1에서 정한 kebab-case).
 - 저장 시점: Phase 4에서 작성 직후 1차 저장. Phase 5 pre-validation이 Phase 4로 회귀시켜 수정하면 **최종 통과본으로 덮어쓰기**(파일은 항상 최신 통과본을 반영).
+- **회귀 이력 보존 (B4)**: 덮어쓰기 *직전* 통과 못 한 버전을 `.specs/<task-id>.composed.iter-<N>.md`로 스냅샷 보존(append-only, N=1,2,…). 최신본은 `.specs/<task-id>.composed.md` 유지. `.specs/`는 gitignore이므로 이력은 **로컬 전용**(git 추적 안 함) — 회귀 원인 분석/diff 용. (정책 선택지: 본 iter-suffix 방식이 기본. log diff 첨부 또는 미보존도 가능 — 유지자 결정으로 변경 가능한 *reversible 정책*.)
 - 저장 수단: Claude Code는 Write 도구로 직접 기록. claude.ai/chat 등 파일 쓰기가 불가한 환경이면 markdown 블록으로 출력 + "이 내용을 `.specs/<task-id>.composed.md`로 저장하라"고 명시 안내 (저장 책임을 사용자에게 위임하되 경로·파일명 고정).
 - 파일 내용: §1~§7 전체 composed prompt + 말미에 routing log(§7) 포함. 별도 routing log는 기존대로 `.specs/<task-id>.log`에도 유지.
 - 저장에 실패하면 그 사실을 산출물에 명시하고 Gate G4 미통과로 처리.
@@ -253,6 +256,7 @@ composed prompt는 **항상 markdown 파일로 저장**한다 — bypass 없는 
 - [ ] 발췌 출처 명시됨
 - [ ] 모순 해소됨 (또는 우선순위 명시)
 - [ ] §4 component 수 ≤ 4
+- [ ] spec.E의 각 success criterion이 §6 Output Gates에 grep 단위로 echo됨 (criterion 1개라도 §6에서 누락 시 회귀 — under-selection 방지, router §5 failure mode)
 - [ ] composed prompt가 `.specs/<task-id>.composed.md`로 저장됨 (또는 파일 쓰기 불가 환경에서 경로 지정 저장 안내 완료)
 
 ---
@@ -300,6 +304,16 @@ composed prompt를 system + user messages로 분할:
 - API 호출 (Anthropic API), 결과 받음.
 
 각 mode에서 **routing log + context manifest를 함께 보존** (`.specs/<task-id>.log`). composed prompt 자체는 Phase 4에서 이미 `.specs/<task-id>.composed.md`로 저장됨 — 실행은 이 파일을 입력으로 삼는다.
+
+### 실행 실패 분기 (B3 — mode별 fallback)
+
+실행이 실패하면 *조용히 종료하지 말고* mode별로 다음을 따른다:
+
+- **Mode A (메인 세션 직접 실행) 실패** (subagent dispatch 오류 / tool 실패 / 도중 abort): 실패 지점과 사유를 `.specs/<task-id>.log`에 기록 → composed prompt 결함이면 **Phase 4로 회귀**(발췌·gate 수정), 환경/도구 문제면 사용자에 보고 후 재시도. run-id 디렉토리는 보존(부분 산출 분석용).
+- **Mode B (사용자 paste 반환) 실패** (사용자가 결과를 다음 turn에 안 붙여넣음 / 실행 환경 부재): 누락을 1회 안내하고 대기. 사용자가 별도 환경에서 못 돌리면 Mode A 또는 Mode C 전환 권고.
+- **Mode C (API 호출) 실패** (rate limit / 토큰 초과 / API 오류): 오류 코드와 함께 `.specs/<task-id>.log`에 기록 → 토큰 초과면 component 발췌 축소 후 재호출, 일시 오류면 backoff 재시도, 영속 오류면 Mode A 폴백.
+
+> 공통: 실행 실패는 **G6 채택이 아니다.** 실패 사유를 로그에 남기고 위 분기 중 하나로 명시 전환한다 (silent failure 금지 — eval-rubric §2.4).
 
 ---
 
