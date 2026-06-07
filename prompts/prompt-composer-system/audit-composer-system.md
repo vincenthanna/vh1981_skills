@@ -55,7 +55,7 @@
 - `task-spec-template` A-E 필드 → composer §5 Phase 4 §1-§7 매핑 손실 점검.
 - Phase 4 발췌 가이드와 spec.E echo의 분기 누락 점검.
 - 표준 머리말 규약(`CLAUDE.md` "표준 머리말 형식") 위반 파일 점검:
-  - 자동 검사: `for f in prompts/prompt-composer-system/*.md prompts/prompt-composer-system/components/*.md; do head -3 "$f" | grep -q "^> \*\*무엇\*\*" || echo "MISSING_HEADER: $f"; done`
+  - 자동 검사: `for f in prompts/prompt-composer-system/*.md prompts/prompt-composer-system/builder/*.md prompts/prompt-composer-system/components/*.md; do head -3 "$f" | grep -q "^> \*\*무엇\*\*" || echo "MISSING_HEADER: $f"; done`  (★ `builder/` 포함 — `f86cc2a` 리팩터 반영, §5.1 경로와 일치)
 
 ### 3.2 A.2.2 도메인 커버리지
 - DeepingSource public repo 인벤토리: `gh repo list DeepingSource --visibility public --limit 30 --json name,description,primaryLanguage,updatedAt`.
@@ -84,7 +84,7 @@
 | S2 | router §1/§2/§7/composer 시리즈 등록 0건 | `grep -l "audit-composer-system" prompts/prompt-composer-system/builder/prompt-component-router.md prompts/prompt-composer-system/builder/optimized-prompt-composer.md` == 0 hit |
 | S3 | 머리말 ⚠️ 경고 보유 | `head -10 prompts/prompt-composer-system/audit-composer-system.md \| grep -c "⚠️"` ≥ 2 |
 | S4 | self-eval 경고 명시 | `grep -c "self-eval 경고\|블라인드 독립 채점" prompts/prompt-composer-system/audit-composer-system.md` ≥ 2 |
-| S5 | Step 0-5 + §6 SSOT 표 보유 | `grep -cE "^- \*\*Step [0-5]\|^\| Gate \|^\| \*\*G[0-5]\*\*" prompts/prompt-composer-system/audit-composer-system.md` ≥ 10 |
+| S5 | Step 0-5 + §6 SSOT 표 보유 | `grep -cE "^- \*\*Step [0-5]\|\*\*G[0-5]\*\*" prompts/prompt-composer-system/audit-composer-system.md` ≥ 10  (★ N4 교정: table-안전하게 *alternation만* 사용 — Step 헤더 6 + Gate 행 6 = 12. 직전 패턴은 ERE에서 `\|`를 literal pipe로 처리해 false 0이었음) |
 
 5항목 중 1개라도 FAIL → 즉시 회귀 (자동 등록 위험 또는 audit 구조 손상).
 
@@ -166,7 +166,7 @@ repo 선정 정책 (매 audit마다 새로 선정 — stale 방지):
 
 | Gate | 조건 | 자동 검증 명령 (PASS 조건) | 실패 시 처리 |
 |---|---|---|---|
-| **G0** | SSOT 11파일 + components/ 7파일 read 0 실패 + 인벤토리 표 산출 | `ls prompts/prompt-composer-system/*.md prompts/prompt-composer-system/components/*.md \| wc -l` ≥ 18 | **1파일 read 실패** → 그 파일 path를 사용자에 보고 + audit 결과에 `[ASSUMPTION:<file> 미read]` 격하 (graceful degradation, 진행 계속). **2파일 이상 실패** → audit 자체 abort + 사용자 보고 + 차기 run 권고 |
+| **G0** | SSOT root 7 + builder/ 5 + components/ 7 파일 read 0 실패 + 인벤토리 표 산출 | `ls prompts/prompt-composer-system/*.md prompts/prompt-composer-system/builder/*.md prompts/prompt-composer-system/components/*.md \| wc -l` ≥ 18  (★ N3 교정: `builder/` 포함 — `f86cc2a` 리팩터 반영; 미포함 시 14로 false FAIL) | **1파일 read 실패** → 그 파일 path를 사용자에 보고 + audit 결과에 `[ASSUMPTION:<file> 미read]` 격하 (graceful degradation, 진행 계속). **2파일 이상 실패** → audit 자체 abort + 사용자 보고 + 차기 run 권고 |
 | **G1** | 4-checklist (§3.1-§3.4) 각각 근거 인용 ≥ 1 + 발견 사항 ≥ 0 (0이어도 명시) | 보고서 §A.2.1-§A.2.4에 `[VERIFIED:...]` 인용 ≥ 4 (수동 확인) | 근거 인용 누락 → 회귀 |
 | **G2** | 3 mock built-prompt trace + P1-P7+smell 매트릭스 + multi-agent synthesis 1단락 | 보고서 §A.3에 3 row × 13 column 매트릭스 + synthesis 단락 1개 (수동 확인) | test < 3 또는 매트릭스 결손 → 회귀 |
 | **G3** | 본 audit prompt §3.5 5항목(S1-S5) 모두 PASS | §3.5 표의 5 grep 명령 실행 → 5/5 PASS | 1개 실패 → 즉시 회귀 (자동 등록 위험 또는 audit 구조 손상) |
