@@ -1,5 +1,11 @@
 # prompt-composer-system — 디렉토리 규약
 
+> **무엇**: 이 디렉토리의 문서 규약(표준 머리말·§0 metadata·layer 분류)과 prompt-composer-system 프로젝트 컨텍스트 SSOT.
+> **용도**: 이 디렉토리에서 문서를 추가·편집할 때 반드시 먼저 읽고 따른다. CLAUDE.md로 자동 로드됨.
+> **시리즈 위치**: 규약/컨텍스트 SSOT — composer Phase 밖. 자기 자신도 본 규약을 따른다(N1 fix).
+
+---
+
 이 디렉토리(하위 `components/` 포함)의 모든 `*.md` 문서는 **표준 머리말(standard header)** 로 시작한다.
 새 문서를 추가하거나 기존 문서를 편집할 때 아래 규약을 반드시 따른다.
 
@@ -79,6 +85,6 @@ Rough request를 받아 prompt component library의 컴포넌트들을 골라 �
 - **조합 인프라(5) — `builder/` 디렉토리**: `builder/optimized-prompt-composer.md`(7-phase orchestrator, 메인 진입점), `builder/task-spec-template.md`(Phase 1), `builder/prompt-component-router.md`(Phase 2), `builder/context-injection-patterns.md`(Phase 3), `builder/prompt-evaluation-rubric.md`(Phase 5/7)
 - **분석 컨텐츠(2)**: `multi-agent-analysis-template.md`(다각도 평가), `agent-role-dictionary.md`(stance × domain 카탈로그)
 - **domain content(도메인 특화)**: `code-review-rubric.md`(Review/PR), `experiment-design-template.md`(Analysis/가설 검증), `rfc-writing-template.md`(Generation/자유 형식 설계 문서), `autonomous-optimization-loop.md`(Analysis/스칼라 자동 탐색), `speckit-spec-generation.md`(Generation/구조화 spec — rfc-writing과 상호 배타)
-- **인터페이스**: `trigger-prompts.md`(시동 입력, v1.2: 3 mode + C-6/C-7)
+- **인터페이스**: `trigger-prompts.md`(시동 입력 정본, v1.2: 3 mode + C-6/C-7), `trigger.md`(A-2 compose-only auto의 paste-ready 사본 — `build_prompt` 커맨드가 wrap; 정본 수정 시 동기화 필요)
 - **라이브러리 성장(component 발굴 2단 파이프라인)**: `component-discovery-collect.md`(stage 1 — 외부 발굴→ledger append, 무인 주기 구동 가능) → `component-discovery-approve.md`(stage 2 — 사람 batch 승인→component 생성·router/composer 반영·commit), 공유 상태 `component-discovery-ledger.md`. 거버넌스는 `self_upgrade.md` 준수. 조합 인프라/분석 컨텐츠 레이어와 별개(component를 *만드는* 메타 도구이지 routable component 아님 — router catalog 미등록).
 - **진단 도구 (build 흐름과 분리, router 미등록)**: `audit-composer-system.md`(prompt-composer-system 자체를 정기 진단; composer Phase 밖에서 독립 실행). composer build 흐름(Phase 1-5)에서 호출 금지. router §1/§2/§7/composer 시리즈 목록에 *등록 금지*.

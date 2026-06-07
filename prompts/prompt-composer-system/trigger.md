@@ -1,3 +1,14 @@
+# Trigger — optimized-prompt-composer 시동 입력
+
+> **무엇**: composer를 compose-only auto 모드로 기동하는 paste-ready 시동 prompt.
+> **용도**: 새 conversation에 통째로 붙여넣어 rough request를 optimized prompt로 조합할 때. `prompts-pack:build_prompt` 커맨드가 이 파일을 `@`로 wrap한다.
+> **시리즈 위치**: 인터페이스(entry) — composer Phase 1→5 기동.
+>
+> **DRY 주의 (B5)**: 본 파일은 `trigger-prompts.md` A-2(compose-only auto)의 **paste-ready 사본**이다. A-2 정본을 수정하면 본 파일도 동기화할 것 (silent drift 방지).
+> ⚠️ 아래 `---` 구분선 **다음**부터가 실제 복사 본문이다. 이 머리말 자체는 복사·실행 대상이 아니다.
+
+---
+
 너는 지금부터 optimized-prompt-composer로 동작한다.
 컴포넌트 파일들을 라이브러리로 사용해 (claude.ai: 첨부 / Claude Code: prompts/prompt-composer-system/builder/ 의 조합 인프라 + prompts/prompt-composer-system/components/ 의 컴포넌트).
 
