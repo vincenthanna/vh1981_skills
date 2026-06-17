@@ -70,11 +70,13 @@ When a command needs the active project and no name was given explicitly, resolv
 
 ### Session re-entry
 
-On the FIRST `update` after a `select` (resuming prior-session work), read the latest history entry's `Next Steps` and the latest investigation doc's `Remaining / Next`, and print a 1–3 line "previous state" summary before gathering. Once per resumed session only.
+On the FIRST `update` after a `select` (resuming prior-session work), read the latest investigation doc's `Remaining / Next` (and `README.md` if present), and print a 1–3 line "previous state" summary before gathering. Do NOT read `history/` for this — investigation docs are the source of resume state. Once per resumed session only.
 
 ### Scoped read (single source of truth)
 
-This section is the ONLY definition of what `update` reads. `update` does NOT read every `.md` file. It reads: `docs/devlog/.active`, the latest history entry, the project `README.md` (if any), and the investigation docs whose slug matches the current topic. A full read of all entries happens only on the first `select` of a project in a session, or when the user explicitly asks for full context. (The gather-intensity table in `Command: Update` decides *how hard* to gather; this decides *what* to read.)
+This section is the ONLY definition of what `update` reads. `update` does NOT read every `.md` file. It reads: `docs/devlog/.active`, the project `README.md` (if any), and the investigation docs whose slug matches the current topic. A full read happens only on the first `select` of a project in a session, or when the user explicitly asks for full context — and a "full read" still means all *investigation* docs (plus `README.md`), never the `history/` folder. (The gather-intensity table in `Command: Update` decides *how hard* to gather; this decides *what* to read.)
+
+**History is not context.** Never read `history/` to understand the project, gather context, resume state, build the README, or answer a question — investigation docs are the source of truth for project content. Read a history entry ONLY when (a) the user explicitly asks to look at the history / a past session, or (b) `update` Part 2 appends to the single latest entry — a write-target read of that one file, not context gathering. Older or other history entries are read only on explicit request.
 
 ---
 
@@ -122,7 +124,7 @@ Projects:
 1. Check if `docs/devlog/<project>/` exists.
 2. If NOT found: scan `docs/devlog/*/` and output available projects — "Project `<project>` not found. Available: <list>. Use `/devlog create <project>` to start one."
 3. If found:
-   - Read all `.md` files in the directory and `history/` to understand existing context.
+   - Read the investigation docs and `README.md` to understand existing context. Do NOT read `history/` — it is the work-log timeline, not project content; read it only if the user explicitly asks to review past sessions.
    - **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline).
    - Output: "Selected devlog `<project>` as active. Use `/devlog update` to add new entries." End the output with the marker line: `[devlog/active: <project>]`.
 
@@ -145,7 +147,7 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
    | Intensity | When | Scope |
    |-----------|------|-------|
    | **Light** | `git diff --stat` shows 0 changed files AND a prior `/devlog` call already ran in this same response | Step C only |
-   | **Normal** | 1–5 commits since the last history entry's `Period` end date | Step A full + Step B (keyword-scoped) + Step C |
+   | **Normal** | 1–5 commits since the latest investigation doc's `Period` end date | Step A full + Step B (keyword-scoped) + Step C |
    | **Full** | 6+ such commits, OR `.active` is older than this session, OR uncertain | Step A + Step B + Step C, all full |
 
    **Step A: Code changes** — Search for code modifications related to the topic:
@@ -193,6 +195,8 @@ The update command performs TWO tasks in sequence: (A) update investigation docs
       - Do NOT modify existing files unless correcting outdated information.
 
 5. **Part 2 — Work History** (`docs/devlog/<project>/history/`):
+
+   This is the ONLY place `update` touches `history/`. It reads just the single latest entry as the append target (per the "History is not context" rule) — to decide topic continuity and append — never the full history, and never for context gathering.
 
    a. Analyze current session context:
       - Recent git activity: `git log --oneline -10`, `git diff --stat`

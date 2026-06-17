@@ -58,7 +58,9 @@ auto-executes.**
 
 Fully regenerates `docs/devlog/<project>/README.md`'s machine-owned region.
 
-1. Read all investigation docs and the latest history entry.
+1. Read all investigation docs. (The AUTO-GENERATED region — the `Entries`
+   table and the `Remaining / Next` summary — is built entirely from
+   investigation docs, so `history/` is not read here.)
 2. Rebuild the `<!-- AUTO-GENERATED -->` … `<!-- /AUTO-GENERATED -->` region:
    the `Entries` table (one row per `NN_*.md`, with its title/summary) and the
    `Remaining / Next` summary (`[Critical]` + `[High]` items across investigation
