@@ -68,9 +68,14 @@ When a command needs the active project and no name was given explicitly, resolv
 - Levels 3–4 are inferences: proceed even with a single candidate, but the marker MUST flag it — `[devlog/active: <project> — inferred from file activity]`. With 2+ candidates at level 3–4, stop and ask.
 - **Stale `.active`**: if it points to a missing directory, or its mtime predates this session, treat it as a candidate to re-confirm with the user — not an authoritative answer.
 
-### Session re-entry
+### Session re-entry — previous-state recap
 
-On the FIRST `update` after a `select` (resuming prior-session work), read the latest investigation doc's `Remaining / Next` (and `README.md` if present), and print a 1–3 line "previous state" summary before gathering. Do NOT read `history/` for this — investigation docs are the source of resume state. Once per resumed session only.
+**Previous-state recap** = the short orientation printed when re-entering a project so work can continue. Trigger it on a `select`, and on the FIRST `update` after the active project was set in a prior session. Produce it at most once per resumed session — a `select` satisfies it, so a first `update` immediately after does not repeat it.
+
+To build it:
+1. Read `README.md` first (if present) — its `Entries` index and `Remaining / Next` summary are the cheapest high-signal overview of the whole project.
+2. Scope the investigation read: always read the latest doc in full, plus any whose `Remaining / Next` still has open `[Critical]` / `[High]` items; for small projects (≤5 docs) just read them all. Never read `history/` — investigation docs are the source of resume state.
+3. Print 1–3 lines: **current state** (what is done / verified) · **open items** (the `[Critical]` / `[High]` entries gathered across docs, each tagged with its source file) · a **suggested next step** or two.
 
 ### Scoped read (single source of truth)
 
@@ -124,9 +129,9 @@ Projects:
 1. Check if `docs/devlog/<project>/` exists.
 2. If NOT found: scan `docs/devlog/*/` and output available projects — "Project `<project>` not found. Available: <list>. Use `/devlog create <project>` to start one."
 3. If found:
-   - Read the investigation docs and `README.md` to understand existing context. Do NOT read `history/` — it is the work-log timeline, not project content; read it only if the user explicitly asks to review past sessions.
    - **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline).
-   - Output: "Selected devlog `<project>` as active. Use `/devlog update` to add new entries." End the output with the marker line: `[devlog/active: <project>]`.
+   - Build and print the **previous-state recap** (see `## Active Project` → "Session re-entry — previous-state recap"): README first, scoped investigation read, never `history/`. This is what orients the user to continue — not a bare confirmation.
+   - End with: `Selected devlog <project> as active — /devlog update to continue.` followed by the marker line: `[devlog/active: <project>]`.
 
 ---
 
