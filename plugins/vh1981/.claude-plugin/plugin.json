@@ -1,7 +1,7 @@
 {
   "name": "vh1981",
-  "description": "vh1981's productivity skills — devlog / worklog / prjdocs for session work logs and project investigation docs",
-  "version": "1.3.0",
+  "description": "vh1981's productivity skills — devlog / worklog / prjdocs / md-to-html for session work logs, project investigation docs, and markdown-to-HTML export",
+  "version": "1.4.0",
   "author": {
     "name": "vh1981"
   }
