@@ -11,8 +11,10 @@ directory) once per session — it carries the doc-writing rules.
 ## Scoped read — what update reads
 
 This section is the ONLY definition of what `update` reads. `update` does NOT
-read every `.md` file. It reads: `docs/devlog/.active`, the project `README.md`
-(if any), and the investigation docs whose slug matches the current topic. A
+read every `.md` file. It reads: the project `README.md` (if any) and the
+investigation docs whose slug matches the current topic. The active project is
+resolved per SKILL.md `## Active Project` — `.active` itself is consulted only
+where those rules say so. A
 full read happens only on the first `select` of a project in a session, or when
 the user explicitly asks for full context — and a "full read" still means all
 *investigation* docs (plus `README.md`), never the `history/` folder ("History
@@ -28,8 +30,8 @@ the collision. Never guess from memory.
 ## Steps
 
 1. **Read existing entries (scoped)**: per "Scoped read" above. If this is the
-   first `update` after the active project was set in a prior session, the
-   previous-state recap (SKILL.md `## Active Project`) applies first.
+   first `update` of a resumed session (SKILL.md `## Active Project`), the
+   previous-state recap applies first.
 
 2. **Gather context — intensity-scaled**:
 
@@ -39,7 +41,7 @@ the collision. Never guess from memory.
    |-----------|------|-------|
    | **Light** | `git diff --stat` shows 0 changed files AND a prior `/devlog` call already ran in this same response | Step C only |
    | **Normal** | 1–5 commits since the latest investigation doc's `Period` end date | Step A full + Step B (keyword-scoped) + Step C |
-   | **Full** | 6+ such commits, OR `.active` is older than this session, OR uncertain | Step A + Step B + Step C, all full |
+   | **Full** | 6+ such commits, OR this is the first `update` of a resumed session (SKILL.md `## Active Project`), OR uncertain | Step A + Step B + Step C, all full |
 
    **Step A: Code changes** — Search for code modifications related to the topic:
    - `git diff --stat` and `git diff --name-status HEAD` for uncommitted changes

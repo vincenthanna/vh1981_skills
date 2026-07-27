@@ -54,7 +54,7 @@ Before creating a new project, decide the right granularity:
 
 ## Active Project
 
-The active project is tracked in `docs/devlog/.active` (one line, no trailing newline). `create` and `select` write it; every other command reads it.
+`docs/devlog/.active` (one line, no trailing newline) records the last project explicitly `select`ed or `create`d in this repo. It is a **cross-session resume hint, not authoritative state**: multiple Claude sessions may run concurrently in one repo and overwrite it at any time, so this session's own devlog record (level 2 below) always outranks the file — weaker inference (level 4) does not. `create` and `select` write it, and `reorg rename` fixes it when it names the renamed project; for resolution, commands consult it only where these rules explicitly say so (level 3, and the level-2 compaction check / missing-directory handling below).
 
 **Marker line (stated once here — command procedures do not repeat it)**: every command output that resolves an active project ends with the marker line `[devlog/active: <project>]`.
 
@@ -63,14 +63,17 @@ The active project is tracked in `docs/devlog/.active` (one line, no trailing ne
 When a command needs the active project and no name was given explicitly, resolve in this priority order — lower number first; if one level yields 2+ tied candidates, stop and ask the user:
 
 1. **Explicit `select` / `create`** in the current message — authoritative.
-2. **`docs/devlog/.active`** — if it points to an existing project directory.
-3. **Recent file activity** — a `docs/devlog/<X>/` file Read or Edited earlier in this session.
+2. **This session's own record** — in order: (i) the project this session most recently `select`ed or `create`d; (ii) failing that, the project a prior devlog command this session resolved — its `[devlog/active: <project>]` marker line in this conversation is the evidence; (iii) failing that, the project(s) whose `docs/devlog/<X>/` files this session Read or Edited via tool calls — grep hits alone do not count, nor do files read only as context-gathering during an update's related-document sweep; 2+ distinct projects are tied candidates. When this level resolves from evidence visible in context, do not consult `.active` — another session may have rewritten it, and this session's record wins.
+   - **Compaction demotion**: if the record survives only in a compacted-context summary (the actual command, marker line, or file reads are no longer visible in context), treat the session as resumed and cross-check `.active` once — if it matches, proceed silently; if it names a different existing project, stop and ask the user once. This mitigates summary distortion; it does not fully solve it.
+   - **Missing directory**: level 2 resolves only if `docs/devlog/<X>/` still exists. If it is gone, do NOT recreate it — another session likely renamed or archived it. Check `.active` and `git log --oneline -- docs/devlog/<X>` for the successor, report what you found, and ask before proceeding.
+3. **`docs/devlog/.active`** — fresh-session resume only: the session has no record of its own and the file points to an existing project directory.
 4. **Conversation topic match** — a project whose `README` / `01_*.md` keywords match the recent conversation.
 5. None of the above → error: "No active project. Use `/devlog create <project>` or `/devlog select <project>` first."
 
-- Levels 1–2 proceed silently, then show the marker.
-- Levels 3–4 are inferences: proceed even with a single candidate, but the marker MUST flag it — `[devlog/active: <project> — inferred from file activity]`. With 2+ candidates at level 3–4, stop and ask.
-- **Stale `.active`**: if it points to a missing directory, or its mtime predates this session, treat it as a candidate to re-confirm with the user — not an authoritative answer.
+- Level 1 proceeds silently, then shows the marker.
+- Level 2 proceeds without confirmation (marker only) — except the compaction and missing-directory cases above.
+- Levels 3–4 are resumptions/inferences: proceed with a single candidate, flagging the marker — `[devlog/active: <project> — resumed from .active]` / `[devlog/active: <project> — inferred from topic]`. With 2+ candidates, stop and ask. Exception — external writes: when `upload` resolved its project via level 3–4, confirm the project name with the user once before copying.
+- **Broken `.active`**: if the file is absent, skip level 3 silently. If it names a missing project directory, ignore it (fall through to level 4) and add one line before the marker: "`.active` names missing project `<x>`; ignored." Never treat a recent mtime as evidence of freshness or ownership — concurrent sessions write the file at arbitrary times; resolution never runs `stat`. Staleness surfaces through the recap, not the filesystem.
 
 ### History is not context
 
@@ -78,7 +81,9 @@ Never read `history/` to understand the project, gather context, resume state, b
 
 ### Session re-entry — previous-state recap
 
-**Previous-state recap** = the short orientation printed when re-entering a project so work can continue. Trigger it on a `select`, and on the FIRST `update` after the active project was set in a prior session. Produce it at most once per resumed session — a `select` satisfies it, so a first `update` immediately after does not repeat it.
+A session is **resumed** for a project when its active status was first established this session via level 3 or 4 (not by `select` / `create`), or via the level-2 compaction demotion above.
+
+**Previous-state recap** = the short orientation printed when re-entering a project so work can continue. Trigger it on a `select`, and on the first `update` of a resumed session. Produce it at most once per resumed session — a `select` satisfies it, so a first `update` immediately after does not repeat it.
 
 To build it (cheapest source first — do NOT read every doc):
 
@@ -108,7 +113,7 @@ To build it (cheapest source first — do NOT read every doc):
 6. Create investigation doc `01_<topic-slug>.md` in `docs/devlog/<project>/` — read `templates/investigation.md` (in this skill's directory) and follow it.
 7. Create work history `history/01_<topic-slug>.md` — read `templates/history.md` (in this skill's directory) and follow it.
 8. Create `docs/devlog/<project>/README.md` — read `templates/readme.md` (in this skill's directory) and follow it.
-9. **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline). All subsequent `update` calls read this file first.
+9. **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline) — the cross-session resume hint. Subsequent commands resolve the active project per `## Active Project`.
 10. Output confirmation: "Created devlog `<project>` with `README.md`, `01_<topic-slug>.md`, and `history/01_<topic-slug>.md`."
 
 ---
@@ -140,7 +145,7 @@ Projects:
 3. If found:
    - **Set active project**: write `<project>` to `docs/devlog/.active` (single line, no trailing newline).
    - Build and print the **previous-state recap** (see `## Active Project`) — this is what orients the user to continue, not a bare confirmation.
-   - End with: `Selected devlog <project> as active — /devlog update to continue.`
+   - Print `Selected devlog <project> as active — /devlog update to continue.`, then the marker line as the final line.
 
 ---
 

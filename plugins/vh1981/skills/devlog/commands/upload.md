@@ -27,7 +27,7 @@ Resolve in this priority order, error out if all fail:
 
 ## Steps
 
-1. Parse `<project>` and `<path>`. If `<project>` was not given, resolve the active project per SKILL.md `## Active Project`.
+1. Parse `<project>` and `<path>`. If `<project>` was not given, resolve the active project per SKILL.md `## Active Project`. If that resolution landed at level 3–4 (resumed/inferred), confirm the project name with the user once before copying (external-write exception).
 2. Resolve the target path as described above. If level 1 supplied a new path, write it (single line, no trailing newline) to `docs/devlog/.upload-target`.
 3. Validate target:
    - Target directory exists. If not, ask the user before creating it — do not silently `mkdir` an external repo.
