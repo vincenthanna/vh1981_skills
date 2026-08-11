@@ -123,8 +123,8 @@ markdown 파일 또는 디렉토리를 **보수적으로(최소 diff)** 정리�
 | `/md-tidy <디렉토리>` | 하위까지 재귀로 모든 `*.md` 정리 |
 | `/md-tidy` | 세션에서 방금 다룬 md 를 대상으로 (불분명하면 확인) |
 
-공백/빈 줄 정리는 `scripts/normalize_whitespace.py`(결정론적·멱등)가, 깨진 문법 수정은 에이전트가
-판단해 처리하며, 파일을 직접 수정한 뒤 파일별 변경 요약을 보고합니다.
+공백/빈 줄 정리는 `plugins/vh1981/skills/md-tidy/scripts/normalize_whitespace.py`(결정론적·멱등)가,
+깨진 문법 수정은 에이전트가 판단해 처리하며, 파일을 직접 수정한 뒤 파일별 변경 요약을 보고합니다.
 
 ## AI 참조 문서
 
@@ -142,6 +142,27 @@ markdown 파일 또는 디렉토리를 **보수적으로(최소 diff)** 정리�
 | 08_Workflow | 워크플로우 문서 |
 | 09_Vertical | 수직 통합 사례 |
 | 10_Safety | 안전성 관련 문서 |
+
+## 상태줄 — devlog 프로젝트 표시
+
+Claude Code 상태줄에 현재 세션의 devlog 프로젝트를 표시하는 스크립트입니다.
+
+```
+vh1981_skills | ⎇ main | 📓 my-project | Opus 5
+```
+
+`statusLine` 은 `settings.json` 레벨 설정이라 플러그인이 실어 나르지 못합니다. 플러그인을 설치해도
+상태줄은 따라가지 않으므로, 사용하는 머신마다 아래를 한 번씩 실행해야 합니다.
+
+```bash
+./scripts/install-statusline.sh
+```
+
+설치 스크립트가 `~/.claude/statusline.sh` 로 복사하고, `~/.claude/settings.json` 의 `statusLine` 을
+나머지 키를 보존한 채 갱신한 뒤, 상태줄이 실제로 한 줄을 출력하는지 확인합니다. 기존 파일은 백업합니다.
+설치 후 세션 재시작이 필요합니다.
+
+표시 규칙, 이식성 관련 사항, 문제 해결은 `scripts/README.md` 에 있습니다.
 
 ## 설치
 
@@ -209,6 +230,10 @@ prompts/
   commit_rules.md
   translate_to_kr.md
   code_visualization.md
+scripts/
+  statusline.sh             # devlog 상태줄 (플러그인 아님, 머신마다 설치)
+  install-statusline.sh     # 위 스크립트 설치 + settings.json 등록
+  README.md                 # 설치·표시 규칙·문제 해결
 ```
 
 ## 라이선스
