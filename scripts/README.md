@@ -46,6 +46,22 @@ vh1981: devlog status line repaired (script+settings). Restart the session to se
 export VH1981_STATUSLINE_AUTOREPAIR=0
 ```
 
+### Claude Code 버전 요구사항
+
+자동 복구는 SessionStart hook 이 발화해야 동작합니다. 버전에 따라 발화하지 않습니다.
+
+| 버전 | 확인 결과 |
+|---|---|
+| 2.1.227 | plugin hook 이 `-p` 모드에서 발화, 복구 확인 |
+| 2.1.29 | SessionStart 가 `-p` 모드에서 발화하지 않음 |
+
+2.1.29 에서는 플러그인 hook 뿐 아니라 `settings.json` 에 직접 넣은 user-level SessionStart hook 도
+발화하지 않았습니다. 플러그인 hook 지원 여부가 아니라 그 버전의 동작입니다. 대화형 세션에서도
+발화하지 않는지는 확인하지 않았습니다.
+
+구버전 환경에서는 `./scripts/install-statusline.sh` 로 직접 설치하십시오. `claude update` 로
+올리는 것도 방법입니다.
+
 ## 수동 설치
 
 플러그인 없이 스크립트만 쓰거나, 자동 복구 전에 즉시 적용하고 싶을 때 사용합니다.
