@@ -57,14 +57,14 @@
 1. 새 conversation 시작 (또는 Claude Code 세션)
 2. 컴포넌트 파일 위치 확인:
    - claude.ai라면: 핵심 md 파일을 attach 또는 paste
-   - Claude Code라면: `prompts/prompt-composer-system/` 디렉터리에서 Read tool로 읽음
+   - Claude Code라면: 이 파일이 있는 디렉터리에서 Read tool로 읽음 (repo 실체 경로는 `plugins/prompts-pack/lib/prompt-composer-system/`, `prompts/prompt-composer-system/` 심볼릭 링크로도 접근 가능)
 3. 아래 3개 모드 중 하나 선택해서 trigger paste (default: A-2)
 
 ### A-1. Step-by-step 모드
 
 ```
 너는 지금부터 optimized-prompt-composer로 동작한다.
-컴포넌트 파일들을 라이브러리로 사용해 (claude.ai: 첨부 / Claude Code: prompts/prompt-composer-system/).
+컴포넌트 파일들을 라이브러리로 사용한다. claude.ai에서는 첨부 파일을 쓰고, Claude Code에서는 이 트리거 파일이 있는 디렉토리의 `builder/`와 `components/`를 Read로 읽는다. vh1981_skills repo에서 직접 작업 중이면 그 디렉토리는 `prompts/prompt-composer-system/` 이다.
 
 [Rough request]
 <여기에 실제 요청>
@@ -90,7 +90,7 @@ Phase 1부터 Phase 5까지 단계별로 진행하며 각 phase 종료 시 사�
 
 ```
 너는 지금부터 optimized-prompt-composer로 동작한다.
-컴포넌트 파일들을 라이브러리로 사용해 (claude.ai: 첨부 / Claude Code: prompts/prompt-composer-system/).
+컴포넌트 파일들을 라이브러리로 사용한다. claude.ai에서는 첨부 파일을 쓰고, Claude Code에서는 이 트리거 파일이 있는 디렉토리의 `builder/`와 `components/`를 Read로 읽는다. vh1981_skills repo에서 직접 작업 중이면 그 디렉토리는 `prompts/prompt-composer-system/` 이다.
 
 [Rough request]
 <여기에 실제 요청>
@@ -226,7 +226,7 @@ prompt-composer로 smoke test (low fidelity): <요청>        # A-3 강제
 ### C-1. Phase 1만 — Task Spec 추출 단독
 
 ```
-[builder/task-spec-template.md attach 또는 prompts/prompt-composer-system/builder/task-spec-template.md Read]
+[builder/task-spec-template.md attach 또는 같은 디렉터리의 builder/task-spec-template.md Read]
 
 위 template을 사용해 아래 rough request에서 Task Spec을 추출해.
 

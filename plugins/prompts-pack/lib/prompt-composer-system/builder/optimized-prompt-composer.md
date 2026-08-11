@@ -4,7 +4,7 @@
 > **용도**: Claude / Claude Code 메인 세션의 prompt로 붙여 Phase 1→7로 prompt를 조립·평가할 때 사용.
 > **시리즈 위치**: composer 본체(Phase 1~7 전체 진행). 아래 component들을 호출.
 >
-> **시리즈 구성** (모두 같이 사용 — 파일 path는 `prompts/prompt-composer-system/` 기준 상대 경로):
+> **시리즈 구성** (모두 같이 사용 — 파일 path는 이 시스템 디렉터리 기준 상대 경로):
 >
 > **조합 인프라 — `builder/` 디렉토리**:
 > 1. `builder/task-spec-template.md` — Phase 1 입력 형식

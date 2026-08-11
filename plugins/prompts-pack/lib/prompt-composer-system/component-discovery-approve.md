@@ -19,7 +19,7 @@
 
 ## 2. Project Context (repo 규약 — 수정 불가)
 
-- 이 repo는 **markdown(prompt/skill)이 주 자산**. component는 `prompts/prompt-composer-system/components/`.
+- 이 repo는 **markdown(prompt/skill)이 주 자산**. component는 `plugins/prompts-pack/lib/prompt-composer-system/components/`.
 - **component 정의(SSOT: `CLAUDE.md`)**: ① 표준 머리말(무엇/용도/시리즈 위치, 보조정보는 빈 `>` 뒤) ② `## 0. Router 등록 metadata`(name/trigger/inputs/outputs/cost/충돌/version/owner) ③ `시리즈 위치`에 composer Phase 명시 ④ 머리말 다음 `---`.
 - **System Invariant(위반 금지)**: ① 발췌만 인용 ② 조합 인프라 vs 분석 컨텐츠 레이어 분리 ③ 새 component는 §0 metadata 필수.
 - **거버넌스(`self_upgrade.md`)**: 화이트리스트 / **1회 1대상** / 작은 diff / **사람 승인 게이트** / 블라인드 독립 채점.
@@ -62,11 +62,11 @@ ledger의 `proposed` 후보를 **batch로 사람에게 제시**(승인/기각/�
 
 ## 5. Run-specific Context (Reference — 읽지 못하면 abort)
 
-- ledger(필수, status 갱신 대상): `prompts/prompt-composer-system/component-discovery-ledger.md`
-- 기존 component: `prompts/prompt-composer-system/components/*.md` — 구조 exemplar 겸 중복 baseline
-- component 규약: `prompts/prompt-composer-system/CLAUDE.md`
-- router(catalog §1·decision tree §2·§6 갱신절차·§7 매핑): `prompts/prompt-composer-system/builder/prompt-component-router.md`
-- composer(시리즈 목록·발췌 가이드): `prompts/prompt-composer-system/builder/optimized-prompt-composer.md`
+- ledger(필수, status 갱신 대상): `plugins/prompts-pack/lib/prompt-composer-system/component-discovery-ledger.md`
+- 기존 component: `plugins/prompts-pack/lib/prompt-composer-system/components/*.md` — 구조 exemplar 겸 중복 baseline
+- component 규약: `plugins/prompts-pack/lib/prompt-composer-system/CLAUDE.md`
+- router(catalog §1·decision tree §2·§6 갱신절차·§7 매핑): `plugins/prompts-pack/lib/prompt-composer-system/builder/prompt-component-router.md`
+- composer(시리즈 목록·발췌 가이드): `plugins/prompts-pack/lib/prompt-composer-system/builder/optimized-prompt-composer.md`
 - 거버넌스: `self_upgrade.md` / changelog: `self_upgrade-changelog.md`
 
 ## 6. 작업 절차 (Stage 0–5) + Output Gates

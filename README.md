@@ -49,9 +49,11 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 
 포함된 slash command:
 
-`/analyze`, `/bug-fix`, `/build_prompt`, `/improve-prompt`, `/pr-audit`, `/search-prompt`, `/verify`, `/write-report`
+`/analyze`, `/bug-fix`, `/build_prompt`, `/fsd`, `/improve-prompt`, `/pr-audit`, `/search-prompt`, `/verify`, `/write-report`
 
-`/build_prompt <요청사항>` — `prompts/prompt-composer-system/trigger.md` 본문을 그대로 실행하면서 `<요청사항>`을 `[Rough request]` 아래에 자동으로 붙입니다.
+`/build_prompt <요청사항>` — plugin에 포함된 `lib/prompt-composer-system/trigger.md` 본문을 그대로 실행하면서 `<요청사항>`을 `[Rough request]` 아래에 자동으로 붙입니다. 이 repo 안에서는 같은 파일을 `prompts/prompt-composer-system/trigger.md` 심볼릭 링크로도 볼 수 있습니다.
+
+`/fsd <목표>` — Full Self-Development의 계획+인계 절반. 목표를 multi-agent로 조사·계획하고 격리된 git worktree + 자기완결적 handoff 문서를 만들어, 새 세션이 handoff만으로 개발→리뷰→검증→PR을 끝까지 실행할 수 있게 인계합니다 (구현은 하지 않음).
 
 ### vh1981
 

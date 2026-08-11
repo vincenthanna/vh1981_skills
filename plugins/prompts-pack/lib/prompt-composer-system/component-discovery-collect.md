@@ -19,7 +19,7 @@
 
 ## 2. Project Context (repo 규약 — 수정 불가)
 
-- 이 repo는 **markdown(prompt/skill)이 주 자산**. component는 `prompts/prompt-composer-system/components/`.
+- 이 repo는 **markdown(prompt/skill)이 주 자산**. component는 `plugins/prompts-pack/lib/prompt-composer-system/components/`.
 - **component 정의(SSOT: `CLAUDE.md`)**: 표준 머리말(무엇/용도/시리즈 위치) + `## 0. Router 등록 metadata` + 기존 section 구조.
 - **System Invariant**: ① 발췌만 인용 ② 조합 인프라 vs 분석 컨텐츠 레이어 분리 ③ 새 component는 §0 metadata 필수.
 - **거버넌스(`self_upgrade.md`)**: 화이트리스트 / 작은 단위 / **사람 승인 게이트** / 블라인드 채점. 단 승인 게이트는 approve에 위임 — collect는 승인 대상(component)을 *만들지 않으므로* 자율 실행 가능.
@@ -57,10 +57,10 @@
 
 ## 5. Run-specific Context (Reference — 읽지 못하면 abort)
 
-- ledger(필수, 쓰기 대상): `prompts/prompt-composer-system/component-discovery-ledger.md` — 없으면 §0 형식으로 신규 생성 후 진행.
-- 기존 component: `prompts/prompt-composer-system/components/*.md` — 중복 판정 baseline.
-- component 규약: `prompts/prompt-composer-system/CLAUDE.md`
-- router catalog: `prompts/prompt-composer-system/builder/prompt-component-router.md` (어떤 분기가 이미 차 있는지)
+- ledger(필수, 쓰기 대상): `plugins/prompts-pack/lib/prompt-composer-system/component-discovery-ledger.md` — 없으면 §0 형식으로 신규 생성 후 진행.
+- 기존 component: `plugins/prompts-pack/lib/prompt-composer-system/components/*.md` — 중복 판정 baseline.
+- component 규약: `plugins/prompts-pack/lib/prompt-composer-system/CLAUDE.md`
+- router catalog: `plugins/prompts-pack/lib/prompt-composer-system/builder/prompt-component-router.md` (어떤 분기가 이미 차 있는지)
 - 거버넌스: `self_upgrade.md`
 
 ## 6. 작업 절차 (Stage 0–4) + Output Gates
@@ -93,7 +93,7 @@
 - [ ] **쓰기는 ledger 1파일뿐** — component/router/composer/CLAUDE.md 0건 수정, library mutation 0
 - [ ] gap 0이면 no-op 로그 후 종료(빈 component 생성 금지)
 
-> **commit(옵션)**: 무인 구동이면 ledger 단일 파일만 `git add prompts/prompt-composer-system/component-discovery-ledger.md && git commit -m "chore(discovery): collect <date>"` 허용(다른 파일 stage 금지 — 무관 변경 혼입 방지). 사람 구동이면 commit을 사람에게 위임 가능.
+> **commit(옵션)**: 무인 구동이면 ledger 단일 파일만 `git add plugins/prompts-pack/lib/prompt-composer-system/component-discovery-ledger.md && git commit -m "chore(discovery): collect <date>"` 허용(다른 파일 stage 금지 — 무관 변경 혼입 방지). 사람 구동이면 commit을 사람에게 위임 가능.
 
 ## 7. Routing Log (참조)
 ```

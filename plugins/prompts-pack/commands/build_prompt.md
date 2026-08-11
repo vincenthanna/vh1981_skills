@@ -1,3 +1,3 @@
-@prompts/prompt-composer-system/trigger.md
+@${CLAUDE_PLUGIN_ROOT}/lib/prompt-composer-system/trigger.md
 
 $ARGUMENTS
