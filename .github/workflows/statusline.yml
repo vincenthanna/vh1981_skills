@@ -1,0 +1,100 @@
+name: statusline
+
+# The two worst status-line bugs so far (`tail -r`, `grep -m1 -o`) passed on
+# macOS and failed on Linux. Running the suite on both is the point of this
+# workflow, so the matrix is not optional.
+
+on:
+  push:
+    paths:
+      - 'plugins/vh1981/scripts/**'
+      - 'plugins/vh1981/hooks/**'
+      - 'scripts/**'
+      - '.github/workflows/statusline.yml'
+  pull_request:
+    paths:
+      - 'plugins/vh1981/scripts/**'
+      - 'plugins/vh1981/hooks/**'
+      - 'scripts/**'
+      - '.github/workflows/statusline.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tool inventory
+        run: |
+          echo "uname: $(uname -srm)"
+          for t in jq python3 git tac; do
+            printf '%-8s %s\n' "$t" "$(command -v $t || echo NONE)"
+          done
+          printf 'tail -r  '
+          printf 'a\nb\n' | tail -r >/dev/null 2>&1 && echo "supported (BSD)" || echo "not supported (GNU)"
+
+      - name: Run status line tests
+        run: ./scripts/tests/run.sh
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck if missing
+        # `A || B && C` parses as `(A || B) && C`, which would install even when
+        # shellcheck is already present. Spell out the conditional instead.
+        run: |
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y shellcheck
+          fi
+
+      - name: Lint shell scripts
+        # scripts/statusline.sh is a symlink to the plugin copy; lint the real file once.
+        run: |
+          shellcheck -s sh \
+            plugins/vh1981/scripts/statusline.sh \
+            plugins/vh1981/scripts/check-statusline.sh \
+            scripts/install-statusline.sh \
+            scripts/tests/run.sh
+
+  manifest:
+    name: plugin manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON manifests
+        run: |
+          for f in .claude-plugin/marketplace.json \
+                   plugins/vh1981/.claude-plugin/plugin.json \
+                   plugins/vh1981/hooks/hooks.json \
+                   plugins/prompts-pack/.claude-plugin/plugin.json; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"
+            echo "ok $f"
+          done
+
+      - name: Hook command must point at a file the plugin ships
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, sys
+          hooks = json.load(open('plugins/vh1981/hooks/hooks.json'))
+          root = pathlib.Path('plugins/vh1981')
+          missing = []
+          for event, groups in hooks['hooks'].items():
+              for group in groups:
+                  for h in group['hooks']:
+                      for ref in re.findall(r'\$\{CLAUDE_PLUGIN_ROOT\}([^"\']+)', h['command']):
+                          if not (root / ref.strip().lstrip('/')).exists():
+                              missing.append(f"{event}: {ref}")
+          if missing:
+              sys.exit('hook references missing files: ' + ', '.join(missing))
+          print('all hook commands resolve')
+          PY

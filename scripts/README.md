@@ -1,15 +1,54 @@
 # statusline.sh — devlog 상태줄
 
-`scripts/statusline.sh` 는 Claude Code 상태줄에 현재 세션의 devlog 프로젝트를 표시하는 스크립트입니다.
-플러그인이 아니라 독립 스크립트인 이유는 `statusLine` 이 `settings.json` 레벨 설정이라 플러그인
-매니페스트가 실어 나르지 못하기 때문이며, 따라서 사용하는 머신마다 한 번씩 설치해야 합니다.
-설치는 `./scripts/install-statusline.sh` 한 번으로 끝나고, 이 스크립트가 파일 복사와 `settings.json`
-등록과 smoke test 까지 수행합니다. macOS 와 Linux 양쪽에서 동작하도록 BSD 전용 `tail -r` 과 jq 의존을
-제거한 상태입니다.
+Claude Code 상태줄에 현재 세션의 devlog 프로젝트를 표시하는 스크립트입니다. `statusLine` 은
+`settings.json` 레벨 설정이라 플러그인 매니페스트가 실어 나르지 못하고, orca 같은 다른 설치 스크립트가
+덮어쓰기도 합니다. 두 경우 모두 에러 없이 상태줄만 조용히 사라지기 때문에, `vh1981` 플러그인이
+SessionStart hook 으로 매 세션 자동 복구합니다. 수동 설치가 필요한 경우를 위해
+`./scripts/install-statusline.sh` 도 남겨 두었습니다. macOS 와 Linux 양쪽에서 동작하며, 회귀 테스트는
+`./scripts/tests/run.sh` 가 두 플랫폼 모두에서 검증합니다.
 
-## 설치
+## 파일 배치
 
-repo 를 clone 한 뒤 다음을 실행합니다.
+정본은 플러그인 안에 있고, repo 루트의 `scripts/statusline.sh` 는 그곳을 가리키는 symlink 입니다.
+`prompts/agents` 가 `plugins/prompts-pack/agents` 를 가리키는 것과 같은 방향입니다.
+
+```
+plugins/vh1981/scripts/statusline.sh        # 정본. 플러그인이 실어 나름
+plugins/vh1981/scripts/check-statusline.sh  # SessionStart 자동 복구
+plugins/vh1981/hooks/hooks.json             # 위 스크립트를 SessionStart 에 등록
+scripts/statusline.sh -> ../plugins/vh1981/scripts/statusline.sh
+scripts/install-statusline.sh               # 수동 설치
+scripts/tests/run.sh                        # 회귀 테스트
+```
+
+## 자동 복구
+
+`vh1981` 플러그인이 설치되어 있으면 세션이 시작될 때마다 다음 두 가지를 확인하고 어긋난 것만 고칩니다.
+
+| 확인 | 복구 |
+|---|---|
+| `~/.claude/statusline.sh` 가 없거나 플러그인이 실어 온 버전과 다름 | 플러그인 버전으로 복사 |
+| `settings.json` 의 `statusLine` 이 그 파일을 가리키지 않음 | 해당 키만 다시 씀 |
+
+고칠 것이 없으면 아무것도 출력하지 않습니다. 무언가 고쳤을 때만 한 줄을 남깁니다.
+
+```
+vh1981: devlog status line repaired (script+settings). Restart the session to see it.
+```
+
+`settings.json` 은 임시 파일에 쓴 뒤 rename 하므로, 여러 세션이 동시에 시작해도 반쯤 쓰인 파일이
+보이지 않습니다. 다른 키는 보존하고 `statusLine` 만 교체하며, 덮어쓰기 전에
+`settings.json.bak-autorepair` 로 백업합니다.
+
+자동 복구를 끄려면 환경변수를 설정합니다.
+
+```bash
+export VH1981_STATUSLINE_AUTOREPAIR=0
+```
+
+## 수동 설치
+
+플러그인 없이 스크립트만 쓰거나, 자동 복구 전에 즉시 적용하고 싶을 때 사용합니다.
 
 ```bash
 ./scripts/install-statusline.sh
@@ -77,6 +116,20 @@ SKILL.md 본문이 transcript 에 실려 들어가도 문제가 없습니다. �
 상태줄이 두 줄로 깨지던 문제도 함께 없어졌습니다. 이전 구현은 `grep -m1 -o` 를 썼는데, `-m1` 은
 매칭되는 줄 하나에서 멈추지만 `-o` 는 그 줄 안의 모든 매칭을 각각 출력하기 때문입니다.
 
+## 테스트
+
+`scripts/tests/run.sh` 가 상태줄, 설치 스크립트, 자동 복구 hook 을 검증합니다. 외부 의존성이 없고
+`mktemp -d` 아래에서만 동작하므로 실제 `~/.claude` 를 건드리지 않습니다.
+
+```bash
+./scripts/tests/run.sh
+```
+
+각 케이스는 실제로 발생했던 버그이거나 hook 이 의존하는 계약입니다. 특히 두 건은 macOS 에서는
+통과하고 Linux 에서만 깨졌던 것이라, `.github/workflows/statusline.yml` 이 `ubuntu-latest` 와
+`macos-latest` 양쪽에서 이 스위트를 돌립니다. 같은 workflow 가 shellcheck 와 매니페스트 JSON 검증도
+수행하며, hook 이 참조하는 파일이 플러그인 안에 실제로 있는지까지 확인합니다.
+
 ## orca 텔레메트리
 
 `~/.orca/agent-hooks/claude-statusline.sh` 가 실행 가능한 상태로 존재하면 스크립트가 payload 를 그대로
@@ -96,6 +149,7 @@ orca 설치 스크립트가 `statusLine` 을 자기 것으로 되돌릴 수 있�
 | `📓 -` 로만 나옴 | 마커도 `.active` 도 없음 | 정상. devlog 명령을 실행하면 채워짐 |
 | `📓 ~name` 이 계속 유지됨 | transcript 마커를 못 읽음 | Linux 에서 구버전을 쓰는지 확인 후 재설치 |
 | 상태줄이 두 줄로 깨짐 | 구버전의 `grep -m1 -o` 버그 | 재설치 |
+| 매 세션 "repaired" 가 반복됨 | 다른 도구가 `statusLine` 을 계속 되돌림 | 그 도구의 설치 스크립트를 확인 |
 
 상태줄을 직접 실행해 확인하는 방법입니다.
 

@@ -151,18 +151,20 @@ Claude Code 상태줄에 현재 세션의 devlog 프로젝트를 표시하는 �
 vh1981_skills | ⎇ main | 📓 my-project | Opus 5
 ```
 
-`statusLine` 은 `settings.json` 레벨 설정이라 플러그인이 실어 나르지 못합니다. 플러그인을 설치해도
-상태줄은 따라가지 않으므로, 사용하는 머신마다 아래를 한 번씩 실행해야 합니다.
+`statusLine` 은 `settings.json` 레벨 설정이라 플러그인 매니페스트가 실어 나르지 못하고, orca 같은
+다른 설치 스크립트가 덮어쓰기도 합니다. 두 경우 모두 에러 없이 상태줄만 조용히 사라집니다.
+
+`vh1981` 플러그인이 설치되어 있으면 **따로 할 일이 없습니다.** SessionStart hook 이 매 세션마다
+스크립트와 `settings.json` 을 확인해 어긋난 것만 고치고, 고칠 것이 없으면 아무것도 출력하지 않습니다.
+자동 복구를 끄려면 `VH1981_STATUSLINE_AUTOREPAIR=0` 을 설정합니다.
+
+플러그인 없이 스크립트만 쓰거나 즉시 적용하고 싶으면 수동 설치도 됩니다.
 
 ```bash
 ./scripts/install-statusline.sh
 ```
 
-설치 스크립트가 `~/.claude/statusline.sh` 로 복사하고, `~/.claude/settings.json` 의 `statusLine` 을
-나머지 키를 보존한 채 갱신한 뒤, 상태줄이 실제로 한 줄을 출력하는지 확인합니다. 기존 파일은 백업합니다.
-설치 후 세션 재시작이 필요합니다.
-
-표시 규칙, 이식성 관련 사항, 문제 해결은 `scripts/README.md` 에 있습니다.
+표시 규칙, 자동 복구 동작, 이식성 관련 사항, 문제 해결은 `scripts/README.md` 에 있습니다.
 
 ## 설치
 
@@ -214,6 +216,10 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 plugins/
   vh1981/
     .claude-plugin/plugin.json   # name: vh1981 (plugin namespace)
+    hooks/hooks.json        # SessionStart 상태줄 자동 복구
+    scripts/
+      statusline.sh         # devlog 상태줄 (정본)
+      check-statusline.sh   # 자동 복구 스크립트
     skills/
       devlog/SKILL.md       # /devlog 스킬 (통합)
       worklog/SKILL.md      # /worklog 스킬
@@ -231,9 +237,12 @@ prompts/
   translate_to_kr.md
   code_visualization.md
 scripts/
-  statusline.sh             # devlog 상태줄 (플러그인 아님, 머신마다 설치)
-  install-statusline.sh     # 위 스크립트 설치 + settings.json 등록
-  README.md                 # 설치·표시 규칙·문제 해결
+  statusline.sh -> ../plugins/vh1981/scripts/statusline.sh   # symlink
+  install-statusline.sh     # 수동 설치 + settings.json 등록
+  tests/run.sh              # 상태줄·설치·자동복구 회귀 테스트
+  README.md                 # 설치·표시 규칙·자동 복구·문제 해결
+.github/workflows/
+  statusline.yml            # ubuntu + macos 매트릭스, shellcheck, 매니페스트 검증
 ```
 
 ## 라이선스

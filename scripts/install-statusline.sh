@@ -12,7 +12,7 @@
 # Override the target directory with CLAUDE_DIR=/somewhere ./scripts/install-statusline.sh
 set -eu
 
-SRC_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+SRC_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 SRC="$SRC_DIR/statusline.sh"
 DEST_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 DEST="$DEST_DIR/statusline.sh"

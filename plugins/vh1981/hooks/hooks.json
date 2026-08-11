@@ -1,0 +1,16 @@
+{
+  "description": "vh1981 plugin hooks — keeps the devlog status line installed and pointed at the shipped script",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh \"${CLAUDE_PLUGIN_ROOT}/scripts/check-statusline.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
