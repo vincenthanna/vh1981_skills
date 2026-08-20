@@ -54,6 +54,9 @@ auto-executes.**
    - duplicate `NN_` prefixes in the same directory
    - broken cross-references (a `docs/devlog/...` path that no longer resolves)
    - empty `.md` files
+   - an investigation doc with no `Progress` section — `reference/writing.md`
+     makes it mandatory, so its absence is a fault, not a judgment call
+   - a project with no `README.md`
    Do NOT auto-detect "obsolete" or "near-duplicate" by meaning — that is a
    judgment call and produces false positives.
 2. Output a table of proposed actions (rename / archive / renumber), each row
@@ -78,6 +81,7 @@ by name. `update` must never trigger it.
    | Signal | What to look for | Proposed action |
    |--------|------------------|-----------------|
    | duplicated fact | the same `file:line`, metric, or finding stated in 2+ docs | keep one canonical statement; replace the others with a cross-reference |
+   | duplicated open item | the same `Remaining / Next` item carried by 2+ docs, often at conflicting priority tags | keep it in the doc that owns the work; cross-reference from the rest, and reconcile the tag |
    | stale open item | a `[Critical]` / `[High]` in `Remaining / Next` that a later doc's `Done`, a later finding, or the current code contradicts | move it to `Done`, or downgrade its tag |
    | superseded conclusion | an earlier doc's `Conclusion` that a later doc reverses | add a dated supersede note above the affected section — keep the original text |
    | oversized doc | a doc that now trips the split triggers in `reference/writing.md` | split the separable topic off into a new `NN_` file |
