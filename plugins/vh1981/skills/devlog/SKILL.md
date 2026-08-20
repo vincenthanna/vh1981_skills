@@ -1,6 +1,6 @@
 ---
 name: devlog
-description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, update, and upload commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, produce structured findings, or publish a devlog project to an external knowledge-base repo. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "upload devlog", "publish to knowledge base", "sync to knowledge base", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
+description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, update, and upload commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, produce structured findings, or publish a devlog project to an external knowledge-base repo. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "consolidate devlog", "tidy devlog docs", "devlog 정리", "upload devlog", "publish to knowledge base", "sync to knowledge base", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
 ---
 
 # Devlog Context
@@ -22,14 +22,15 @@ Parse the arguments to determine which command to run:
 | `select <project>` | **Select** |
 | `update` | **Update** |
 | `update <instructions>` | **Update** with specific instructions |
-| `reorg <action> [args]` | **Reorg** (rename / archive / cleanup / readme) |
+| `reorg <action> [args]` | **Reorg** (rename / archive / cleanup / consolidate / readme) |
 | `rename <old> <new>` | **Reorg** — alias for `reorg rename` |
+| `consolidate` | **Reorg** — alias for `reorg consolidate` |
 | `run <condition-name>` | **Validation** — register a measurement run |
 | `compare <condition> ...` | **Validation** — build/grow a comparison report |
 | `upload [<project>] [--to <path>]` | **Upload** — publish to an external knowledge-base repo |
 | *(no args)* | **Update** |
 
-If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `run`, `compare`, `upload`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
+If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `consolidate`, `run`, `compare`, `upload`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
 
 Detailed procedures live in `commands/*.md` in this skill's directory (`update`, `upload`, `reorg`, `validation`) — read the relevant file when routing lands on that command. Doc-writing rules (what goes where, templates, split triggers, output quality) live in `reference/writing.md` — read it once per session before writing or editing devlog docs.
 
@@ -160,17 +161,18 @@ Performs three parts in sequence: update investigation docs, update work history
 
 ## Command: Reorg
 
-Reorganization actions, grouped under one command. Routing: `reorg <action> [args]`, plus `rename` as a top-level alias for `reorg rename`. If `reorg` is called with no action, list the available actions.
+Reorganization actions, grouped under one command. Routing: `reorg <action> [args]`, plus `rename` and `consolidate` as top-level aliases for `reorg rename` / `reorg consolidate`. If `reorg` is called with no action, list the available actions.
 
 | Action | Purpose |
 |--------|---------|
 | `reorg rename <old> <new>` | rename a project, fix all cross-references |
 | `reorg archive <path>` | isolate an obsolete doc/subtopic into `_archived/` |
 | `reorg cleanup` | propose hygiene fixes (duplicate `NN_`, broken refs, empty files) — proposal only, never auto-executes |
+| `reorg consolidate` | propose content-level tidying of accumulated investigation docs (duplicated facts, stale open items, superseded conclusions, split/folder thresholds) — proposal only; excludes `history/` |
 | `reorg readme` | fully regenerate the README's `<!-- AUTO-GENERATED -->` region |
 | `reorg move` | reserved — not yet implemented; tell the user it is unavailable |
 
-**Read `commands/reorg.md` (in this skill's directory) for the step-by-step procedure of the requested action.** Never `rm` a file directly — removal goes through `reorg archive`. Every reorg action is meta/housekeeping work: record it as one line in history, not as a new investigation doc.
+**Read `commands/reorg.md` (in this skill's directory) for the step-by-step procedure of the requested action.** Never `rm` a file directly — removal goes through `reorg archive`. Every reorg action is meta/housekeeping work: record it as one line in history, not as a new investigation doc — except `consolidate`, which touches `history/` neither for reading nor for writing.
 
 ---
 

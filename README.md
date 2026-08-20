@@ -72,6 +72,13 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 | `/devlog select <project>` | 프로젝트 선택 (활성화) |
 | `/devlog update` | 조사 문서 + 작업 기록 동시 갱신 |
 | `/devlog update <instructions>` | 지시사항에 따라 조사 수행 후 갱신 |
+| `/devlog reorg rename <old> <new>` | 프로젝트 이름 변경 + 모든 cross-reference 치환 (`/devlog rename` 으로도 호출) |
+| `/devlog reorg archive <path>` | 낡은 문서를 `_archived/` 로 격리하고 사유를 기록 (삭제는 하지 않음) |
+| `/devlog reorg cleanup` | 구조적 위생 문제 점검 — 중복 `NN_`, 깨진 링크, 빈 파일. 제안만 하고 자동 실행하지 않음 |
+| `/devlog reorg consolidate` | 쌓인 조사 문서의 내용 정리 제안 — 중복 서술, 이미 해결된 open item, 뒤집힌 결론, 파일 분할/폴더링 임계. 제안만 하며 `history/` 는 읽지도 쓰지도 않음 (`/devlog consolidate` 으로도 호출) |
+| `/devlog reorg readme` | README의 `<!-- AUTO-GENERATED -->` 영역 재생성 |
+| `/devlog run <condition>` | 측정 run manifest 를 `runs/<condition>/` 에 등록 (실험 자체를 실행하지는 않음) |
+| `/devlog compare <조건들>` | `comparisons/` 에 비교 리포트 생성·확장 |
 | `/devlog upload [<project>] [--to <path>]` | 외부 knowledge-base repo로 프로젝트 복사 (target 경로는 `docs/devlog/.upload-target`에 자동 저장) |
 
 **디렉토리 구조:**
@@ -81,6 +88,7 @@ docs/devlog/<project>/
   01_<topic>.md          ← 조사/분석 문서
   history/
     01_<topic>.md        ← 작업 기록
+  _archived/             ← reorg archive 로 격리된 문서 + _log.md
 ```
 
 ### worklog

@@ -23,7 +23,7 @@ carries the rules for doc content and structure.
 
 Do not print classification labels to the user — this table is an internal routing rule.
 
-**Meta / housekeeping work** — devlog's own tidying (rename, README refresh, cross-ref fixes, `NN_` renumbering, splitting/merging docs) does NOT get a new investigation doc. Record it as one line in the history `Changes` section, and if relevant one line in an investigation doc's `Done`. If investigation or implementation work is mixed in, record that normally too — the meta exemption applies only to pure tidying.
+**Meta / housekeeping work** — devlog's own tidying (rename, README refresh, cross-ref fixes, `NN_` renumbering, splitting/merging docs) does NOT get a new investigation doc. Record it as one line in the history `Changes` section, and if relevant one line in an investigation doc's `Done` — except `reorg consolidate`, which records nothing in `history/` (`commands/reorg.md`). If investigation or implementation work is mixed in, record that normally too — the meta exemption applies only to pure tidying.
 
 ## Templates
 
@@ -52,7 +52,7 @@ When a devlog doc references another devlog doc, use a single path form:
 - References outside devlog (memory files, repo source) — a repo-relative or absolute path plus a one-line note.
 - Never put a ticket ID or commit SHA in a path component — it breaks on rename/squash.
 
-This single form is what makes `reorg rename` and `reorg cleanup` reliable. **Premise**: file moves and renames go through `reorg` — it auto-substitutes cross-references and shows the match list for approval. Avoid manual `mv` of devlog files.
+This single form is what makes `reorg rename`, `reorg cleanup`, and `reorg consolidate` reliable. **Premise**: file moves and renames go through `reorg` — it auto-substitutes cross-references and shows the match list for approval. Avoid manual `mv` of devlog files.
 
 ## Writing rules
 
