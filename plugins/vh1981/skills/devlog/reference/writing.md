@@ -18,6 +18,7 @@ carries the rules for doc content and structure.
 | Architecture decision + its rationale | Investigation doc — `Conclusion` |
 | List of changed files + why each changed | History entry — `Changes` |
 | Commands / tests / builds run, problems hit | History entry |
+| Extended detail of an approach that was tried and NOT adopted | Investigation doc while the work is live; `reorg consolidate` later extracts it to `rejected/` and leaves the verdict + reason behind |
 | Future work items | Both — but History keeps only a short pointer to the investigation doc's `Remaining / Next` |
 | Ambiguous / both seem to apply | Default to History as the primary record; the investigation doc references it ("see `history/NN`") |
 

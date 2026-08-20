@@ -80,6 +80,13 @@ When a command needs the active project and no name was given explicitly, resolv
 
 Never read `history/` to understand the project, gather context, resume state, build the README, or answer a question — investigation docs are the source of truth for project content. Read a history entry ONLY when (a) the user explicitly asks to look at the history / a past session, or (b) `update` Part 2 appends to the single latest entry — a write-target read of that one file, not context gathering. Older or other history entries are read only on explicit request.
 
+`rejected/` follows the same discipline for the same reason. It holds the detail
+of approaches that were evaluated and left off the mainstream path, extracted by
+`reorg consolidate`. The mainstream doc keeps the verdict and the reason, so the
+detail is needed only when someone is about to re-attempt that approach, when
+the user asks for it, or when `consolidate` is writing the extraction itself.
+Never read it to gather context, resume state, or build the README.
+
 ### Session re-entry — previous-state recap
 
 A session is **resumed** for a project when its active status was first established this session via level 3 or 4 (not by `select` / `create`), or via the level-2 compaction demotion above.
@@ -168,7 +175,7 @@ Reorganization actions, grouped under one command. Routing: `reorg <action> [arg
 | `reorg rename <old> <new>` | rename a project, fix all cross-references |
 | `reorg archive <path>` | isolate an obsolete doc/subtopic into `_archived/` |
 | `reorg cleanup` | propose hygiene fixes (duplicate `NN_`, broken refs, empty files) — proposal only, never auto-executes |
-| `reorg consolidate` | propose content-level tidying of accumulated investigation docs (duplicated facts, stale open items, superseded conclusions, split/folder thresholds) — proposal only; excludes `history/` |
+| `reorg consolidate` | propose content-level tidying and compaction of accumulated investigation docs (duplicated facts and open items, stale open items, superseded conclusions, off-mainstream detail → `rejected/`, split/folder thresholds) — proposal only; excludes `history/` |
 | `reorg readme` | fully regenerate the README's `<!-- AUTO-GENERATED -->` region |
 | `reorg move` | reserved — not yet implemented; tell the user it is unavailable |
 
@@ -204,6 +211,7 @@ A devlog project directory holds these path types:
 - `docs/devlog/<project>/NN_<topic>.md` — investigation docs (top level)
 - `docs/devlog/<project>/history/NN_<topic>.md` — history entries
 - `docs/devlog/<project>/<subtopic>/NN_<topic>.md` — investigation docs grouped under a subtopic folder (trigger in `reference/writing.md`)
+- `docs/devlog/<project>/rejected/NN_<topic>.md` — detail of approaches evaluated and not adopted, extracted by `reorg consolidate`; not context (see above)
 - `docs/devlog/<project>/_archived/` — superseded docs, kept for the record
 - `docs/devlog/<project>/README.md` — project index (see `Command: Create`)
 

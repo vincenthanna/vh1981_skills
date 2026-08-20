@@ -67,8 +67,16 @@ auto-executes.**
 ## reorg consolidate
 
 Reads the project's accumulated investigation docs and proposes content-level
-tidying — the judgment-call counterpart to `cleanup`. Same contract: **proposal
-only, never auto-executes**, and nothing is deleted.
+tidying **and compaction** — the judgment-call counterpart to `cleanup`. Same
+contract: **proposal only, never auto-executes**, and nothing is deleted.
+
+Compaction is the second half of the job. A long-running project accumulates
+detailed write-ups of approaches that were evaluated and then left off the
+mainstream path — rejected, regressed, deferred, or beaten by a sibling branch.
+That detail is worth keeping and worth *not* reading every time: it is what
+stops someone re-attempting a dead end. consolidate moves it to `rejected/` and
+leaves a one-line verdict behind, so the mainstream doc stays readable and the
+detail is one link away.
 
 **Read scope — investigation docs only**: `<project>/*.md`,
 `<project>/<subtopic>/*.md`, and `README.md`. Never `history/` (SKILL.md
@@ -84,6 +92,7 @@ by name. `update` must never trigger it.
    | duplicated open item | the same `Remaining / Next` item carried by 2+ docs, often at conflicting priority tags | keep it in the doc that owns the work; cross-reference from the rest, and reconcile the tag |
    | stale open item | a `[Critical]` / `[High]` in `Remaining / Next` that a later doc's `Done`, a later finding, or the current code contradicts | move it to `Done`, or downgrade its tag |
    | superseded conclusion | an earlier doc's `Conclusion` that a later doc reverses | add a dated supersede note above the affected section — keep the original text |
+   | off-mainstream detail | a mainstream doc carrying an extended write-up of an approach that was NOT adopted — rejected, regressed, deferred, or superseded by a sibling branch — where the detail runs past a few lines or has grown its own subsections, code blocks, or measurement tables | extract to `rejected/NN_<slug>.md`; leave a one-line verdict row behind (see "Extraction" below) |
    | oversized doc | a doc that now trips the split triggers in `reference/writing.md` | split the separable topic off into a new `NN_` file |
    | foldering threshold | 5–6+ investigation docs with 3+ sharing a topic-slug prefix | group those into a `<prefix>/` subtopic folder |
 
@@ -109,11 +118,34 @@ by name. `update` must never trigger it.
    - After any approved row that adds, splits, moves, or renumbers a `NN_` file,
      run `reorg readme` so `Entries` and `Remaining / Next` match the tree.
 
-4. **Recording**: consolidate writes nothing to `history/`. Its trace is left in
+4. **Extraction** — for approved `off-mainstream detail` rows:
+
+   a. Create `<project>/rejected/NN_<slug>.md` — read `templates/rejected.md`
+      and follow it. Move the detail verbatim; do not re-summarize it, and do
+      not improve it. It is a record of what was actually tried.
+   b. In the source doc, replace the extracted block with ONE row in a
+      `Rejected approaches` table:
+
+      | 기법 | Verdict | 이유 | 상세 |
+      |------|---------|------|------|
+      | 003b velocity gating | 폐기 | threshold 3.0이 느슨해 차단되는 매칭이 없었음 | `docs/devlog/<project>/rejected/01_velocity-gating.md` |
+
+      **The reason stays in the mainstream doc.** Only the detail moves — a row
+      that says just "폐기" without why fails the whole point, because the next
+      person cannot tell whether their new idea is the same idea.
+   c. A verdict that is already one line stays where it is, and an existing
+      compact "rejected approaches" summary table is the target shape, not a
+      source to extract from. Over-extraction is a real failure mode: it turns
+      a readable one-line verdict into a link the reader has to follow.
+   d. Extraction never leaves the project: the doc moves to `rejected/`, not to
+      `_archived/`. `_archived/` is for superseded *documents*; `rejected/` is
+      for evaluated-and-not-adopted *approaches*, which stay valid as findings.
+
+5. **Recording**: consolidate writes nothing to `history/`. Its trace is left in
    place instead — rows that archive a file log to `_archived/_log.md` as usual,
-   supersede notes and cross-references are self-documenting inside the docs,
-   and index changes land through `reorg readme`. The run summary goes to the
-   user's output only.
+   supersede notes, cross-references, and `rejected/` extractions are
+   self-documenting inside the docs, and index changes land through
+   `reorg readme`. The run summary goes to the user's output only.
 
 ## reorg readme
 
