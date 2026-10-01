@@ -20,11 +20,14 @@ vh1981 플러그인이 매 세션 시작 시 주입하는 기본 규칙이다.
 - 파괴적/되돌리기 어려운 동작 전에는 반드시 확인 (rm -rf, force push, reset --hard, DB drop 등).
 - `--no-verify`, hook skip 금지 (명시 요청 시에만).
 - commit/push는 명시 요청 시에만.
+- 다른 사람이 읽을 외부 게시물(Slack 메시지, PR 코멘트 답글, PR 본문 수정, 리뷰 재요청, 메일)은 바로 보내지 않는다. 초안을 파일로 쓰고, 보낼 명령을 그대로 `POST-QUEUE.md` 에 적어 사용자에게 보인 뒤 멈춘다. 사용자가 보내라고 하면 그 목록을 위에서부터 실행하고 각각 반영됐는지 확인한다. 초안은 humanizer 스킬로 다듬는다.
 
 ## 작업 진행
 - 모호한 요구는 추측하지 말고 질문.
+- 완료와 PASS는 실행 근거로만 판정한다. 로그 줄, HTTP 코드, row 수, 컨테이너 시작 시각, CI run ID 같은 관측값 없이 코드만 보고 통과라고 하지 않는다.
 - UI 변경은 브라우저에서 실제 동작 확인 후 완료 보고.
 - 작업 중간/종료 보고는 1-2문장.
+- worktree에서 git을 다루거나, ssh·docker로 원격 명령을 보내거나, gh로 PR 본문을 고치거나, subagent·외부 LLM CLI를 쓸 때는 먼저 `{{GUIDELINES_DIR}}/shell-pitfalls.md` 를 읽는다. 오류 없이 조용히 실패하는 함정 모음이다.
 
 ## 모델 학습
 - 긴 학습은 시작 전에 끝난 뒤 이어서 학습할 수 있는지 확인한다. ultralytics 는 정상 종료와 early stopping 때 `last.pt`/`best.pt` 에서 optimizer·EMA 상태를 지운다.

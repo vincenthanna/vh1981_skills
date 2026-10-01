@@ -140,6 +140,20 @@ markdown 파일 또는 디렉토리를 **보수적으로(최소 diff)** 정리�
 공백/빈 줄 정리는 `plugins/vh1981/skills/md-tidy/scripts/normalize_whitespace.py`(결정론적·멱등)가,
 깨진 문법 수정은 에이전트가 판단해 처리하며, 파일을 직접 수정한 뒤 파일별 변경 요약을 보고합니다.
 
+### humanizer
+
+바깥으로 보낼 글(Slack 메시지, PR 코멘트 답글과 본문, 이메일, 공지, 진행 보고)에서 AI 문체를 걷어내고
+분량을 줄입니다. 33개 패턴 카탈로그와 비개발자용 진행 보고 모드를 담고 있으며, 질문 없이 최종본을 냅니다.
+repo에 남는 markdown 문서는 대상이 아니며 `doc-style.md` 를 따릅니다.
+
+| 입력 | 동작 |
+|------|------|
+| `/humanizer` + 붙여넣은 글 | 최종본과 가장 큰 변경 한 줄을 출력 |
+| `/humanizer <파일>` | 파일의 산문만 고쳐 덮어쓰고 1~2줄로 보고 |
+| 다른 작업의 Slack·PR 초안 | 초안을 내놓기 직전에 마지막 단계로 적용 |
+
+패턴 카탈로그는 Wikipedia의 "Signs of AI writing"을 기반으로 한 MIT 라이선스 humanizer 3.1.0을 한국어로 옮긴 것입니다.
+
 ## AI 참조 문서
 
 `docs/ai-reference/` 경로에 AI가 참고할 수 있는 Claude SDK, 튜토리얼, 연구자료 등이 정리되어 있습니다.
@@ -174,6 +188,7 @@ markdown 파일 또는 디렉토리를 **보수적으로(최소 diff)** 정리�
 | `plugins/vh1981/guidelines/doc-style.md` | 문서를 작성할 때만 읽는 상세 규칙 |
 | `plugins/vh1981/guidelines/ml-training.md` | 모델 학습을 다룰 때만 읽는 체크포인트·재개 규칙 |
 | `plugins/vh1981/guidelines/japanese-notation.md` | 일본어를 적을 때 읽는 한글 발음 표기 규칙 |
+| `plugins/vh1981/guidelines/shell-pitfalls.md` | worktree, ssh·docker, gh, subagent를 다룰 때 읽는 조용한 실패 함정 모음 |
 | `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
@@ -268,6 +283,7 @@ plugins/
       doc-style.md          # 문서 작성 상세 규칙 (필요할 때 Read)
       ml-training.md        # 모델 학습 체크포인트·재개 규칙 (필요할 때 Read)
       japanese-notation.md  # 일본어 한글 발음 표기 규칙 (필요할 때 Read)
+      shell-pitfalls.md     # 셸·도구 실전 함정 (필요할 때 Read)
     scripts/
       inject-guidelines.sh  # core.md 주입 스크립트
       statusline.sh         # devlog 상태줄 (정본)
@@ -276,6 +292,7 @@ plugins/
       devlog/SKILL.md       # /devlog 스킬 (통합)
       worklog/SKILL.md      # /worklog 스킬
       prjdocs/SKILL.md      # /prjdocs 스킬
+      humanizer/            # /humanizer 스킬 (SKILL.md + references/patterns.md)
   prompts-pack/
     .claude-plugin/plugin.json
     agents/                 # debugger, code-reviewer, ...
