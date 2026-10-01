@@ -31,6 +31,7 @@
 
 | 경로 | 용도 | 비고 |
 |------|------|------|
+| `prompts/autorun.md` | 작업 지시서를 받아 조사, 실행, 검증, 보고까지 한 번에 진행하는 절차 | 외부 게시물은 초안만, 교훈은 `prompts/autorun-learnings.md` |
 | `prompts/code_visualization.md` | 코드 구조를 mermaid 5종 view로 시각화 | C++/GStreamer 위주 |
 | `prompts/commands/` | user-level slash command 원본 (`~/.claude/commands/`와 동일) | 아래 4번 참고 |
 | `prompts/deepingsource/tests/` | deepingsource 테스트 관련 prompt | (TODO: 세부 정리) |

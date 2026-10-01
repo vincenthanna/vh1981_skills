@@ -35,7 +35,7 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
   mkdir -p ~/.claude/agents
   ln -s ~/repos/vh1981_skills/plugins/prompts-pack/agents/debugger.md ~/.claude/agents/debugger.md
   ```
-- AI 참고 문서 (`prompts/ai-reference/`, `prompts/baseline.md`, `prompts/commit_rules.md`, `prompts/translate_to_kr.md`, `prompts/code_visualization.md`)는 plugin에 포함되지 않으므로 이 방식으로 참조합니다.
+- AI 참고 문서 (`prompts/ai-reference/`, `prompts/baseline.md`, `prompts/commit_rules.md`, `prompts/translate_to_kr.md`, `prompts/code_visualization.md`, `prompts/autorun.md`)는 plugin에 포함되지 않으므로 이 방식으로 참조합니다.
 
 ## Plugins
 
