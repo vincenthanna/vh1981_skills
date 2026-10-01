@@ -1,6 +1,6 @@
 #!/bin/sh
-# Regression tests for the devlog status line, its installer, and the
-# SessionStart self-repair hook.
+# Regression tests for the devlog status line, its installer, and the two
+# SessionStart hooks (status line self-repair, default guideline injection).
 #
 #   ./scripts/tests/run.sh
 #
@@ -13,6 +13,7 @@ ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 STATUSLINE="$ROOT/plugins/vh1981/scripts/statusline.sh"
 INSTALLER="$ROOT/scripts/install-statusline.sh"
 CHECKER="$ROOT/plugins/vh1981/scripts/check-statusline.sh"
+INJECTOR="$ROOT/plugins/vh1981/scripts/inject-guidelines.sh"
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT INT TERM
@@ -195,6 +196,44 @@ else pass "opt-out really skips the copy"; fi
 out=$(printf '{}' | env "CLAUDE_PLUGIN_ROOT=/nonexistent" "CLAUDE_CONFIG_DIR=$HOOKCFG" /bin/sh "$CHECKER" 2>&1)
 assert_eq "hook exits 0 when the plugin root is missing" "0" "$?"
 assert_eq "hook stays quiet when the plugin root is missing" "" "$out"
+
+echo
+echo "# inject-guidelines.sh (SessionStart default guidelines)"
+
+run_inject() { printf '{}' | env "CLAUDE_PLUGIN_ROOT=$1" ${2:+VH1981_GUIDELINES=$2} /bin/sh "$INJECTOR" 2>&1; }
+
+out=$(run_inject "$ROOT/plugins/vh1981")
+assert_contains "injects the guideline title" "# vh1981 기본 가이드라인" "$out"
+assert_contains "points doc-style at this install's absolute path" "$ROOT/plugins/vh1981/guidelines/doc-style.md" "$out"
+assert_not_contains "no placeholder survives substitution" "{{GUIDELINES_DIR}}" "$out"
+# Every on-demand file core.md points at must ship with the plugin.
+refs=$(printf '%s\n' "$out" | grep -o 'guidelines/[A-Za-z0-9._-]*\.md' | sort -u)
+missing=""
+for r in $refs; do
+  [ -f "$ROOT/plugins/vh1981/$r" ] || missing="$missing $r"
+done
+assert_eq "every guideline file it names exists" "" "$missing"
+assert_contains "names the ml-training guideline" "guidelines/ml-training.md" "$refs"
+
+# Large hook output is moved to a file and only a preview reaches the context.
+# Bytes over-count Korean text, so this is stricter than a character limit.
+size=$(printf '%s' "$out" | wc -c | tr -d ' ')
+if [ "$size" -lt 10000 ]; then pass "injected text stays under 10000 bytes ($size)"
+else fail "injected text stays under 10000 bytes" "got $size"; fi
+
+# sed replacement metacharacters in the install path must come through literally.
+ODD="$TMP/plug&in|dir"
+mkdir -p "$ODD/guidelines"
+cp "$ROOT/plugins/vh1981/guidelines/core.md" "$ODD/guidelines/"
+out=$(run_inject "$ODD")
+assert_contains "install path with & and | is substituted literally" "$ODD/guidelines/doc-style.md" "$out"
+
+out=$(run_inject "$ROOT/plugins/vh1981" 0)
+assert_eq "VH1981_GUIDELINES=0 disables injection" "" "$out"
+
+out=$(run_inject /nonexistent)
+assert_eq "injector exits 0 when the plugin root is missing" "0" "$?"
+assert_eq "injector stays quiet when the plugin root is missing" "" "$out"
 
 echo
 if [ "$FAILED" = "0" ]; then

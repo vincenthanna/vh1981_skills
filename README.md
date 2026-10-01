@@ -57,7 +57,7 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 
 ### vh1981
 
-`/plugin install vh1981` 하나로 아래 3개 skill이 모두 설치됩니다.
+`/plugin install vh1981` 하나로 아래 skill이 모두 설치되고, [기본 가이드라인](#기본-가이드라인--모든-세션에-적용되는-규칙)이 모든 세션에 적용됩니다.
 
 ### devlog (통합 스킬)
 
@@ -157,6 +157,38 @@ markdown 파일 또는 디렉토리를 **보수적으로(최소 diff)** 정리�
 | 09_Vertical | 수직 통합 사례 |
 | 10_Safety | 안전성 관련 문서 |
 
+## 기본 가이드라인 — 모든 세션에 적용되는 규칙
+
+`vh1981` 플러그인을 설치하면 세션이 시작될 때마다 기본 작업 규칙, 문서 작성 규칙, 모델 학습 규칙이 컨텍스트에 들어갑니다.
+사용자나 프로젝트의 `CLAUDE.md`, 또는 사용자의 직접 지시와 충돌하면 그쪽이 우선합니다.
+규칙의 정본은 이 repo 의 `plugins/vh1981/guidelines/` 이며, 고친 뒤에는 플러그인 버전을 올려야 설치된
+머신이 새 규칙을 받습니다.
+
+플러그인 루트의 `CLAUDE.md` 는 로드되지 않고, 플러그인 `settings.json` 은 `agent` 와
+`subagentStatusLine` 키만 받습니다. 그래서 SessionStart hook 이 규칙을 stdout 으로 출력해 컨텍스트에
+넣습니다. matcher 를 두지 않았으므로 startup, resume, `/clear`, compact 때마다 다시 주입됩니다.
+
+| 파일 | 역할 |
+|---|---|
+| `plugins/vh1981/guidelines/core.md` | 매 세션 주입되는 규칙 본문 |
+| `plugins/vh1981/guidelines/doc-style.md` | 문서를 작성할 때만 읽는 상세 규칙 |
+| `plugins/vh1981/guidelines/ml-training.md` | 모델 학습을 다룰 때만 읽는 체크포인트·재개 규칙 |
+| `plugins/vh1981/guidelines/japanese-notation.md` | 일본어를 적을 때 읽는 한글 발음 표기 규칙 |
+| `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
+
+`core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
+컨텍스트에 들어갑니다. 긴 내용은 `doc-style.md` 처럼 별도 파일로 두고 `core.md` 에서
+`{{GUIDELINES_DIR}}/<파일>` 로 가리키면, hook 이 이 자리표시자를 설치 경로로 바꿉니다.
+`./scripts/tests/run.sh` 는 주입 텍스트가 10000 bytes 미만인지 검사합니다.
+
+주입을 끄려면 환경변수를 설정합니다.
+
+```bash
+export VH1981_GUIDELINES=0
+```
+
+주입된 규칙이 subagent 에도 전달되는지는 확인하지 않았습니다(미검증).
+
 ## 상태줄 — devlog 프로젝트 표시
 
 Claude Code 상태줄에 현재 세션의 devlog 프로젝트를 표시하는 스크립트입니다.
@@ -230,8 +262,14 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 plugins/
   vh1981/
     .claude-plugin/plugin.json   # name: vh1981 (plugin namespace)
-    hooks/hooks.json        # SessionStart 상태줄 자동 복구
+    hooks/hooks.json        # SessionStart 가이드라인 주입 + 상태줄 자동 복구
+    guidelines/
+      core.md               # 매 세션 주입되는 기본 규칙 (정본)
+      doc-style.md          # 문서 작성 상세 규칙 (필요할 때 Read)
+      ml-training.md        # 모델 학습 체크포인트·재개 규칙 (필요할 때 Read)
+      japanese-notation.md  # 일본어 한글 발음 표기 규칙 (필요할 때 Read)
     scripts/
+      inject-guidelines.sh  # core.md 주입 스크립트
       statusline.sh         # devlog 상태줄 (정본)
       check-statusline.sh   # 자동 복구 스크립트
     skills/
@@ -253,7 +291,7 @@ prompts/
 scripts/
   statusline.sh -> ../plugins/vh1981/scripts/statusline.sh   # symlink
   install-statusline.sh     # 수동 설치 + settings.json 등록
-  tests/run.sh              # 상태줄·설치·자동복구 회귀 테스트
+  tests/run.sh              # 상태줄·설치·자동복구·가이드라인 주입 회귀 테스트
   README.md                 # 설치·표시 규칙·자동 복구·문제 해결
 .github/workflows/
   statusline.yml            # ubuntu + macos 매트릭스, shellcheck, 매니페스트 검증

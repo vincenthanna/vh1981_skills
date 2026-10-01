@@ -9,12 +9,14 @@ on:
     paths:
       - 'plugins/vh1981/scripts/**'
       - 'plugins/vh1981/hooks/**'
+      - 'plugins/vh1981/guidelines/**'
       - 'scripts/**'
       - '.github/workflows/statusline.yml'
   pull_request:
     paths:
       - 'plugins/vh1981/scripts/**'
       - 'plugins/vh1981/hooks/**'
+      - 'plugins/vh1981/guidelines/**'
       - 'scripts/**'
       - '.github/workflows/statusline.yml'
   workflow_dispatch:
@@ -62,6 +64,7 @@ jobs:
           shellcheck -s sh \
             plugins/vh1981/scripts/statusline.sh \
             plugins/vh1981/scripts/check-statusline.sh \
+            plugins/vh1981/scripts/inject-guidelines.sh \
             scripts/install-statusline.sh \
             scripts/tests/run.sh
 
