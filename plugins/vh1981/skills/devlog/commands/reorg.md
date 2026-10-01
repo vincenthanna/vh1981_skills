@@ -51,7 +51,8 @@ Inspects the active project and proposes hygiene fixes — **proposal only, neve
 auto-executes.**
 
 1. Detect only verifiable, structural signals:
-   - duplicate `NN_` prefixes in the same directory
+   - duplicate `NN_` prefixes in the same directory (a `.html` report sharing
+     the stem of its source `.md` is not a duplicate)
    - broken cross-references (a `docs/devlog/...` path that no longer resolves)
    - empty `.md` files
    - an investigation doc with no `Progress` section — `reference/writing.md`

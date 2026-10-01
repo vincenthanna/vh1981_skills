@@ -154,6 +154,23 @@ repo에 남는 markdown 문서는 대상이 아니며 `doc-style.md` 를 따릅�
 
 패턴 카탈로그는 Wikipedia의 "Signs of AI writing"을 기반으로 한 MIT 라이선스 humanizer 3.1.0을 한국어로 옮긴 것입니다.
 
+### techreport
+
+조사·측정 결과를 그 분야를 모르는 사람도 혼자 읽을 수 있는 단일 HTML 기술 보고서로 만들고, 주제별 색인 웹서버에 올립니다.
+보고서에는 0장 비유와 그 비유의 한계, 용어집과 마우스 팝업, 인라인 SVG 그림과 설명용 애니메이션, arXiv 로 제목을 확인한 논문 인용,
+재현 실패까지 남기는 검증 기록이 들어갑니다. 외부 이미지와 CDN 은 쓰지 않습니다.
+
+| 항목 | 내용 |
+|------|------|
+| 저장 위치 | 활성 devlog 프로젝트의 `docs/devlog/<project>/NN_<slug>.html` |
+| 서버 | 보고서를 만들면 `scripts/serve_devlog.sh docs/devlog` 로 자동 기동 (기본 `0.0.0.0:8800`, 이미 떠 있으면 그대로) |
+| 이 머신에서만 보기 | `REPORT_HOST=127.0.0.1` 을 붙여 기동 |
+| 중지 | `kill "$(cat /tmp/serve_devlog.8800.pid)"` |
+
+서버는 시작할 때 만든 `.html` 허용 목록으로만 응답하므로, 요청 경로가 파일 시스템에 닿지 않습니다.
+이미지가 내장된 보고서는 기본으로 잠기고 `--include-personal` 로만 열립니다. 템플릿은 `templates/report.html`,
+넘기기 전 검사 목록은 `reference/checklist.md` 에 있습니다.
+
 ## AI 참조 문서
 
 `docs/ai-reference/` 경로에 AI가 참고할 수 있는 Claude SDK, 튜토리얼, 연구자료 등이 정리되어 있습니다.
@@ -293,6 +310,7 @@ plugins/
       worklog/SKILL.md      # /worklog 스킬
       prjdocs/SKILL.md      # /prjdocs 스킬
       humanizer/            # /humanizer 스킬 (SKILL.md + references/patterns.md)
+      techreport/           # /techreport 스킬 (템플릿, 검사 목록, 보고서 서버)
   prompts-pack/
     .claude-plugin/plugin.json
     agents/                 # debugger, code-reviewer, ...

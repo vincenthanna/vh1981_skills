@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{제목}}</title>
+<style>
+:root{
+  --bg:#faf9f7; --card:#fff; --ink:#1a1a1c; --mut:#6b6b72; --line:#e3e0da;
+  --blue:#2f6fd0; --red:#cf4a3e; --amber:#c88a1e; --green:#2e8b57; --violet:#6b4fb8;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16161a; --card:#1e1e24; --ink:#e9e8e4; --mut:#9b9aa3; --line:#32323a;
+  --blue:#74a6f0; --red:#f08478; --amber:#e8b85a; --green:#64c08c; --violet:#a994e8;
+}}
+:root[data-theme="dark"]{
+  --bg:#16161a; --card:#1e1e24; --ink:#e9e8e4; --mut:#9b9aa3; --line:#32323a;
+  --blue:#74a6f0; --red:#f08478; --amber:#e8b85a; --green:#64c08c; --violet:#a994e8;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.78 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Malgun Gothic",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px 120px}
+header{padding:60px 0 26px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(25px,4.2vw,38px);line-height:1.26;margin:0 0 14px;letter-spacing:-.02em}
+.sub{color:var(--mut);font-size:15px;margin:0}
+.sub b{color:var(--ink);font-weight:600}
+h2{font-size:clamp(20px,3vw,26px);margin:62px 0 6px;letter-spacing:-.015em;scroll-margin-top:16px}
+h2 .n{color:var(--mut);font-weight:400;font-variant-numeric:tabular-nums;margin-right:.5em}
+h3{font-size:18px;margin:34px 0 8px;letter-spacing:-.01em;scroll-margin-top:16px}
+h4{font-size:14px;margin:24px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.07em}
+p{margin:13px 0}
+a{color:var(--blue)}
+.t{border-bottom:1px dotted color-mix(in srgb,var(--blue) 55%,transparent);
+   text-decoration:none;color:inherit;cursor:help}
+.t:hover{background:color-mix(in srgb,var(--blue) 12%,transparent);border-radius:3px}
+code{font:13px/1.5 var(--mono);background:color-mix(in srgb,var(--ink) 7%,transparent);
+  padding:1px 5px;border-radius:4px;word-break:break-word}
+hr{border:0;border-top:1px solid var(--line);margin:46px 0}
+.lede{font-size:18px;line-height:1.72}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:28px 0}
+.toc ol{margin:0;padding-left:1.3em;columns:2;column-gap:28px}
+.toc li{margin:3px 0;break-inside:avoid}
+.toc a{text-decoration:none}.toc a:hover{text-decoration:underline}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);
+  border-radius:0 10px 10px 0;padding:14px 18px;margin:22px 0}
+.box.warn{border-left-color:var(--red)}
+.box.ok{border-left-color:var(--green)}
+.box.note{border-left-color:var(--amber)}
+.box.plain{border-left-color:var(--violet)}
+.box .lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--mut);display:block;margin-bottom:4px}
+.box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:20px 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:430px}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:600;
+  border-bottom:1.5px solid var(--line)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hi td{background:color-mix(in srgb,var(--blue) 9%,transparent);font-weight:600}
+tr.bad td{background:color-mix(in srgb,var(--red) 9%,transparent)}
+.good{color:var(--green);font-weight:600}.bad{color:var(--red);font-weight:600}.dim{color:var(--mut)}
+figure{margin:26px 0}
+figcaption{font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6}
+svg{max-width:100%;height:auto;display:block}
+.svgwrap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 16px;overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:12px;margin:24px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .v{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .k{font-size:12.5px;color:var(--mut);margin-top:3px;line-height:1.45}
+ul,ol{margin:12px 0;padding-left:1.4em}
+li{margin:7px 0}
+dl.gloss{margin:18px 0}
+dl.gloss dt{font-weight:700;margin:20px 0 2px;scroll-margin-top:16px}
+dl.gloss dt .en{font-weight:400;color:var(--mut);font-size:13.5px;margin-left:8px}
+dl.gloss dd{margin:0 0 4px;color:var(--ink)}
+dl.gloss dd.ex{color:var(--mut);font-size:14px}
+.strike{text-decoration:line-through;color:var(--mut)}
+sup.c{font-size:11px;font-weight:700;vertical-align:super;line-height:0}
+sup.c a{text-decoration:none;color:var(--violet);padding:0 1px}
+sup.c a:hover{text-decoration:underline}
+ol.refs{margin:18px 0;padding-left:0;list-style:none;counter-reset:r}
+ol.refs li{counter-increment:r;margin:22px 0;padding-left:2.5em;position:relative;scroll-margin-top:16px}
+ol.refs li::before{content:"[" counter(r) "]";position:absolute;left:0;top:0;
+ color:var(--violet);font-weight:700;font-size:13px}
+ol.refs .ti{font-weight:600}
+ol.refs .me{color:var(--mut);font-size:13px;display:block;margin:1px 0 5px}
+ol.refs .su{font-size:14.5px;line-height:1.66}
+ol.refs .use{font-size:13.5px;color:var(--mut);display:block;margin-top:5px}
+/* 용어 툴팁 — body 바로 아래에 fixed 로 띄운다.
+   가짜 요소(::after)로 만들면 (a) 화면 좌우 끝에서 잘리고
+   (b) overflow:auto 인 표 안에서는 통째로 클리핑된다. 둘 다 실제로 발생했다. */
+#tip{position:fixed;z-index:9999;max-width:min(360px,calc(100vw - 24px));
+ background:var(--ink);color:var(--bg);font-size:13px;line-height:1.55;font-weight:400;
+ padding:9px 12px;border-radius:9px;text-align:left;
+ box-shadow:0 6px 24px rgba(0,0,0,.26);opacity:0;visibility:hidden;pointer-events:none;
+ transform:translateY(4px);transition:opacity .13s ease,transform .13s ease}
+#tip.on{opacity:1;visibility:visible;transform:translateY(0)}
+#tip::after{content:"";position:absolute;left:var(--ax,50%);transform:translateX(-50%);
+ border:6px solid transparent}
+#tip.up::after{top:100%;border-top-color:var(--ink)}
+#tip.down::after{bottom:100%;border-bottom-color:var(--ink)}
+@media (hover:none){#tip{display:none}}
+footer{margin-top:72px;padding-top:22px;border-top:1px solid var(--line);color:var(--mut);font-size:13.5px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.05em;padding:2px 8px;
+  border-radius:999px;vertical-align:middle;margin-left:6px}
+.tag.v{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green)}
+.tag.x{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
+.tag.l{background:color-mix(in srgb,var(--violet) 18%,transparent);color:var(--violet)}
+@media print{body{background:#fff}.toc{break-inside:avoid}h2{break-after:avoid}}
+
+/* ─── 그림·애니메이션 부품 ────────────────────────────────────────────
+   원칙: 멈춘 상태가 최종 상태다. JS 가 꺼져도, 인쇄해도, 모션을 끈 사용자에게도
+   정보가 전부 보여야 한다. 아래는 전부 "기본은 보임, JS 가 있을 때만 애니메이션" 이다. */
+.steps{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.steps .stage{position:relative;min-height:1px}
+.steps .step{display:none}
+.steps .step.on{display:block;animation:fade .32s ease}
+.steps .step .cap{font-size:14px;color:var(--mut);margin-top:10px;line-height:1.6}
+.steps .nav{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.steps .nav button{font:inherit;font-size:13.5px;padding:7px 14px;border-radius:8px;
+ border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.steps .nav button:hover{border-color:var(--mut)}
+.steps .dots{display:flex;gap:6px;margin-left:auto}
+.steps .dots i{width:8px;height:8px;border-radius:50%;background:var(--line);display:block}
+.steps .dots i.on{background:var(--blue)}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+/* JS 가 없으면 모든 단계를 그냥 세로로 보여준다 */
+html:not(.js) .steps .step{display:block;margin-bottom:18px}
+html:not(.js) .steps .nav{display:none}
+
+.gw{transition:width .45s cubic-bezier(.2,.7,.3,1)}      /* 등장하는 막대 */
+.dr{transition:stroke-dashoffset .6s ease}                /* 그려지는 선 */
+.ba .after{display:none}
+.ba.flip .before{display:none}
+.ba.flip .after{display:block}
+.batog{font:inherit;font-size:13.5px;padding:6px 13px;border-radius:8px;
+ border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;margin-top:10px}
+
+@media (prefers-reduced-motion: reduce){
+  .gw,.dr{transition:none !important}
+  .steps .step.on{animation:none}
+}
+@media print{
+  .steps .step{display:block !important;margin-bottom:14px}
+  .steps .nav{display:none}
+  .ba .after{display:block}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>{{제목}}<br>— {{부제}}</h1>
+  <p class="sub">
+    질문: <b>“{{이 보고서가 답하는 질문 한 문장}}”</b><br>
+    {{날짜}} · <span class="dim">{{프로젝트 / 경로}}</span>
+  </p>
+</header>
+
+<div class="box plain">
+  <span class="lbl">이 문서를 읽는 법</span>
+  <p><b>점선 밑줄이 그어진 낱말</b>은 <b>마우스를 올리면 설명이 바로 뜨고</b>,
+  누르면 <a href="#gloss">용어집</a>의 자세한 설명으로 갑니다.
+  배경 지식이 없으시면 <a href="#q0">0장</a>부터, 익숙하시면 <a href="#q1">1장</a>부터 보시면 됩니다.</p>
+</div>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#q0">아주 쉬운 설명</a></li>
+    <li><a href="#q1">한 장 요약</a></li>
+    <li><a href="#q2">{{본문 절}}</a></li>
+    <li><a href="#qv">검증 기록</a></li>
+    <li><a href="#gloss"><b>용어집</b></a></li>
+    <li><a href="#refs"><b>참고 문헌</b></a></li>
+  </ol>
+</nav>
+
+<!-- ═══ 0장 — 비유를 여기서 세운다. 그리고 비유가 깨지는 지점까지 같이 쓴다 ═══ -->
+<h2 id="q0"><span class="n">00</span>아주 쉬운 설명</h2>
+<h3>우리가 만드는 것</h3>
+<p>{{도메인을 모르는 사람 기준으로. 전문 용어를 쓰면 바로 <a class="t" href="#g-예시">용어 링크</a>를 단다}}</p>
+<h3>무엇이 문제인가</h3>
+<div class="box plain">
+  <span class="lbl">비유</span>
+  <p>{{핵심 기전을 일상 사물로. 이 비유가 문서 전체를 지탱한다}}</p>
+</div>
+<h3>{{그 비유로 설명 안 되는 경우는?}}</h3>
+<p>{{읽는 사람이 바로 떠올릴 반례를 먼저 다룬다. 가능하면 재서 답한다}}</p>
+<h3>그래서 무엇을 확인했나</h3>
+<ol><li>{{코드를 읽어…}}</li><li>{{직접 측정해…}}</li><li>{{문헌을 조사해…}}</li></ol>
+
+<!-- ═══ 1장 — 이것만 읽어도 되게 ═══ -->
+<h2 id="q1"><span class="n">01</span>한 장 요약</h2>
+<div class="kpis">
+  <div class="kpi"><div class="v bad">{{값}}</div><div class="k">{{무엇인지}}</div></div>
+  <div class="kpi"><div class="v">{{값}}</div><div class="k">{{무엇인지}}</div></div>
+  <div class="kpi"><div class="v">{{값}}</div><div class="k">{{무엇인지}}</div></div>
+  <div class="kpi"><div class="v good">{{값}}</div><div class="k">{{무엇인지}}</div></div>
+</div>
+<div class="box warn"><span class="lbl">핵심</span><p>{{한 문단}}</p></div>
+<h4>결론</h4>
+<ol><li><b>{{결론 1}}</b></li><li><b>{{결론 2}}</b></li><li><b>{{결론 3}}</b></li></ol>
+
+<!-- ═══ 본문 — 절마다 "어떻게 쟀나 → 결과 → 무슨 뜻인가" ═══ -->
+<h2 id="q2"><span class="n">02</span>{{본문 절 제목}}</h2>
+<h4>어떻게 측정했나</h4>
+<p>{{표본 수, 설계, 눈가림 여부}}</p>
+<div class="tw"><table>
+<thead><tr><th>조건</th><th class="n">값</th><th>쉬운 설명</th></tr></thead>
+<tbody>
+<tr><td>{{ }}</td><td class="n">{{ }}</td><td>{{지표를 몰라도 읽히게}}</td></tr>
+<tr class="hi"><td><b>{{가장 중요한 줄}}</b></td><td class="n"><b>{{ }}</b></td><td>{{ }}</td></tr>
+</tbody></table></div>
+<div class="box warn"><span class="lbl">읽는 법</span><p>{{숫자가 무슨 뜻인지}}</p></div>
+
+<!-- 차트가 필요하면 인라인 SVG. 외부 리소스·이미지는 쓰지 않는다 -->
+
+<!-- ══ 애니메이션 부품 사용 예 — 필요한 것만 복사해 쓰고 나머지는 지운다 ══
+
+  ① 단계 도식 — 기전을 1·2·3 으로 나눠 보여준다. 0장 비유에 쓰면 효과가 가장 크다.
+     버튼은 JS 가 자동으로 붙인다. JS 가 없으면 전부 세로로 펼쳐진다.
+
+  <div class="steps">
+    <div class="stage">
+      <div class="step on">
+        <svg viewBox="0 0 820 200" role="img" aria-label="{{1단계 설명}}"> ... </svg>
+        <p class="cap"><b>1.</b> {{무슨 일이 일어나는가}}</p>
+      </div>
+      <div class="step">
+        <svg viewBox="0 0 820 200" role="img" aria-label="{{2단계}}"> ... </svg>
+        <p class="cap"><b>2.</b> {{ }}</p>
+      </div>
+    </div>
+  </div>
+
+  ② 등장하는 막대 — width 를 0 으로 두지 말고 data-w 에 최종값을 쓴다.
+     JS 가 꺼져 있으면 그대로 최종 폭으로 그려진다.
+
+  <rect class="gw" data-w="296" x="210" y="56" width="296" height="16" rx="3" fill="#cf4a3e"/>
+
+  ③ 그려지는 선 — data-len 은 선의 대략적인 길이(px). 넉넉히 잡아도 된다.
+
+  <polyline class="dr" data-len="760" points="70,200 210,118 350,69 770,30"
+            fill="none" stroke="#2f6fd0" stroke-width="2.5"/>
+
+  ④ 숫자 세기 — 본문 텍스트에 최종값을 그대로 쓰고 data-to 를 같이 둔다.
+
+  <div class="v bad"><span class="cu" data-to="68">68</span>%</div>
+
+  ⑤ 전/후 토글 — 같은 자리에서 바뀌므로 차이가 선명하다.
+
+  <div class="ba">
+    <div class="before"><svg ...>{{전}}</svg></div>
+    <div class="after"><svg ...>{{후}}</svg></div>
+    <button class="batog" type="button" data-b="후 →" data-a="← 전">후 →</button>
+  </div>
+-->
+
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 820 220" role="img" aria-label="{{설명}}">
+  <g font-family="inherit" font-size="13" fill="currentColor">
+    <!-- 축/막대/곡선. 색은 #2f6fd0(파랑) #cf4a3e(빨강) -->
+  </g>
+</svg>
+</div>
+<figcaption>{{무엇을 보여주는 그림인지}}</figcaption>
+</figure>
+
+<!-- ═══ 검증 기록 — 빼지 말 것 ═══ -->
+<h2 id="qv"><span class="n">NN</span>검증 기록</h2>
+<p>{{조사 출처}}의 주장을 <b>그대로 옮기지 않고 직접 확인</b>했습니다.</p>
+<div class="tw"><table>
+<thead><tr><th>보고된 주장</th><th>직접 확인</th><th></th></tr></thead>
+<tbody>
+<tr><td>{{ }}</td><td>동일</td><td class="n"><span class="tag v">확인</span></td></tr>
+<tr><td>{{ }}</td><td><b>{{다른 값}}</b></td><td class="n"><span class="tag x">불일치</span></td></tr>
+</tbody></table></div>
+<div class="box note"><span class="lbl">왜 이 기록을 남기나</span><p>{{한 문단}}</p></div>
+
+<hr>
+<h2 id="qz" style="margin-top:20px">지금 확실한 것 / 아직 모르는 것</h2>
+<div class="tw"><table><thead><tr><th>확실</th><th class="n">값</th></tr></thead>
+<tbody><tr><td>{{ }}</td><td class="n">{{ }}</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>아직 모름</th><th>알려면</th></tr></thead>
+<tbody><tr><td>{{ }}</td><td>{{ }}</td></tr></tbody></table></div>
+
+<!-- ═══ 용어집 — 가나다순이 아니라 이해하는 순서 ═══ -->
+<h2 id="gloss"><span class="n">⌘</span>용어집</h2>
+<p class="dim">가나다순이 아니라 <b>이해하는 순서</b>로 놓았습니다.</p>
+<dl class="gloss">
+<dt id="g-예시">{{용어}} <span class="en">{{English}}</span></dt>
+<dd>{{한두 문장 정의. 이 내용이 그대로 마우스 팝업이 된다}}</dd>
+<dd class="ex">{{비유나 예시. 팝업에서는 제외된다}}</dd>
+</dl>
+
+<!-- ═══ 참고 문헌 — 제목을 직접 확인한 것만 ═══ -->
+<h2 id="refs"><span class="n">※</span>참고 문헌</h2>
+<div class="box note"><span class="lbl">읽기 전에</span>
+<p>아래는 <b>arXiv 공식 API 로 번호와 제목이 일치하는지 직접 확인</b>한 것만 실었습니다.
+다만 <b>논문 안의 개별 수치까지 원문 대조로 재확인하지는 않았습니다</b>.</p></div>
+<ol class="refs">
+<li id="r1"><span class="ti">{{제목}}</span>
+<span class="me">{{저자, 학회 연도}} · <a href="https://arxiv.org/abs/{{id}}" target="_blank" rel="noopener">arXiv:{{id}}</a></span>
+<span class="su">{{3~4줄 요약 — 무엇을 했고 핵심 결론이 무엇인지}}</span>
+<span class="use"><b>이 보고서에서</b> — {{어디에 썼는지 한 줄}}</span></li>
+</ol>
+
+<footer>
+  <p><b>출처</b> — {{재현 가능한 산출물 경로}}</p>
+  <p>이 문서에는 <b>민감 이미지가 포함돼 있지 않습니다</b> — 수치·표·도식만 들어갑니다.</p>
+  <p class="dim">{{프로젝트}} · {{날짜}}</p>
+</footer>
+</div>
+<script>
+/* 용어 툴팁.
+   설명은 용어집 <dd> 에서 그대로 긁어오므로 두 번 적지 않는다 — 용어집을 고치면 툴팁도 바뀐다.
+   말풍선은 하나만 만들어 body 에 붙이고 fixed 로 띄운다:
+     - 화면 좌우 끝에서 잘리지 않도록 가로 위치를 클램프하고
+     - 표(overflow:auto) 안의 용어에서도 클리핑되지 않는다. */
+(function () {
+  var PAD = 12, GAP = 10;
+  var tip = document.createElement('div');
+  tip.id = 'tip';
+  document.body.appendChild(tip);
+
+  var terms = document.querySelectorAll('a.t[href^="#g-"]');
+  terms.forEach(function (a) {
+    var dt = document.getElementById(a.getAttribute('href').slice(1));
+    if (!dt) return;
+    var txt = '', n = dt.nextElementSibling;
+    while (n && n.tagName === 'DD') {           // 첫 정의만; 예시(.ex)는 제외
+      if (n.classList.contains('ex')) break;
+      txt += (txt ? ' ' : '') + n.textContent.trim();
+      n = n.nextElementSibling;
+    }
+    txt = txt.replace(/\s+/g, ' ').trim();
+    if (txt.length > 190) txt = txt.slice(0, 188).replace(/[\s,.\u00b7]+$/, '') + '\u2026';
+    if (txt) a.setAttribute('data-tip', txt);
+  });
+
+  var cur = null;
+
+  function place(a) {
+    var r = a.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth;
+    var vh = document.documentElement.clientHeight;
+
+    tip.style.left = '0px';                      // 측정 전 폭 제약 해제
+    tip.style.top = '0px';
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+
+    var cx = r.left + r.width / 2;               // 용어의 가로 중심
+    var x = cx - w / 2;                          // 이상적인 위치
+    x = Math.max(PAD, Math.min(x, vw - w - PAD)); // 화면 안으로 클램프
+
+    var above = r.top - h - GAP >= PAD;          // 위 공간이 모자라면 아래로
+    var y = above ? r.top - h - GAP : r.bottom + GAP;
+    y = Math.max(PAD, Math.min(y, vh - h - PAD));
+
+    tip.style.left = Math.round(x) + 'px';
+    tip.style.top = Math.round(y) + 'px';
+    tip.classList.toggle('up', above);
+    tip.classList.toggle('down', !above);
+    // 화살표는 클램프된 뒤에도 용어를 가리켜야 한다
+    var ax = Math.max(12, Math.min(cx - x, w - 12));
+    tip.style.setProperty('--ax', Math.round(ax) + 'px');
+  }
+
+  function show(a) {
+    var txt = a.getAttribute('data-tip');
+    if (!txt) return;
+    cur = a;
+    tip.textContent = txt;
+    place(a);
+    tip.classList.add('on');
+  }
+
+  function hide() {
+    cur = null;
+    tip.classList.remove('on');
+  }
+
+  terms.forEach(function (a) {
+    a.addEventListener('mouseenter', function () { show(a); });
+    a.addEventListener('focus', function () { show(a); });
+    a.addEventListener('mouseleave', hide);
+    a.addEventListener('blur', hide);
+  });
+  addEventListener('scroll', function () { if (cur) place(cur); }, { passive: true });
+  addEventListener('resize', hide);
+  addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+})();
+
+/* ─── 그림·애니메이션 부품 ───────────────────────────────────────────
+   전부 선택적 장식이다. 이 블록이 통째로 실패해도 문서는 최종 상태로 읽힌다. */
+(function () {
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('js');
+
+  /* 1) 단계 도식 — 자동 반복하지 않는다. 버튼으로만 넘어간다 */
+  document.querySelectorAll('.steps').forEach(function (box) {
+    var steps = box.querySelectorAll('.step');
+    if (!steps.length) return;
+    var i = 0;
+    var nav = document.createElement('div');
+    nav.className = 'nav';
+    nav.innerHTML = '<button type="button" data-d="-1">← 이전</button>' +
+                    '<button type="button" data-d="1">다음 →</button><span class="dots"></span>';
+    box.appendChild(nav);
+    var dots = nav.querySelector('.dots');
+    steps.forEach(function () { dots.appendChild(document.createElement('i')); });
+    function draw() {
+      steps.forEach(function (s, k) { s.classList.toggle('on', k === i); });
+      dots.querySelectorAll('i').forEach(function (d, k) { d.classList.toggle('on', k === i); });
+      nav.querySelectorAll('button').forEach(function (b) {
+        b.disabled = (b.dataset.d === '-1' && i === 0) ||
+                     (b.dataset.d === '1' && i === steps.length - 1);
+        b.style.opacity = b.disabled ? .45 : 1;
+      });
+    }
+    nav.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      i = Math.max(0, Math.min(steps.length - 1, i + (+b.dataset.d)));
+      draw();
+    });
+    draw();
+  });
+
+  /* 2) 등장 — 화면에 들어올 때 한 번만. data-w / data-len 이 최종값이다 */
+  var grows = document.querySelectorAll('.gw[data-w], .dr[data-len]');
+  if (grows.length) {
+    if (reduce || !('IntersectionObserver' in window)) {
+      grows.forEach(function (el) {
+        if (el.dataset.w) el.setAttribute('width', el.dataset.w);
+        if (el.dataset.len) el.style.strokeDashoffset = 0;
+      });
+    } else {
+      grows.forEach(function (el) {
+        if (el.dataset.w) el.setAttribute('width', 0);
+        if (el.dataset.len) {
+          el.style.strokeDasharray = el.dataset.len;
+          el.style.strokeDashoffset = el.dataset.len;
+        }
+      });
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          var el = e.target;
+          if (el.dataset.w) el.setAttribute('width', el.dataset.w);
+          if (el.dataset.len) el.style.strokeDashoffset = 0;
+          io.unobserve(el);
+        });
+      }, { threshold: .25 });
+      grows.forEach(function (el) { io.observe(el); });
+    }
+  }
+
+  /* 3) 숫자 세기 — data-to 가 최종값. 텍스트는 처음부터 최종값으로 두고 JS 가 되감는다 */
+  var ups = document.querySelectorAll('.cu[data-to]');
+  if (ups.length && !reduce && 'IntersectionObserver' in window) {
+    var io2 = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var el = e.target, to = parseFloat(el.dataset.to);
+        var dec = (el.dataset.to.split('.')[1] || '').length, t0 = 0;
+        io2.unobserve(el);
+        function tick(ts) {
+          if (!t0) t0 = ts;
+          var k = Math.min(1, (ts - t0) / 400);
+          el.textContent = (to * (1 - Math.pow(1 - k, 3))).toFixed(dec);
+          if (k < 1) requestAnimationFrame(tick); else el.textContent = el.dataset.to;
+        }
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: .5 });
+    ups.forEach(function (el) { io2.observe(el); });
+  }
+
+  /* 4) 전/후 토글 */
+  document.querySelectorAll('.ba').forEach(function (box) {
+    var b = box.querySelector('.batog');
+    if (b) b.addEventListener('click', function () {
+      box.classList.toggle('flip');
+      b.textContent = box.classList.contains('flip') ? (b.dataset.a || '← 전') : (b.dataset.b || '후 →');
+    });
+  });
+})();
+</script>
+</html>
