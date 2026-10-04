@@ -28,6 +28,7 @@ vh1981 플러그인이 매 세션 시작 시 주입하는 기본 규칙이다.
 - UI 변경은 브라우저에서 실제 동작 확인 후 완료 보고.
 - 작업 중간/종료 보고는 1-2문장.
 - worktree에서 git을 다루거나, ssh·docker로 원격 명령을 보내거나, gh로 PR 본문을 고치거나, subagent·외부 LLM CLI를 쓸 때는 먼저 `{{GUIDELINES_DIR}}/shell-pitfalls.md` 를 읽는다. 오류 없이 조용히 실패하는 함정 모음이다.
+- claude.ai 커넥터(Notion 등)가 `not connected` 이거나 재연결이 404로 실패하면, 포기하거나 재시도를 반복하지 말고 `{{GUIDELINES_DIR}}/mcp-connectors.md` 의 우회 절차를 따른다.
 
 ## 모델 학습
 - 긴 학습은 시작 전에 끝난 뒤 이어서 학습할 수 있는지 확인한다. ultralytics 는 정상 종료와 early stopping 때 `last.pt`/`best.pt` 에서 optimizer·EMA 상태를 지운다.

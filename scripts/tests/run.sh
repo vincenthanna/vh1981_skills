@@ -215,6 +215,7 @@ done
 assert_eq "every guideline file it names exists" "" "$missing"
 assert_contains "names the ml-training guideline" "guidelines/ml-training.md" "$refs"
 assert_contains "names the shell-pitfalls guideline" "guidelines/shell-pitfalls.md" "$refs"
+assert_contains "names the mcp-connectors guideline" "guidelines/mcp-connectors.md" "$refs"
 
 # Large hook output is moved to a file and only a preview reaches the context.
 # Bytes over-count Korean text, so this is stricter than a character limit.

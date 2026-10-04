@@ -9,7 +9,7 @@
     {
       "name": "vh1981",
       "description": "vh1981's productivity skills — devlog / worklog / prjdocs / md-to-html / md-tidy / humanizer / techreport for session work logs, project investigation docs, markdown-to-HTML export, conservative markdown whitespace/syntax cleanup, de-AI polishing of outgoing Slack/PR/email text, and standalone HTML technical reports served by topic, plus default guidelines injected into every session",
-      "version": "1.8.0",
+      "version": "1.8.1",
       "author": {
         "name": "vh1981"
       },

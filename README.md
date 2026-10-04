@@ -206,6 +206,7 @@ repo에 남는 markdown 문서는 대상이 아니며 `doc-style.md` 를 따릅�
 | `plugins/vh1981/guidelines/ml-training.md` | 모델 학습을 다룰 때만 읽는 체크포인트·재개 규칙 |
 | `plugins/vh1981/guidelines/japanese-notation.md` | 일본어를 적을 때 읽는 한글 발음 표기 규칙 |
 | `plugins/vh1981/guidelines/shell-pitfalls.md` | worktree, ssh·docker, gh, subagent를 다룰 때 읽는 조용한 실패 함정 모음 |
+| `plugins/vh1981/guidelines/mcp-connectors.md` | claude.ai 커넥터(Notion 등) 연결이 404로 실패할 때 읽는 우회 절차 |
 | `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
@@ -301,6 +302,7 @@ plugins/
       ml-training.md        # 모델 학습 체크포인트·재개 규칙 (필요할 때 Read)
       japanese-notation.md  # 일본어 한글 발음 표기 규칙 (필요할 때 Read)
       shell-pitfalls.md     # 셸·도구 실전 함정 (필요할 때 Read)
+      mcp-connectors.md     # MCP 커넥터 연결 실패 우회 (필요할 때 Read)
     scripts/
       inject-guidelines.sh  # core.md 주입 스크립트
       statusline.sh         # devlog 상태줄 (정본)
