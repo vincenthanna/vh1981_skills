@@ -82,13 +82,13 @@ The depth of investigation should match the complexity of the topic and user's r
 - Grep/glob for relevant files
 - Read key files only (not exhaustive)
 - Summary-level findings
-- No diagrams
+- A diagram only when the finding is a flow or structure (one small mermaid block)
 
 ### Medium (default)
 - Thorough file search across relevant directories
 - Read all related files
 - Detailed findings with tables and code references
-- Data flow traces
+- Data flow traces, drawn as a mermaid diagram
 - Risk assessment if applicable
 
 ### Deep
@@ -96,7 +96,7 @@ The depth of investigation should match the complexity of the topic and user's r
 - Read every related file completely
 - Detailed calculations (memory, performance, scaling)
 - Cross-reference with documentation and git history
-- Mermaid diagrams
+- Mermaid diagrams for every flow and structure; a techreport HTML for charts and mechanisms
 - Comprehensive risk matrix
 
 ### Output length
@@ -104,9 +104,10 @@ Match output length to investigation depth — but there is **no hard line-count
 
 ## Output quality rules
 
-- **Tables over prose**: Use markdown tables for comparisons, location maps, risk assessments, and metrics.
+General style and visuals are not restated here: document structure and sentences follow `${CLAUDE_PLUGIN_ROOT}/guidelines/doc-style.md`, plain technical style and what to draw follow `${CLAUDE_PLUGIN_ROOT}/guidelines/output-principles.md`. The rules below are devlog-specific.
+
 - **Code references**: Always include `file:line` references so the reader can navigate to source.
-- **Data flow notation**: Use `A → B → C` with annotations for describing pipelines and call chains.
-- **Quantitative over qualitative**: Prefer "32MB per view" over "significant memory usage".
+- **Data flow**: draw pipelines and call chains as a mermaid diagram, or as `A → B → C` inside a code block. In prose, write the relation with a verb ("A calls B"), not an arrow.
+- **Quantitative over qualitative**: Prefer "32MB per view" over "significant memory usage". Measurements go in tables with their unit and spread (avg, min, max, percentile).
 - **Conclusions must be actionable**: End with prioritized recommendations, not just observations.
 - **Language consistency**: one project, one language — follow the first doc's language (usually the session's). Section header *text* and prose go in the project language; field *keys* (`Branch`, `Period`, `Summary`), priority tags (`[Critical]` …), and code / `file:line` references stay in English. Do not force-migrate existing files to a different language.

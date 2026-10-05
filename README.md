@@ -98,7 +98,9 @@ docs/devlog/<project>/
 빠집니다. 조사 문서에는 한 줄 판정과 그 이유, 그리고 상세 문서 링크만 남습니다 —
 이유까지 빼면 다음 사람이 같은 시도를 반복하므로 이유는 반드시 본문에 남깁니다.
 
-### worklog
+### worklog (deprecated)
+
+새 작업은 devlog 를 씁니다. `docs/history/` 를 이미 쓰는 repo 에서 `/worklog` 를 명시적으로 부를 때만 동작합니다.
 
 세션 작업 기록을 `docs/history/<subject>/` 경로에 마크다운 파일로 관리합니다.
 
@@ -111,7 +113,9 @@ docs/devlog/<project>/
 | `/worklog select <subject>` | 작업 로그 선택 (활성화) |
 | `/worklog update` | 활성 작업 로그에 진행 내용 추가 |
 
-### prjdocs
+### prjdocs (deprecated)
+
+새 작업은 devlog 를 씁니다. `docs/projects/` 를 이미 쓰는 repo 에서 `/prjdocs` 를 명시적으로 부를 때만 동작합니다.
 
 프로젝트 주제에 대한 심층 조사 결과를 `docs/projects/<project>/` 경로에 구조화된 분석 보고서로 관리합니다.
 
@@ -160,8 +164,8 @@ repo에 남는 markdown 문서는 대상이 아니며 `doc-style.md` 를 따릅�
 여러 repo와 머신의 devlog를 하나의 knowledge base(KB) 디렉토리에 모으고, 어느 세션에서나 업로드·검색·현황 조회를 합니다.
 KB는 로컬 경로나 `ssh://user@host/abs/path` 이며, 원격에는 `python3` 3.8 이상만 있으면 됩니다(스크립트는 첫 호출 때 `<kb>/.kb/bin/` 에 복사됩니다).
 주 독자는 AI이고, 사람은 `/kb` 명령으로 접근합니다.
-기본 KB는 ds35의 `/home/yeonhui/kb`(`ssh://yeonhui@192.168.100.135/home/yeonhui/kb`)이며, `/kb init <위치>`, 환경변수 `VH1981_KB`,
-`--kb <위치>` 로 머신이나 명령마다 바꿀 수 있습니다. 내장 기본값 자체는 `VH1981_KB_DEFAULT` 로 바꿉니다.
+KB 위치는 코드에 넣지 않습니다. 머신마다 `/kb init <위치>` 로 한 번 정하고(`~/.config/vh1981/kb`), 환경변수 `VH1981_KB` 나
+명령의 `--kb <위치>` 로 바꿀 수 있습니다. 여러 머신이 함께 쓰는 기본값은 `VH1981_KB_DEFAULT` 에 둡니다.
 
 | 명령 | 설명 |
 |------|------|
@@ -243,7 +247,7 @@ KB가 있는 머신의 cron이 KB 디렉토리에서 headless claude로 이 스�
 
 | 파일 | 역할 |
 |---|---|
-| `plugins/vh1981/guidelines/core.md` | 매 세션 주입되는 규칙 본문 |
+| `plugins/vh1981/guidelines/core.md` | 매 세션 주입되는 규칙 본문. 맨 위의 우선순위와 "정책 지도"가 주제마다 정본 문서 하나를 정하고, 다른 문서는 정본을 가리키기만 합니다 |
 | `plugins/vh1981/guidelines/doc-style.md` | 문서를 작성할 때만 읽는 상세 규칙 |
 | `plugins/vh1981/guidelines/ml-training.md` | 모델 학습을 다룰 때만 읽는 체크포인트·재개 규칙 |
 | `plugins/vh1981/guidelines/japanese-notation.md` | 일본어를 적을 때 읽는 한글 발음 표기 규칙 |

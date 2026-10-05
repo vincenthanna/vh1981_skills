@@ -9,6 +9,10 @@ description: 임의의 markdown 문서를 사람이 읽기 좋고 직관적으�
 > 무손실 복제가 목적이 아니다 — **이해(comprehension)** 가 목적이다.
 > markdown 이 source of truth(편집·유지 대상)이고, HTML 은 한 방향으로 뽑아내는
 > 검토 전용 throwaway 산출물이다. 역방향(html→md)은 없다. md 를 고치면 다시 export 한다.
+>
+> 무엇을 어떤 그림으로 보여 줄지는 `${CLAUDE_PLUGIN_ROOT}/guidelines/output-principles.md` 를 따른다.
+> 이 뷰는 본인이 브라우저로 보는 개인 검토용이라 CDN 라이브러리(mermaid, highlight.js, 웹폰트)를 써도 된다.
+> 남에게 넘기거나 서버에 올릴 보고서는 자기완결 HTML 이어야 하므로 `vh1981:techreport` 로 만든다.
 
 ---
 

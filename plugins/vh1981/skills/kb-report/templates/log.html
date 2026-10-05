@@ -2,7 +2,7 @@
 <html lang="ko">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>{{TITLE — 예: Daily log 2026-10-04 (일) / Weekly log 2026-W40}}</title>
+<title>{{TITLE. 예: Daily log 2026-10-04 (일) / Weekly log 2026-W40}}</title>
 <style>
 :root{
   --bg:#faf9f7; --card:#fff; --ink:#1a1a1c; --mut:#6b6b72; --line:#e3e0da;
@@ -61,7 +61,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:v
 <header>
   <p class="crumb"><a href="/">← 전체 목록</a></p>
   <h1>{{TITLE}}</h1>
-  <p class="sub">{{기간 — 예: 2026-10-04 (일) · 수집 2026-10-05 06:30 KST}}</p>
+  <p class="sub">{{기간. 예: 2026-10-04 (일) · 수집 2026-10-05 06:30 KST}}</p>
 </header>
 
 <h2>요약</h2>
@@ -86,7 +86,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:v
   <rect class="bar c" x="{{250+항목 폭+수정 폭}}" y="12" width="{{커밋 폭}}" height="18"/>
   <text class="num" x="{{막대 끝+8}}" y="25">항목 {{a}} · 수정 {{b}} · 커밋 {{c}}</text>
 </svg>
-<figcaption>{{무엇을 보라는 그림인지 한 줄. 예: 활동은 fancl-staff-journey 에 몰렸고 나머지는 문서 정리뿐이다}}</figcaption>
+<figcaption>{{무엇을 보라는 그림인지 한 줄. 예: 활동은 한 프로젝트에 몰렸고 나머지는 문서 정리뿐이다}}</figcaption>
 </figure>
 
 <h2>프로젝트별</h2>
@@ -96,7 +96,7 @@ footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:v
   <h3>{{프로젝트 제목}} <span class="tag live">LIVE</span><!-- KB 사본으로만 수집했으면 <span class="tag copy">KB 사본</span> --></h3>
   <p class="meta"><code>{{KB ID}}</code> · {{host:checkout}}@{{branch}}</p>
   <ul>
-    <li>{{한 일 — 결과의 말로 한 줄. 근거 파일을 괄호로}}</li>
+    <li>{{한 일: 결과의 말로 한 줄. 근거 파일을 괄호로}}</li>
   </ul>
   <p class="src">근거: <code>{{파일 경로}}</code>, 커밋 <code>{{sha}}</code></p>
 </section>

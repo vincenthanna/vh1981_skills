@@ -14,7 +14,7 @@ KB="python3 <이 skill 디렉토리>/scripts/kb.py"     # ${CLAUDE_PLUGIN_ROOT}/
 
 ## KB 위치
 
-기본 KB는 ds35의 `/home/yeonhui/kb` 다. 이 값은 고정이 아니며, 머신이나 작업마다 바꿔 쓸 수 있다. 위치는 아래 순서로 정해진다.
+KB 위치는 코드에 들어 있지 않다. 머신마다 한 번 정하고, 필요하면 작업마다 바꿔 쓴다. 위치는 아래 순서로 정해진다.
 
 | 순서 | 출처 | 바꾸는 법 |
 |---|---|---|
@@ -22,14 +22,15 @@ KB="python3 <이 skill 디렉토리>/scripts/kb.py"     # ${CLAUDE_PLUGIN_ROOT}/
 | 2 | 환경변수 `VH1981_KB` | 셸이나 settings.json env |
 | 3 | `~/.config/vh1981/kb` | `$KB init <위치>` 가 쓴다 |
 | 4 | `docs/devlog/.upload-target` | 이전 방식. 보이면 `$KB init <그 위치>` 를 제안한다 |
-| 5 | 내장 기본값 `ssh://yeonhui@192.168.100.135/home/yeonhui/kb` | 환경변수 `VH1981_KB_DEFAULT` 로 바꾼다 |
+| 5 | 환경변수 `VH1981_KB_DEFAULT` | 여러 머신이 함께 쓰는 공용 기본값. 셸 profile이나 settings.json env에 둔다 |
 
 위치는 로컬 절대경로 또는 `ssh://user@host/abs/path` 다. ssh 위치라도 그 KB가 지금 머신에 있으면(KB의 `.kb/host` 가 이 머신 이름) 로컬 경로로 바로 쓴다.
 `$KB where` 는 쓰일 위치와 그 출처를 보여 준다. 사용자가 다른 KB를 쓰겠다고 하면 `$KB init <새 위치>` 로 만들고 이 머신의 기본으로 저장한다.
 KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로, 위치를 바꿔도 문서끼리의 참조는 그대로다.
 
-`$KB where --configured` 는 1~4번으로 정한 위치가 없으면(내장 기본값뿐이면) 종료 코드 1을 낸다. `/devlog update` 의 자동 업로드는 이 검사를 통과한 머신에서만 돈다.
-내장 기본값은 사내망에서만 닿으므로, 그 밖의 머신에서 자동 업로드가 ssh 대기로 느려지지 않게 하기 위해서다. 그런 머신은 `$KB init` 을 한 번 하면 자동 업로드가 켜진다.
+다섯 곳 모두 비어 있으면 "KB 위치가 없다"로 실패한다. 그때는 사용자에게 위치를 묻고 `$KB init <위치>` 를 한다.
+`$KB where --configured` 는 1~4번으로 정한 위치가 없으면(5번 공용 기본값뿐이면) 종료 코드 1을 낸다. `/devlog update` 의 자동 업로드와 자동 checkin은 이 검사를 통과한 머신에서만 돈다.
+공용 기본값은 특정 망에서만 닿을 수 있으므로, 그 밖의 머신에서 자동 업로드가 ssh 대기로 느려지지 않게 하기 위해서다. 그런 머신은 `$KB init` 을 한 번 하면 자동 업로드가 켜진다.
 
 ## 명령 라우팅
 
@@ -61,7 +62,7 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
      tags: [reid, int8]        # KB의 KB.md "태그 어휘"에서 고른다
      summary: >-
        무엇을 왜 하는지와 현재 결론, 3줄 이내
-     related: [repos/ppap/pa-reid-train-speedup]
+     related: [repos/<repo>/<other-project>]
    ---
    ```
 
@@ -86,7 +87,7 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
 2. `$KB search <패턴>... [--scope <프로젝트 ID>]` 로 본문을 찾는다. 패턴은 정규식이고 대소문자를 무시하며 여러 개면 OR다. 한국어와 영어 표현을 함께 넣는다.
    `history/`, `rejected/`, `_archived/` 는 사용자가 과거 경위나 버린 방법을 물을 때만 `--all` 로 포함한다.
 3. 일치한 문서만 `$KB cat <ID>/<파일>` 로 읽는다. 파일 목록이 필요하면 `$KB cat <ID>` 를 쓴다.
-4. 답에는 프로젝트 ID와 파일 경로를 함께 적는다. 예: `repos/ppap/reid-low-res-similarity/21_id-loss-bnneck-report.html`.
+4. 답에는 프로젝트 ID와 파일 경로를 함께 적는다. 예: `repos/<repo>/<project>/03_latency-analysis.md`.
 5. KB 사본이 오래돼 보이면(INDEX의 마지막 업로드 날짜) `$KB fetch` 로 소유 checkout의 최신 내용을 읽자고 제안한다.
 
 문서 안의 절대경로는 그 문서를 쓴 머신의 경로다. 지금 머신에 있다고 가정하지 않는다. 그 경로를 봐야 하면 등록부의 checkout `access` 로 `$KB fetch` 한다.

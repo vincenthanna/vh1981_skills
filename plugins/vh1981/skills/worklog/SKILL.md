@@ -1,7 +1,9 @@
 ---
 name: worklog
-description: Manage session work logs as human-readable markdown files in docs/history/<subject>/. Supports create, list, select, and update commands. Use this skill whenever the user wants to log work progress, create a work history entry, save session context for later, back up what was done, or resume tracking work from a previous session. Trigger phrases include "worklog", "log my work", "save work history", "create worklog", "update worklog", "list worklogs", "select worklog". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
+description: DEPRECATED legacy skill, superseded by vh1981:devlog. Manages session work logs in docs/history/<subject>/ for repos that still use that old layout. Use ONLY when the user explicitly types /worklog or names the "worklog" skill, or asks to keep working in an existing docs/history/<subject>/ tree. For any new investigation, deep dive, analysis report or work log, use vh1981:devlog instead.
 ---
+
+> **Deprecated.** 새 작업은 `vh1981:devlog` 를 쓴다. 이 스킬은 `docs/history/<subject>/` 를 이미 쓰는 repo의 기존 문서를 이어 쓸 때만 쓴다. 문서 작성 규칙은 devlog와 같이 `doc-style.md` 와 `output-principles.md` 를 따른다.
 
 # Worklog Context
 

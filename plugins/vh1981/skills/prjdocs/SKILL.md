@@ -1,7 +1,9 @@
 ---
 name: prjdocs
-description: Investigate and document project topics with structured analysis reports. Supports create, list, select, and update commands. Reports are stored as markdown files in docs/projects/<project>/. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, document architecture decisions, evaluate risks, compare cross-repo implementations, or produce structured findings with tables and diagrams. Trigger phrases include "prjdocs", "investigate", "analyze this", "deep dive", "evaluate", "document findings", "create project doc", "update project doc", "list project docs". Do NOT use for git commits (use /commit), PR descriptions (use /pr), session work logs (use /worklog), or code changes (use /develop).
+description: DEPRECATED legacy skill, superseded by vh1981:devlog. Manages investigation reports in docs/projects/<project>/ for repos that still use that old layout. Use ONLY when the user explicitly types /prjdocs or names the "prjdocs" skill, or asks to keep working in an existing docs/projects/<project>/ tree. For any new investigation, deep dive, analysis report or work log, use vh1981:devlog instead.
 ---
+
+> **Deprecated.** 새 작업은 `vh1981:devlog` 를 쓴다. 이 스킬은 `docs/projects/<project>/` 를 이미 쓰는 repo의 기존 문서를 이어 쓸 때만 쓴다. 문서 작성 규칙은 devlog와 같이 `doc-style.md` 와 `output-principles.md` 를 따른다.
 
 # Project Docs Context
 
@@ -190,7 +192,7 @@ The depth of investigation should match the complexity of the topic and user's r
 - Grep/glob for relevant files
 - Read key files only (not exhaustive)
 - Summary-level findings
-- No diagrams
+- A diagram only when the finding is a flow or structure
 
 ### Medium (default)
 - Thorough file search across relevant directories
@@ -213,7 +215,7 @@ The depth of investigation should match the complexity of the topic and user's r
 
 - **Tables over prose**: Use markdown tables for comparisons, location maps, risk assessments, and metrics.
 - **Code references**: Always include `file:line` references so the reader can navigate to source.
-- **Data flow notation**: Use `A → B → C` with annotations for describing pipelines and call chains.
+- **Data flow**: draw pipelines and call chains as a mermaid diagram, or as `A → B → C` inside a code block. In prose, write the relation with a verb.
 - **Quantitative over qualitative**: Prefer "32MB per view" over "significant memory usage".
 - **Conclusions must be actionable**: End with prioritized recommendations, not just observations.
 - **Korean or English**: Match the language the user has been using in the session.

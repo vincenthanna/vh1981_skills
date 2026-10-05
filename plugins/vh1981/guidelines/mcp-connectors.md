@@ -21,7 +21,7 @@ Claude 로그인 계정을 바꾼 직후에 이렇게 된 사례가 있다. 같�
    ```
 
 2. `mcp__<서버>__authenticate` 를 인자 없이 호출한다. 인증 URL이 돌아온다.
-3. 사용자에게 URL을 주고, 회사 Notion 워크스페이스(DeepingSource) 계정으로 승인하게 한다.
+3. 사용자에게 URL을 주고, 회사 Notion 워크스페이스 계정으로 승인하게 한다.
 4. 브라우저가 `http://localhost:<port>/callback?code=...&state=...` 로 이동하면서 연결 오류를 보인다. 원격 세션에서는 정상이다.
    사용자에게 주소창의 전체 URL을 복사해 대화에 붙여 달라고 한다.
 5. `mcp__<서버>__complete_authentication` 을 그 URL을 `callback_url` 로 넘겨 호출한다.

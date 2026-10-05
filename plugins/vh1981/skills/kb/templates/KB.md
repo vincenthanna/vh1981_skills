@@ -20,7 +20,7 @@ topics/<topic>/<project>/     repo 없이 만든 devlog 사본
 .kb/bin/kb.py                 ssh 접근 시 클라이언트가 복사해 두는 스크립트
 ```
 
-프로젝트 ID는 KB 안 경로다. 예를 들어 `repos/ppap/reid-low-res-similarity` 다. 문서끼리 참조하거나 답에 출처를 적을 때 이 ID를 쓴다.
+프로젝트 ID는 KB 안 경로다. 예를 들어 `repos/<repo>/<project>` 다. 문서끼리 참조하거나 답에 출처를 적을 때 이 ID를 쓴다.
 
 ## 업로드 규칙
 

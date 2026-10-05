@@ -370,10 +370,11 @@ assert_contains "daily logs are newest first" "['2026-10-03', '2026-10-02', '202
 
 where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
 out=$(where)
-assert_contains "built-in default is the ds35 KB" "ssh://yeonhui@192.168.100.135/home/yeonhui/kb  (출처: built-in default)" "$out"
-assert_contains "built-in default alone is not 'configured'" "rc=1" "$out"
+assert_contains "with nothing configured there is no KB" "KB 위치가 없다" "$out"
+assert_not_contains "no host or user name is built into kb.py" "192.168" "$(cat "$KBPY")"
 out=$(where VH1981_KB_DEFAULT=/srv/kb)
-assert_contains "VH1981_KB_DEFAULT replaces the built-in default" "/srv/kb  (출처: built-in default)" "$out"
+assert_contains "VH1981_KB_DEFAULT supplies a shared default" "/srv/kb  (출처: built-in default)" "$out"
+assert_contains "the shared default alone is not 'configured'" "rc=1" "$out"
 mkdir -p "$KBT/home/.config/vh1981" && printf '%s' "$KBT/kb" > "$KBT/home/.config/vh1981/kb"
 out=$(where)
 assert_contains "init's config file outranks the default" "rc=0" "$out"

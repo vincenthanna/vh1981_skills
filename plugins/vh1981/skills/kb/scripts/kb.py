@@ -43,9 +43,8 @@ from urllib.parse import urlparse
 
 SCRIPT = os.path.realpath(__file__) if "__file__" in globals() else ""
 CONFIG = os.path.expanduser("~/.config/vh1981/kb")
-# Built-in default KB, used only when nothing else names one. Override per
-# machine with `kb.py init <location>`, VH1981_KB, or VH1981_KB_DEFAULT.
-DEFAULT_KB = "ssh://yeonhui@192.168.100.135/home/yeonhui/kb"
+# Shared default KB, used only when nothing else names one. It comes from the
+# environment (VH1981_KB_DEFAULT) so no host or user name lives in this public repo.
 TEXT_EXT = {".md", ".txt", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".csv", ".log",
             ".toml", ".cfg", ".ini", ".patch", ".diff"}
 TEXT_MAX = 512 * 1024
@@ -693,14 +692,20 @@ def git_top(cwd):
 
 
 def default_spec() -> str:
-    return os.environ.get("VH1981_KB_DEFAULT") or DEFAULT_KB
+    return os.environ.get("VH1981_KB_DEFAULT", "").strip()
+
+
+NO_KB = "KB 위치가 없다. `kb.py init <위치>` 로 이 머신의 KB를 정하거나 VH1981_KB 를 설정한다"
 
 
 def resolve_loc(explicit) -> Loc:
-    return _resolve(explicit).localize()
+    loc = _resolve(explicit)
+    if loc is None:
+        die(NO_KB)
+    return loc.localize()
 
 
-def _resolve(explicit) -> Loc:
+def _resolve(explicit):
     if explicit:
         return Loc(explicit, "--kb")
     if os.environ.get("VH1981_KB"):
@@ -719,7 +724,7 @@ def _resolve(explicit) -> Loc:
             return Loc(v, f"{legacy} (legacy)")
     except OSError:
         pass
-    return Loc(default_spec(), "built-in default")
+    return Loc(default_spec(), "built-in default") if default_spec() else None
 
 
 _pushed = set()
@@ -1000,6 +1005,8 @@ def render_upload(p, res, inc, exc, verbose):
 
 
 def cmd_init(a):
+    if not a.location and not default_spec():
+        die("KB 위치를 지정한다: kb.py init <로컬 경로 | ssh://user@host/abs/path>")
     loc = Loc(a.location or default_spec(), "argument" if a.location else "built-in default")
     tmpl = os.path.join(os.path.dirname(SCRIPT), "..", "templates", "KB.md")
     kb_md = open(tmpl, encoding="utf-8").read() if os.path.isfile(tmpl) else "# KB\n"
@@ -1063,7 +1070,7 @@ def cmd_checkin(a):
     if os.environ.get("VH1981_KB_CHECKIN", "1") == "0":
         return 0
     loc = _resolve(a.kb)
-    if loc.source.startswith("built-in default") and not a.force:
+    if loc is None or (loc.source.startswith("built-in default") and not a.force):
         return 0                      # only machines that ran `kb init` (or set VH1981_KB)
     loc.localize()
     idt = ident(os.getcwd())
@@ -1326,7 +1333,7 @@ def main(argv=None):
     sp = ap.add_subparsers(dest="cmd", required=True)
 
     p = sp.add_parser("init", help="KB를 만들고 이 머신의 기본 KB로 저장")
-    p.add_argument("location", nargs="?", help=f"생략하면 기본값 {DEFAULT_KB}")
+    p.add_argument("location", nargs="?", help="생략하면 VH1981_KB_DEFAULT")
     p.add_argument("--no-save", action="store_true")
     p.set_defaults(fn=cmd_init)
 
@@ -1352,7 +1359,7 @@ def main(argv=None):
 
     p = sp.add_parser("search", help="KB 본문 검색 (정규식, 대소문자 무시, 여러 개는 OR)")
     p.add_argument("patterns", nargs="+")
-    p.add_argument("--scope", help="경로 접두어. 예: repos/ppap/reid-low-res-similarity")
+    p.add_argument("--scope", help="경로 접두어. 예: repos/<repo>/<project>")
     p.add_argument("--all", action="store_true", help="history/, rejected/, _archived/ 포함")
     p.add_argument("--per-file", type=int, default=2)
     p.add_argument("--max", type=int, default=40)

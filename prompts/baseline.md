@@ -47,8 +47,11 @@
 | Skill | 용도 |
 |-------|------|
 | `vh1981:devlog` | 통합 작업 로그 + 조사 보고서 (`docs/devlog/<project>/`) |
-| `vh1981:worklog` | 세션 작업 히스토리 (`docs/history/<subject>/`) |
-| `vh1981:prjdocs` | 프로젝트 조사/분석 보고서 (`docs/projects/<project>/`) |
+| `vh1981:kb` | 여러 repo·머신의 devlog knowledge base 업로드·검색·현황 |
+| `vh1981:kb-report` | KB 기반 daily/weekly log (cron) |
+| `vh1981:techreport` | 비전공자용 단일 HTML 기술 보고서 |
+| `vh1981:humanizer` | Slack·PR·메일 같은 바깥 글 다듬기 |
+| `vh1981:worklog`, `vh1981:prjdocs` | deprecated. devlog 로 통합됨, 기존 레이아웃 repo 에서 명시 호출할 때만 |
 | `bug-fix` | 분석 → 방향 제시 → 승인 후 구현의 3단계 버그 수정 |
 | `analyze` | 코드 수정 없이 분석만 |
 | `verify` | 검증-수정 반복 사이클 |
