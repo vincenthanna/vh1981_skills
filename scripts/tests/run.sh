@@ -238,6 +238,102 @@ assert_eq "injector exits 0 when the plugin root is missing" "0" "$?"
 assert_eq "injector stays quiet when the plugin root is missing" "" "$out"
 
 echo
+echo "# kb.py (devlog knowledge base)"
+
+KBPY="$ROOT/plugins/vh1981/skills/kb/scripts/kb.py"
+KBT="$TMP/kbt"
+mkdir -p "$KBT"
+kbr() { (cd "$1" && shift && python3 "$KBPY" --kb "$KBT/kb" "$@" 2>&1); }
+mkproj() {
+  d="$1/docs/devlog/proj"; mkdir -p "$d/history" "$d/data"
+  printf -- '---\nkb:\n  status: active\n  tags: [reid]\n  summary: >-\n    line one\n    line two\n---\n# Proj\n\n## Remaining / Next (summary)\n- [Critical] fix leak\n- [Low] later\n' > "$d/README.md"
+  echo "needle finding" > "$d/01_a.md"
+  echo "historyonly" > "$d/history/01_h.md"
+  echo x > "$d/data/img.jpg"
+  printf '<img src="data:image/png;base64,AA">' > "$d/embed.html"
+  printf '<p>plain</p>' > "$d/plain.html"
+}
+git init -q "$KBT/main" && git -C "$KBT/main" -c user.email=t@t -c user.name=t commit -q --allow-empty -m i
+git -C "$KBT/main" remote add origin https://github.com/Org/repo.git
+git -C "$KBT/main" worktree add -q "$KBT/wt" -b feat 2>/dev/null
+git init -q "$KBT/clone" && git -C "$KBT/clone" -c user.email=t@t -c user.name=t commit -q --allow-empty -m i
+git -C "$KBT/clone" remote add origin git@github.com:Org/repo.git
+mkdir -p "$KBT/plain"
+mkproj "$KBT/wt"; mkproj "$KBT/clone"; mkproj "$KBT/plain"
+echo "different" > "$KBT/clone/docs/devlog/proj/01_a.md"
+
+python3 "$KBPY" init "$KBT/kb" --no-save >/dev/null 2>&1
+idn() { (cd "$1" && python3 "$KBPY" ident | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d["name"],d["remote"],d["main_checkout"]==d["top"])'); }
+assert_eq "https and git@ remotes name the same repo" "$(idn "$KBT/main" | cut -d' ' -f1-2)" "$(idn "$KBT/clone" | cut -d' ' -f1-2)"
+assert_contains "a worktree resolves to its main checkout" "repo github.com/Org/repo False" "$(idn "$KBT/wt")"
+
+out=$(kbr "$KBT/wt" upload proj)
+assert_contains "first upload makes the checkout the owner" "[proj] ok  repos/repo/proj" "$out"
+assert_eq "images are not uploaded" "" "$(ls "$KBT/kb/repos/repo/proj/data" 2>/dev/null | grep jpg)"
+assert_eq "html with embedded images is not uploaded" "no" "$([ -f "$KBT/kb/repos/repo/proj/embed.html" ] && echo yes || echo no)"
+assert_eq "plain html is uploaded" "yes" "$([ -f "$KBT/kb/repos/repo/proj/plain.html" ] && echo yes || echo no)"
+
+out=$(kbr "$KBT/clone" upload proj; echo "rc=$?")
+assert_contains "another checkout's diverged copy is a conflict" "[proj] conflict" "$out"
+assert_contains "conflict lists the differing file" "내용 다름 1개: 01_a.md" "$out"
+assert_contains "conflict exits non-zero" "rc=2" "$out"
+assert_eq "conflict writes nothing" "needle finding" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
+assert_contains "NOW.md shows the diverged copy" "다른 사본" "$(cat "$KBT/kb/NOW.md")"
+assert_contains "NOW.md carries Critical open items" "[Critical] fix leak" "$(cat "$KBT/kb/NOW.md")"
+assert_not_contains "NOW.md drops Low items" "[Low] later" "$(cat "$KBT/kb/NOW.md")"
+assert_contains "INDEX.md has the card summary" "line one line two" "$(cat "$KBT/kb/INDEX.md")"
+
+out=$(kbr "$KBT/wt" search needle)
+assert_contains "search finds body text" "repos/repo/proj/01_a.md:1: needle finding" "$out"
+assert_not_contains "search skips history by default" "historyonly" "$(kbr "$KBT/wt" search historyonly)"
+assert_contains "search --all includes history" "history/01_h.md" "$(kbr "$KBT/wt" search historyonly --all)"
+assert_contains "cat refuses paths outside the KB tree" "unsafe path" "$(kbr "$KBT/wt" cat ../../etc/passwd)"
+
+rm "$KBT/wt/docs/devlog/proj/plain.html"
+out=$(kbr "$KBT/wt" upload proj; echo "rc=$?")
+assert_contains "owner deletions wait for --yes" "needs-confirm" "$out"
+assert_eq "nothing deleted before --yes" "yes" "$([ -f "$KBT/kb/repos/repo/proj/plain.html" ] && echo yes || echo no)"
+kbr "$KBT/wt" upload proj --yes >/dev/null
+assert_eq "--yes deletes the vanished file" "no" "$([ -f "$KBT/kb/repos/repo/proj/plain.html" ] && echo yes || echo no)"
+
+out=$(kbr "$KBT/clone" upload proj --take-over --yes)
+assert_contains "take-over reports the displaced files" "밀려난 파일" "$out"
+assert_eq "take-over writes the new owner's content" "different" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
+reg=$(cat "$KBT/kb/registry/repos/repo.md")
+assert_contains "previous owner is recorded as a copy" '"copies": [' "$reg"
+
+out=$(kbr "$KBT/plain" upload proj; echo "rc=$?")
+assert_contains "a checkout without origin must name a topic" "--topic" "$out"
+out=$(kbr "$KBT/plain" upload proj --topic notes)
+assert_contains "topic upload lands under topics/" "topics/notes/proj" "$out"
+
+(kbr "$KBT/clone" upload proj --yes >/dev/null &) ; kbr "$KBT/clone" upload proj --yes >/dev/null; sleep 1
+python3 -c "import json;json.load(open('$KBT/kb/.kb/manifest/repos/repo/proj.json'))" 2>/dev/null
+assert_eq "concurrent uploads leave a valid manifest" "0" "$?"
+assert_eq "no lock is left behind" "no" "$([ -d "$KBT/kb/.kb/lock" ] && echo yes || echo no)"
+
+where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
+out=$(where)
+assert_contains "built-in default is the ds35 KB" "ssh://yeonhui@192.168.100.135/home/yeonhui/kb  (출처: built-in default)" "$out"
+assert_contains "built-in default alone is not 'configured'" "rc=1" "$out"
+out=$(where VH1981_KB_DEFAULT=/srv/kb)
+assert_contains "VH1981_KB_DEFAULT replaces the built-in default" "/srv/kb  (출처: built-in default)" "$out"
+mkdir -p "$KBT/home/.config/vh1981" && printf '%s' "$KBT/kb" > "$KBT/home/.config/vh1981/kb"
+out=$(where)
+assert_contains "init's config file outranks the default" "rc=0" "$out"
+out=$(where VH1981_KB=/elsewhere)
+assert_contains "VH1981_KB outranks the config file" "/elsewhere  (출처: VH1981_KB)" "$out"
+out=$(cd "$KBT/plain" && HOME="$KBT/home" python3 "$KBPY" --kb "ssh://nobody@unreachable.invalid$KBT/kb" where 2>&1)
+assert_contains "an ssh location whose KB is on this machine is used locally" "이 머신의 로컬 경로" "$out"
+
+if ssh -o BatchMode=yes -o ConnectTimeout=3 localhost true 2>/dev/null; then
+  out=$( (cd "$KBT/wt" && python3 "$KBPY" --kb "ssh://localhost$KBT/kb" search needle 2>&1) )
+  assert_contains "search works over ssh" "repos/repo/proj" "$out"
+else
+  echo "skip ssh transport (no passwordless ssh to localhost)"
+fi
+
+echo
 if [ "$FAILED" = "0" ]; then
   echo "all $COUNT checks passed"
 else

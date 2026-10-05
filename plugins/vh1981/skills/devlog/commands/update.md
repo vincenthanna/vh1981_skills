@@ -121,5 +121,12 @@ the collision. Never guess from memory.
    - If Part 2 created a NEW history file in this run, append its one-line row to the README `Entries` table inside the `<!-- AUTO-GENERATED -->` region.
    - Do NOT rescan or fully regenerate the README here — that is `reorg readme`. Only the `<!-- AUTO-GENERATED -->` region is ever touched; everything else is user-owned.
 
-6. Output summary of what was investigated, key findings, and what was updated
-   or created (in docs, history, and README).
+6. **Part 4 — KB card and upload** (only when this machine has a KB set —
+   `python3 ${CLAUDE_PLUGIN_ROOT}/skills/kb/scripts/kb.py where --configured` exits 0):
+   - If this run changed the project's conclusion or status, refresh the
+     README `kb:` frontmatter card (`status`, `summary`, `tags`) so it matches.
+   - Auto-upload per `commands/upload.md` §Auto-upload after `update`. devlogs
+     are rarely in git, so the KB copy is usually the only backup.
+
+7. Output summary of what was investigated, key findings, and what was updated
+   or created (in docs, history, README, and the KB upload result).

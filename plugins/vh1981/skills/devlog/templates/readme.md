@@ -9,7 +9,21 @@ machine-owned and replaced on refresh. Everything outside it (the title line,
 Scope, Out of scope, any prose) is user-owned and is NEVER touched by an
 automatic refresh.
 
+The leading `kb:` frontmatter is the project card the `vh1981:kb` skill
+indexes. `create` writes it with `status: active` and a summary drawn from the
+Scope; `update` refreshes `status` / `summary` when the conclusion changes.
+`tags` come from the KB's `KB.md` tag vocabulary (leave `[]` when no KB is
+set up). An automatic README refresh never drops the frontmatter.
+
 ```markdown
+---
+kb:
+  status: active            # active | paused | done
+  tags: []                  # from the KB's KB.md tag vocabulary
+  summary: >-
+    <what this project does and why, and the current conclusion, 3 lines max>
+  related: []               # KB project ids, e.g. repos/<repo>/<project>
+---
 # <Project Title>
 
 - **Scope**: <one-line scope statement>

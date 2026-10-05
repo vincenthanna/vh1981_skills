@@ -1,6 +1,6 @@
 ---
 name: devlog
-description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, update, and upload commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, produce structured findings, or publish a devlog project to an external knowledge-base repo. Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "consolidate devlog", "tidy devlog docs", "devlog 정리", "upload devlog", "publish to knowledge base", "sync to knowledge base", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
+description: Unified project documentation and work logging skill. Manages investigation reports and session work history as markdown files in docs/devlog/<project>/. Supports create, list, select, update, and upload commands. Use this skill when the user wants to deeply analyze a codebase topic, create technical investigation reports, log work progress, document architecture decisions, produce structured findings, or publish a devlog project to the knowledge base (delegates to vh1981:kb). Trigger phrases include "devlog", "investigate", "analyze this", "deep dive", "log my work", "save work history", "create devlog", "update devlog", "list devlogs", "select devlog", "consolidate devlog", "tidy devlog docs", "devlog 정리", "upload devlog", "publish to knowledge base", "sync to knowledge base", "run validation condition", "register a run", "compare conditions", "validation campaign", "ablation run". Do NOT use for git commits (use /commit), PR descriptions (use /pr), or CLAUDE.md updates (use /review-claudemd).
 ---
 
 # Devlog Context
@@ -27,7 +27,7 @@ Parse the arguments to determine which command to run:
 | `consolidate` | **Reorg** — alias for `reorg consolidate` |
 | `run <condition-name>` | **Validation** — register a measurement run |
 | `compare <condition> ...` | **Validation** — build/grow a comparison report |
-| `upload [<project>] [--to <path>]` | **Upload** — publish to an external knowledge-base repo |
+| `upload [<project>] [--to <path>]` | **Upload** — publish to the knowledge base via `vh1981:kb` |
 | *(no args)* | **Update** |
 
 If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `consolidate`, `run`, `compare`, `upload`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
@@ -198,9 +198,9 @@ For validation/ablation campaigns — each measurement adds a *condition* to the
 
 ## Command: Upload
 
-Publishes a devlog project to an external knowledge-base repo — a bulk copy of `docs/devlog/<project>/` into the target; no git commit. Syntax: `upload [<project>] [--to <path>]` (positional `upload <project> <path>` also accepted); `--to` saves the target to `docs/devlog/.upload-target` as the new default.
+Publishes a devlog project to the knowledge base (KB) by delegating to the `vh1981:kb` skill, which selects text files, detects conflicts between checkouts holding copies of the same project, and maintains the KB index. The KB may be a local path or `ssh://user@host/path`. Syntax: `upload [<project>] [--to <path>]` (positional `upload <project> <path>` also accepted). `update` also uploads automatically as its last step when a KB is configured.
 
-**Read `commands/upload.md` (in this skill's directory) for target resolution and the copy procedure.**
+**Read `commands/upload.md` (in this skill's directory) for the syntax mapping and the auto-upload rules.**
 
 ---
 

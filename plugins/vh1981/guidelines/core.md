@@ -28,6 +28,7 @@ vh1981 플러그인이 매 세션 시작 시 주입하는 기본 규칙이다.
 - UI 변경은 브라우저에서 실제 동작 확인 후 완료 보고.
 - 작업 중간/종료 보고는 1-2문장.
 - worktree에서 git을 다루거나, ssh·docker로 원격 명령을 보내거나, gh로 PR 본문을 고치거나, subagent·외부 LLM CLI를 쓸 때는 먼저 `{{GUIDELINES_DIR}}/shell-pitfalls.md` 를 읽는다. 오류 없이 조용히 실패하는 함정 모음이다.
+- 다른 repo나 서버의 과거 작업(같은 모델, 데이터셋, 버그, 실험)이 관련돼 보이면 추측하거나 처음부터 조사하기 전에 `vh1981:kb` 스킬로 knowledge base를 먼저 검색한다.
 - claude.ai 커넥터(Notion 등)가 `not connected` 이거나 재연결이 404로 실패하면, 포기하거나 재시도를 반복하지 말고 `{{GUIDELINES_DIR}}/mcp-connectors.md` 의 우회 절차를 따른다.
 
 ## 모델 학습
