@@ -433,7 +433,7 @@ def store_register(root, meta, _payload):
             if entry is None:
                 entry = {"at": co["at"], "projects": [], "copies": []}
                 reg["checkouts"].append(entry)
-            for k in ("access", "branch", "work"):
+            for k in ("access", "branch", "work", "last_seen", "devlog_projects"):
                 if co.get(k) is not None:
                     entry[k] = co[k]
         save_registry(root, kind, name, reg, prose)
@@ -922,6 +922,18 @@ def summarize_excluded(exc):
     return by
 
 
+def upload_one(loc, idt, kind, name, p, take_over=False, dry_run=False, yes=False):
+    pdir = os.path.join(idt["devlog"], p)
+    inc, exc = select_files(pdir)
+    rd = parse_readme(pdir)
+    co = {"at": idt["at"], "host": idt["host"], "path": idt["top"], "branch": idt["branch"], "access": idt["access"]}
+    meta = {"kind": kind, "name": name, "project": p, "remote": idt["remote"] if kind == "repos" else "",
+            "checkout": co, "files": [{k: f[k] for k in ("path", "sha256", "size")} for f in inc],
+            "take_over": take_over, "dry_run": dry_run, "yes": yes,
+            "card": rd["card"], "title": rd["title"], "period": rd["period"], "open_items": rd["open_items"]}
+    return call(loc, "upload", meta, b"" if dry_run else make_tar(inc)), inc, exc
+
+
 def cmd_upload(a):
     loc = resolve_loc(a.kb)
     idt = ident(os.getcwd())
@@ -936,21 +948,13 @@ def cmd_upload(a):
     projects = idt["projects"] if a.all else [a.project] if a.project else []
     if not projects:
         die("올릴 프로젝트를 지정한다: <project> 또는 --all")
-    co = {"at": idt["at"], "host": idt["host"], "path": idt["top"], "branch": idt["branch"], "access": idt["access"]}
     rc = 0
     for p in projects:
-        pdir = os.path.join(idt["devlog"], p)
-        if not os.path.isdir(pdir):
-            print(f"[{p}] 없음: {pdir}")
+        if not os.path.isdir(os.path.join(idt["devlog"], p)):
+            print(f"[{p}] 없음: {os.path.join(idt['devlog'], p)}")
             rc = 1
             continue
-        inc, exc = select_files(pdir)
-        rd = parse_readme(pdir)
-        meta = {"kind": kind, "name": name, "project": p, "remote": idt["remote"] if kind == "repos" else "",
-                "checkout": co, "files": [{k: f[k] for k in ("path", "sha256", "size")} for f in inc],
-                "take_over": a.take_over, "dry_run": a.dry_run, "yes": a.yes,
-                "card": rd["card"], "title": rd["title"], "period": rd["period"], "open_items": rd["open_items"]}
-        res = call(loc, "upload", meta, b"" if a.dry_run else make_tar(inc))
+        res, inc, exc = upload_one(loc, idt, kind, name, p, take_over=a.take_over, dry_run=a.dry_run, yes=a.yes)
         print(render_upload(p, res, inc, exc, a.verbose))
         if res["status"] not in ("ok", "dry-run", "same-as-owner"):
             rc = 2
@@ -1044,6 +1048,141 @@ def cmd_cat(a):
         print("\n".join(res["files"]))
     else:
         sys.stdout.write(res["text"])
+    return 0
+
+
+def checkin_stamp(at: str) -> str:
+    base = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "vh1981", "kb-checkin")
+    return os.path.join(base, hashlib.sha256(at.encode()).hexdigest()[:16])
+
+
+def cmd_checkin(a):
+    """SessionStart check-in: register this checkout and upload the devlog projects it owns.
+    Runs in the background, once per checkout per day. Never asks: conflicts and
+    deletions are skipped (they need a human), so a check-in cannot overwrite or remove."""
+    if os.environ.get("VH1981_KB_CHECKIN", "1") == "0":
+        return 0
+    loc = _resolve(a.kb)
+    if loc.source.startswith("built-in default") and not a.force:
+        return 0                      # only machines that ran `kb init` (or set VH1981_KB)
+    loc.localize()
+    idt = ident(os.getcwd())
+    if not idt["projects"]:
+        return 0
+    today = datetime.now().strftime("%Y-%m-%d")
+    stamp = checkin_stamp(idt["at"])
+    try:
+        if not a.force and open(stamp).read().strip() == today:
+            return 0
+    except OSError:
+        pass
+    kind, name = ("repos", idt["name"]) if idt["kind"] == "repos" else ("topics", idt["name"])
+    if kind == "topics":              # reuse the topic this checkout was registered under
+        for r in call(loc, "registry", {})["registries"]:
+            if r["id"].startswith("topics/") and any(c.get("at") == idt["at"] for c in r["checkouts"]):
+                name = r["id"].split("/", 1)[1]
+                break
+    call(loc, "register", {"kind": kind, "name": name, **({"remote": idt["remote"]} if idt["remote"] else {}),
+                           "checkout": {"at": idt["at"], "branch": idt["branch"], "last_seen": now_iso(),
+                                        "devlog_projects": idt["projects"]}})
+    results = []
+    for p in idt["projects"]:
+        try:
+            res, _, _ = upload_one(loc, idt, kind, name, p)
+            results.append(f"{p}={res['status']}")
+        except SystemExit:
+            results.append(f"{p}=error")
+    os.makedirs(os.path.dirname(stamp), exist_ok=True)
+    write_atomic(stamp, today + "\n")
+    print(f"{now_iso()} checkin {kind}/{name} {idt['at']} " + " ".join(results))
+    return 0
+
+
+def collect_local(top, since, until):
+    """What happened in one checkout between since and until (inclusive, local dates):
+    dated devlog entries, devlog files modified, and the checkout owner's git commits."""
+    top = os.path.realpath(top)
+    idt = ident(top)
+    projects = [(p, os.path.join(idt["devlog"], p)) for p in idt["projects"]]
+    entries = scan_log(projects, since, until)[:300]
+    modified = []
+    for pid, pdir in projects:
+        for dp, dns, fns in os.walk(pdir):
+            dns[:] = [d for d in dns if not d.startswith(".")]
+            for fn in fns:
+                if fn.endswith(".md"):
+                    d = datetime.fromtimestamp(os.path.getmtime(os.path.join(dp, fn))).strftime("%Y-%m-%d")
+                    if since <= d <= until:
+                        modified.append({"project": pid, "file": os.path.relpath(os.path.join(dp, fn), pdir), "date": d})
+    commits = []
+    email = git(["config", "user.email"], top) or ""
+    if git(["rev-parse", "--git-dir"], top):
+        out = git(["log", "--all", f"--since={since} 00:00:00", f"--until={until} 23:59:59",
+                   *([f"--author={email}"] if email else []), "--no-merges",
+                   "--date=format:%Y-%m-%d %H:%M", "--format=%h%x09%ad%x09%s"], top) or ""
+        for ln in out.splitlines()[:200]:
+            h, _, rest = ln.partition("\t")
+            d, _, subj = rest.partition("\t")
+            commits.append({"sha": h, "date": d, "subject": subj})
+    return {"at": idt["at"], "branch": idt["branch"], "entries": entries,
+            "modified": sorted(modified, key=lambda m: (m["date"], m["project"], m["file"]))[:200],
+            "commits": commits, "author": email}
+
+
+def cmd_collect_local(a):
+    print(json.dumps(collect_local(a.path, a.since, a.until), ensure_ascii=False))
+    return 0
+
+
+def cmd_collect(a):
+    """Crawl every registered checkout for a period. Live data where the KB host can
+    reach the checkout (this machine, or its ssh access); otherwise the KB copy."""
+    loc = resolve_loc(a.kb)
+    since, until = a.since, a.until or a.since
+    regs = call(loc, "registry", {})["registries"]
+    me = host_name()
+    script = open(SCRIPT, "rb").read() if SCRIPT else b""
+    out = {"since": since, "until": until, "generated": now_iso(), "kb": str(loc), "checkouts": []}
+    for r in regs:
+        for c in r["checkouts"]:
+            host, _, path = c["at"].partition(":")
+            row = {"source_id": r["id"], "repo_work": r.get("work", ""), "at": c["at"], "branch": c.get("branch", ""),
+                   "work": c.get("work", ""), "projects": c.get("projects", []), "copies": c.get("copies", []),
+                   "last_seen": c.get("last_seen", ""), "last_upload": c.get("last_upload", "")}
+            data, err = None, ""
+            if host == me and os.path.isdir(path):
+                data, row["via"] = collect_local(path, since, until), "live-local"
+            elif (c.get("access") or "").startswith("ssh://") and script:
+                l2 = Loc(c["access"].rstrip("/") + "/")
+                rr = run_ssh([*l2.ssh_base(), "python3 - collect-local " + shlex.quote(path)
+                              + f" --since {since} --until {until}"], input=script, capture_output=True)
+                try:
+                    data, row["via"] = json.loads(rr.stdout.decode("utf-8")), "live-ssh"
+                except ValueError:
+                    err = (rr.stderr.decode(errors="replace") or "no output").strip()[-200:]
+            if data is None:
+                row["via"] = "kb-copy"
+                if err:
+                    row["error"] = err
+                ents = []
+                for p in c.get("projects", []):
+                    ents += call(loc, "log", {"since": since, "until": until, "scope": f"{r['id']}/{p}"})["entries"]
+                data = {"entries": ents, "modified": [], "commits": []}
+            row.update({k: data.get(k, []) for k in ("entries", "modified", "commits")})
+            if data.get("author"):
+                row["author"] = data["author"]
+            row["active"] = bool(row["entries"] or row["modified"] or row["commits"])
+            out["checkouts"].append(row)
+    out["checkouts"].sort(key=lambda x: (not x["active"], x["source_id"], x["at"]))
+    text = json.dumps(out, ensure_ascii=False, indent=1)
+    if a.out:
+        write_atomic(a.out, text + "\n")
+        act = [x for x in out["checkouts"] if x["active"]]
+        print(f"{a.out}: checkout {len(out['checkouts'])}개 중 활동 {len(act)}개 · "
+              + ", ".join(f"{short_at(x['at'])}({x['via']}: 항목 {len(x['entries'])}, 수정 {len(x['modified'])}, 커밋 {len(x['commits'])})"
+                          for x in act))
+    else:
+        print(text)
     return 0
 
 
@@ -1222,6 +1361,22 @@ def main(argv=None):
     p = sp.add_parser("cat", help="KB 문서 읽기. 디렉토리면 파일 목록")
     p.add_argument("path")
     p.set_defaults(fn=cmd_cat)
+
+    p = sp.add_parser("checkin", help="SessionStart 용: 이 checkout 등록 + 소유 devlog 업로드 (하루 1회)")
+    p.add_argument("--force", action="store_true", help="오늘 이미 했어도, 기본값 KB여도 실행")
+    p.set_defaults(fn=cmd_checkin)
+
+    p = sp.add_parser("collect", help="등록된 모든 checkout 에서 기간의 작업 수집(JSON). daily/weekly log 재료")
+    p.add_argument("--since", required=True)
+    p.add_argument("--until")
+    p.add_argument("--out")
+    p.set_defaults(fn=cmd_collect)
+
+    p = sp.add_parser("collect-local", help="(내부용) 한 checkout 의 기간 작업 JSON")
+    p.add_argument("path")
+    p.add_argument("--since", required=True)
+    p.add_argument("--until", required=True)
+    p.set_defaults(fn=cmd_collect_local)
 
     p = sp.add_parser("log", help="기간 안에 날짜가 붙은 devlog 항목 뽑기 (작업 기록)")
     p.add_argument("--since", help="YYYY-MM-DD (포함)")

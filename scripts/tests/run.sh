@@ -216,6 +216,7 @@ assert_eq "every guideline file it names exists" "" "$missing"
 assert_contains "names the ml-training guideline" "guidelines/ml-training.md" "$refs"
 assert_contains "names the shell-pitfalls guideline" "guidelines/shell-pitfalls.md" "$refs"
 assert_contains "names the mcp-connectors guideline" "guidelines/mcp-connectors.md" "$refs"
+assert_contains "names the output-principles guideline" "guidelines/output-principles.md" "$refs"
 
 # Large hook output is moved to a file and only a preview reaches the context.
 # Bytes over-count Korean text, so this is stricter than a character limit.
@@ -341,6 +342,31 @@ assert_not_contains "a mid-sentence date is not a work entry" "mid-sentence" "$(
 assert_contains "--loose takes mid-sentence dates too" "mention" "$(cd "$KBT/plain" && python3 "$KBPY" log --local --loose --since 2026-09-20)"
 kbr "$KBT/plain" upload proj --topic notes --yes >/dev/null
 assert_contains "log reads the whole KB without --local" "topics/notes/proj" "$(kbr "$KBT/plain" log --since 2026-09-10 --until 2026-09-10)"
+
+# checkin: only with a configured KB, once per checkout per day
+CH="$KBT/chome"; mkdir -p "$CH/.config/vh1981"
+ci() { (cd "$KBT/wt" && env -u VH1981_KB HOME="$CH" XDG_CACHE_HOME="$CH/.cache" python3 "$KBPY" checkin 2>&1); }
+assert_eq "checkin does nothing without a configured KB" "" "$(ci)"
+printf '%s' "$KBT/kb" > "$CH/.config/vh1981/kb"
+out=$(ci)
+assert_contains "checkin registers and uploads" "checkin repos/repo" "$out"
+assert_contains "checkin records last_seen" '"last_seen"' "$(cat "$KBT/kb/registry/repos/repo.md")"
+assert_eq "second checkin the same day is a no-op" "" "$(ci)"
+out=$(cd "$KBT/wt" && CLAUDE_PLUGIN_ROOT="$ROOT/plugins/vh1981" HOME="$CH" XDG_CACHE_HOME="$CH/.cache" /bin/sh "$ROOT/plugins/vh1981/scripts/kb-checkin.sh" </dev/null; echo "rc=$?")
+assert_eq "checkin hook returns at once and quietly" "rc=0" "$out"
+
+# collect: crawl registered checkouts for a period
+out=$(cd "$KBT/plain" && python3 "$KBPY" --kb "$KBT/kb" collect --since 2026-09-10 --until 2026-09-10)
+assert_contains "collect reads a checkout on this machine live" '"via": "live-local"' "$out"
+assert_contains "collect carries dated entries" "fixed the leak" "$out"
+
+# report server: a KB root lists daily and weekly logs newest first
+mkdir -p "$KBT/kb/reports/daily" "$KBT/kb/reports/weekly"
+for d in 2026-10-01 2026-10-03 2026-10-02; do printf '<title>Daily %s</title>' "$d" > "$KBT/kb/reports/daily/$d.html"; done
+printf '<title>W40</title>' > "$KBT/kb/reports/weekly/2026-W40.html"
+out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;t=s.scan(Path('$KBT/kb'));print(list(t)[:2]);print([r['stem'] for r in t['Daily log']])")
+assert_contains "KB index starts with the daily and weekly logs" "['Daily log', 'Weekly log']" "$out"
+assert_contains "daily logs are newest first" "['2026-10-03', '2026-10-02', '2026-10-01']" "$out"
 
 where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
 out=$(where)

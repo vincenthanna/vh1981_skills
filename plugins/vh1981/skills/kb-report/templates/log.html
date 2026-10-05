@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{TITLE — 예: Daily log 2026-10-04 (일) / Weekly log 2026-W40}}</title>
+<style>
+:root{
+  --bg:#faf9f7; --card:#fff; --ink:#1a1a1c; --mut:#6b6b72; --line:#e3e0da;
+  --blue:#2f6fd0; --red:#cf4a3e; --amber:#c88a1e; --green:#2e8b57;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16161a; --card:#1e1e24; --ink:#e9e8e4; --mut:#9b9aa3; --line:#32323a;
+  --blue:#74a6f0; --red:#f08478; --amber:#e8b85a; --green:#64c08c;
+}}
+:root[data-theme="dark"]{
+  --bg:#16161a; --card:#1e1e24; --ink:#e9e8e4; --mut:#9b9aa3; --line:#32323a;
+  --blue:#74a6f0; --red:#f08478; --amber:#e8b85a; --green:#64c08c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Malgun Gothic",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 96px}
+header{padding:44px 0 20px;border-bottom:1px solid var(--line)}
+.crumb{font-size:13px;color:var(--mut);margin:0 0 10px}
+.crumb a{color:var(--blue);text-decoration:none}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.25;margin:0 0 8px;letter-spacing:-.02em}
+.sub{color:var(--mut);font-size:14px;margin:0}
+h2{font-size:20px;margin:44px 0 10px;letter-spacing:-.01em}
+p{margin:10px 0}
+a{color:var(--blue)}
+code{font:13px/1.5 var(--mono);background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 5px;border-radius:4px;word-break:break-word}
+.lede{font-size:17px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:22px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .k{font-size:13px;color:var(--mut)}
+.proj{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+.proj h3{font-size:17px;margin:0 0 2px}
+.proj .meta{font-size:13px;color:var(--mut);margin:0 0 8px}
+.proj ul{margin:6px 0 4px;padding-left:1.2em}
+.proj li{margin:3px 0}
+.proj .src{font-size:12.5px;color:var(--mut)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:0 6px;margin-left:6px;vertical-align:2px}
+.tag.live{color:var(--green);border:1px solid var(--green)}
+.tag.copy{color:var(--amber);border:1px solid var(--amber)}
+.box{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:0 10px 10px 0;padding:12px 16px;margin:20px 0;font-size:14.5px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+figure{margin:18px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:13px;color:var(--mut);margin-top:6px}
+.bar{fill:var(--blue)}.bar.c{fill:var(--green)}.bar.m{fill:var(--amber)}
+.lbl{fill:currentColor;font-size:13px}.num{fill:var(--mut);font-size:12px;font-variant-numeric:tabular-nums}
+footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+</style>
+<div class="wrap">
+
+<header>
+  <p class="crumb"><a href="/">← 전체 목록</a></p>
+  <h1>{{TITLE}}</h1>
+  <p class="sub">{{기간 — 예: 2026-10-04 (일) · 수집 2026-10-05 06:30 KST}}</p>
+</header>
+
+<h2>요약</h2>
+<p class="lede">{{3~5문장. 그날(그 주) 무엇을 했는지 결과 중심으로. 가장 중요한 결정이나 막힌 일을 포함한다}}</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">{{N}}</div><div class="k">활동한 프로젝트</div></div>
+  <div class="kpi"><div class="v">{{N}}</div><div class="k">기록된 항목</div></div>
+  <div class="kpi"><div class="v">{{N}}</div><div class="k">커밋</div></div>
+</div>
+
+<h2>활동 분포</h2>
+<!-- 이해를 돕는 그림을 기본으로 넣는다 (guidelines/output-principles.md). 숫자는 수집 JSON에서 그대로 가져온다.
+     daily: 프로젝트마다 한 줄, 쌓은 막대 3색 = 기록 항목(파랑) · 수정 문서(주황) · 커밋(초록).
+       행 i 의 y = 8 + i*34, 막대 시작 x = 250, 전체 폭 = 합계/최대합계*480. 높이 = 16 + 행수*34.
+     weekly: 위 그림 대신(또는 아래에 더해) 날짜 7칸의 세로 막대. 칸 j 의 x = 40 + j*110, 막대 높이 = 그날 활동/최대*140. -->
+<figure>
+<svg viewBox="0 0 820 {{높이}}" role="img" aria-label="{{프로젝트별 활동 수: 기록 항목, 수정 문서, 커밋}}">
+  <text class="lbl" x="0" y="25">{{프로젝트 짧은 이름}}</text>
+  <rect class="bar" x="250" y="12" width="{{항목 폭}}" height="18" rx="3"/>
+  <rect class="bar m" x="{{250+항목 폭}}" y="12" width="{{수정 폭}}" height="18"/>
+  <rect class="bar c" x="{{250+항목 폭+수정 폭}}" y="12" width="{{커밋 폭}}" height="18"/>
+  <text class="num" x="{{막대 끝+8}}" y="25">항목 {{a}} · 수정 {{b}} · 커밋 {{c}}</text>
+</svg>
+<figcaption>{{무엇을 보라는 그림인지 한 줄. 예: 활동은 fancl-staff-journey 에 몰렸고 나머지는 문서 정리뿐이다}}</figcaption>
+</figure>
+
+<h2>프로젝트별</h2>
+
+<!-- 활동한 프로젝트마다 하나. 활동이 많은 순서. -->
+<section class="proj">
+  <h3>{{프로젝트 제목}} <span class="tag live">LIVE</span><!-- KB 사본으로만 수집했으면 <span class="tag copy">KB 사본</span> --></h3>
+  <p class="meta"><code>{{KB ID}}</code> · {{host:checkout}}@{{branch}}</p>
+  <ul>
+    <li>{{한 일 — 결과의 말로 한 줄. 근거 파일을 괄호로}}</li>
+  </ul>
+  <p class="src">근거: <code>{{파일 경로}}</code>, 커밋 <code>{{sha}}</code></p>
+</section>
+
+<!-- weekly 전용: 다음 주로 넘어가는 열린 항목
+<h2>다음으로 넘어가는 일</h2>
+<div class="tw"><table>
+<tr><th>프로젝트</th><th>항목</th><th>우선순위</th></tr>
+<tr><td><code>{{KB ID}}</code></td><td>{{항목}}</td><td>{{Critical/High}}</td></tr>
+</table></div>
+-->
+
+<!-- weekly 전용: 그 주의 daily log 링크
+<h2>이 주의 daily log</h2>
+<ul><li><a href="/d/reports/daily/{{YYYY-MM-DD}}">{{YYYY-MM-DD (요일)}}</a></li></ul>
+-->
+
+<div class="box">{{수집 범위: 확인한 checkout 수, KB 사본으로만 본 checkout, 접속 실패한 곳. 활동이 없었던 날이면 그 사실을 여기 쓴다}}</div>
+
+<footer>
+  <p>kb-report가 <code>{{reports/.data/... .json}}</code> 의 수집 결과로 만들었다. 생성 {{시각}}.</p>
+</footer>
+</div>
+</html>

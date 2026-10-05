@@ -181,6 +181,21 @@ KB는 로컬 경로나 `ssh://user@host/abs/path` 이며, 원격에는 `python3`
 devlog에 새로 넣는 Done, history 항목은 `- YYYY-MM-DD: ...`, 새 Finding 헤딩은 `(YYYY-MM-DD)` 로 끝나도록 날짜를 붙입니다. `log` 가 이 날짜로 기간을 거릅니다.
 설계 근거는 `docs/projects/knowledge-base/01_spec-and-plan.md` 에 있습니다.
 
+### kb-report
+
+KB가 있는 머신의 cron이 KB 디렉토리에서 headless claude로 이 스킬을 실행해, 등록된 모든 repo·디렉토리에서 어제 한 일을 모아 단일 HTML **daily log** 를 만듭니다.
+일요일 22:00에는 그 주의 **weekly log** 를 만듭니다. 두 로그는 KB를 루트로 하는 웹 서버(`http://<KB 머신>:8800/`)에 최신순으로 올라갑니다.
+
+| 명령 | 설명 |
+|------|------|
+| `/kb-report daily [YYYY-MM-DD]` | 그날(기본: 어제)의 daily log 생성 |
+| `/kb-report weekly [YYYY-MM-DD]` | 그날로 끝나는 7일의 weekly log 생성 |
+| `/kb-report install` | KB 머신에 cron(06:30 daily, 일 22:00 weekly, 재부팅 시 서버)과 실행 파일 설치 |
+| `/kb-report status` | 최근 실행 로그와 최신 로그 페이지 |
+
+수집은 `kb.py collect` 가 합니다. KB 머신에서 ssh로 들어갈 수 있는 checkout은 그 자리에서(live), 들어갈 수 없는 checkout(노트북 등)은
+세션 시작 때 자동 checkin이 올린 KB 사본으로 읽습니다. cron의 claude는 `kb.py`, 서버 스크립트, Read/Write/Edit/Glob/Grep만 쓸 수 있습니다.
+
 ### techreport
 
 조사·측정 결과를 그 분야를 모르는 사람도 혼자 읽을 수 있는 단일 HTML 기술 보고서로 만들고, 주제별 색인 웹서버에 올립니다.
@@ -232,9 +247,12 @@ devlog에 새로 넣는 Done, history 항목은 `- YYYY-MM-DD: ...`, 새 Finding
 | `plugins/vh1981/guidelines/doc-style.md` | 문서를 작성할 때만 읽는 상세 규칙 |
 | `plugins/vh1981/guidelines/ml-training.md` | 모델 학습을 다룰 때만 읽는 체크포인트·재개 규칙 |
 | `plugins/vh1981/guidelines/japanese-notation.md` | 일본어를 적을 때 읽는 한글 발음 표기 규칙 |
+| `plugins/vh1981/guidelines/output-principles.md` | 보고서·문서·설명의 기본 원칙: 쉬운 기술 문체(ASD-STE100의 약 80%)와 이미지·그래프·차트·애니메이션 기본 사용 |
+| `plugins/vh1981/guidelines/references/karpathy-understanding-llm-outputs.md` | 위 원칙의 근거: Karpathy 글(2026-10-02) 번역과 관련 실험·자료 |
 | `plugins/vh1981/guidelines/shell-pitfalls.md` | worktree, ssh·docker, gh, subagent를 다룰 때 읽는 조용한 실패 함정 모음 |
 | `plugins/vh1981/guidelines/mcp-connectors.md` | claude.ai 커넥터(Notion 등) 연결이 404로 실패할 때 읽는 우회 절차 |
 | `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
+| `plugins/vh1981/scripts/kb-checkin.sh` | 세션 시작 때 백그라운드로 KB에 checkin 하는 SessionStart hook (`VH1981_KB_CHECKIN=0` 으로 끔) |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
 컨텍스트에 들어갑니다. 긴 내용은 `doc-style.md` 처럼 별도 파일로 두고 `core.md` 에서
@@ -329,6 +347,8 @@ plugins/
       ml-training.md        # 모델 학습 체크포인트·재개 규칙 (필요할 때 Read)
       japanese-notation.md  # 일본어 한글 발음 표기 규칙 (필요할 때 Read)
       shell-pitfalls.md     # 셸·도구 실전 함정 (필요할 때 Read)
+      output-principles.md  # 보고서·문서 기본 원칙: 쉬운 문체 + 시각 자료 (필요할 때 Read)
+      references/           # 원칙의 근거 자료 (Karpathy 글 번역 등)
       mcp-connectors.md     # MCP 커넥터 연결 실패 우회 (필요할 때 Read)
     scripts/
       inject-guidelines.sh  # core.md 주입 스크립트
@@ -341,6 +361,7 @@ plugins/
       humanizer/            # /humanizer 스킬 (SKILL.md + references/patterns.md)
       techreport/           # /techreport 스킬 (템플릿, 검사 목록, 보고서 서버)
       kb/                   # /kb 스킬 (kb.py 클라이언트·store, KB.md 템플릿)
+      kb-report/            # /kb-report 스킬 (daily·weekly log, cron 설치)
   prompts-pack/
     .claude-plugin/plugin.json
     agents/                 # debugger, code-reviewer, ...

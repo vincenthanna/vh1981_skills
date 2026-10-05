@@ -225,6 +225,30 @@ devlog의 `templates/readme.md` 에 이 frontmatter를 추가하고, `create` �
 문장 중간의 날짜는 "그날 한 일"이 아닐 수 있어 기본으로는 세지 않는다. 규칙 이전 문서는 `--loose` 로 날짜가 든 모든 bullet을 근사로 뽑는다.
 조사 시점의 Done 항목 725개 중 날짜가 있던 것은 89개였고 형식도 제각각이었으므로, 이전 기록은 근사로만 뽑힌다.
 
+### 자동 checkin과 daily/weekly log
+
+KB는 등록된 checkout을 스스로 찾아가 어제 한 일을 모은다. 이를 위해 세 부분이 함께 돈다.
+
+```mermaid
+flowchart LR
+  S[세션 시작<br>vh1981 설치된 머신] -->|SessionStart hook, 백그라운드, 하루 1회| C[kb.py checkin<br>등록 + 소유 devlog 업로드]
+  C --> KB[(KB<br>ds35 /home/yeonhui/kb)]
+  CR[cron 06:30 daily<br>일 22:00 weekly] --> R[headless claude<br>kb-report 스킬]
+  R -->|kb.py collect| KB
+  R -->|ssh 또는 로컬, live| W[등록된 checkout들]
+  R --> H[reports/daily, reports/weekly<br>단일 HTML]
+  H --> SV[serve_devlog.py :8800<br>최신순 색인]
+```
+
+| 부분 | 동작 |
+|---|---|
+| checkin | `scripts/kb-checkin.sh` 가 세션 시작 때 `kb.py checkin` 을 백그라운드로 띄운다. checkout을 등록하고(branch, devlog 프로젝트, 마지막 활동) 소유한 devlog를 업로드한다. 충돌·삭제는 건너뛴다. KB 위치를 정한 머신에서만, checkout당 하루 한 번 돈다 |
+| collect | `kb.py collect --since --until` 이 등록부의 모든 checkout에서 날짜 붙은 항목, 그날 수정된 devlog 문서, 본인 커밋을 모은다. KB 머신이 들어갈 수 있는 곳은 live로, 못 들어가는 곳(노트북)은 checkin이 올린 KB 사본으로 읽는다 |
+| kb-report | cron이 KB 디렉토리에서 headless claude를 띄운다. 허용 도구는 `kb.py`, 서버 스크립트, Read/Write/Edit/Glob/Grep뿐이다. 스킬과 작성 원칙의 사본은 `<kb>/.kb/kb-report/` 에 있어 플러그인 버전과 무관하다 |
+| 서버 | KB 루트를 서빙한다. Daily log, Weekly log를 최신순으로, 이어서 KB 프로젝트의 HTML 보고서를 보여 준다 |
+
+2026-10-05에 ds35에 설치했고, 10-04 daily log를 수동 실행으로 만들어 색인에 나타나는 것까지 확인했다. 첫 cron 실행은 10-06 06:30이다(미검증).
+
 ### KB 위치 설정
 
 KB 위치는 머신 단위로 한 번 정한다. 아래 순서로 찾는다.

@@ -43,6 +43,8 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
 | `register` | 아래 §등록 |
 | `fetch <repo> [<project>]` | `$KB fetch <repo> [<project>] [--file <문서>]`. 등록된 checkout에 접속해 최신 devlog를 읽는다 |
 | `check` | `$KB check` 결과를 종류별로 묶어 보여 주고, 고칠 방법을 한 줄씩 붙인다 |
+| `collect --since <날짜> [--until <날짜>]` | 등록된 모든 checkout에서 기간의 작업(날짜 붙은 항목, 수정된 devlog 문서, 본인 커밋)을 JSON으로 모은다. KB 머신에서 직접 들어갈 수 있으면 live로, 아니면 KB 사본으로 읽는다. `vh1981:kb-report` 의 재료다 |
+| `checkin` | SessionStart hook이 자동으로 부른다. 직접 부를 일은 없다. `--force` 는 오늘 이미 했어도 다시 한다 |
 | `log`, "이번 달 한 일", "기간 내 진행한 일" | `$KB log --since <날짜> --until <날짜> [--scope <ID>]`. 날짜 규칙으로 기록된 항목(Done, history, 날짜 붙은 Finding)을 날짜순으로 뽑는다. 규칙 이전 문서까지 보려면 `--loose` 를 붙이고 결과가 근사라고 밝힌다. 결과는 프로젝트별, 날짜별로 요약한다 |
 | `survey <작업 디렉토리>...` | `$KB survey <dir>...`. 첫 일괄 업로드 전에 갈라진 사본을 비교해 소유자를 고르게 한다 |
 | 인자 없음 | `status` |
@@ -100,6 +102,12 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
    ```bash
    $KB register --work "<repo가 하는 일>" --domains "<쉼표 구분>" --checkout-work "<이 checkout의 일>" --access ssh://user@host
    ```
+
+## 자동 checkin
+
+vh1981 플러그인이 설치된 세션이 시작하면 `scripts/kb-checkin.sh` 가 백그라운드로 `kb.py checkin` 을 실행한다. 세션을 기다리게 하지 않는다.
+checkin은 이 checkout을 등록부에 올리고(branch, devlog 프로젝트, 마지막 활동 시각) 소유한 devlog 프로젝트를 업로드한다. 충돌이나 삭제가 필요한 업로드는 건너뛴다.
+checkout마다 하루 한 번만 돌고, KB 위치를 직접 정한 머신(`kb init` 이나 `VH1981_KB`)에서만 돈다. 결과는 `~/.cache/vh1981/kb-checkin.log` 에 한 줄씩 남는다. 끄려면 `VH1981_KB_CHECKIN=0` 이다.
 
 ## 하지 않는 것
 

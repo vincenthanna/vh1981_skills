@@ -71,6 +71,7 @@ This single form is what makes `reorg rename`, `reorg cleanup`, and `reorg conso
   | history `Changes` / `Decisions` / `Issues & Blockers` bullet | `- 2026-10-05: <change>` |
 
   The date leads the bullet (after the bullet marker) or ends the heading in parentheses — the extractor matches only those positions, so a date mentioned mid-sentence does not count as "work done that day".
+- **Plain technical style and visuals by default** — follow `${CLAUDE_PLUGIN_ROOT}/guidelines/output-principles.md`: one idea per sentence, the same word for the same thing, domain terms and identifiers kept as they are (never drop a fact to make a sentence simpler). Put a mermaid diagram in any doc that describes a flow, structure or dependency, and a table for any comparison or set of measurements. When a trend, distribution or mechanism needs a real chart or animation, produce an HTML report with `vh1981:techreport` and link it from the doc. The user does not have to ask for visuals.
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
 
 ## Investigation depth levels

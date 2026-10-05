@@ -60,34 +60,65 @@ def _has_personal(p: Path) -> int:
     return n
 
 
+def _rows(gid: str, base: Path, files, newest_first: bool = False) -> list:
+    docs: dict[str, dict] = {}
+    for f in files:
+        rel = f.relative_to(base)
+        # `X.artifact.html` is the published twin of `X.html`; collapse to one row.
+        stem = str(rel)[:-len('.artifact.html')] if str(rel).endswith('.artifact.html') \
+            else str(rel)[:-len('.html')]
+        st = f.stat()
+        d = docs.setdefault(stem, {'stem': stem, 'variants': {}})
+        d['variants']['artifact' if str(rel).endswith('.artifact.html') else 'plain'] = {
+            'path': f, 'size': st.st_size, 'mtime': st.st_mtime,
+            'imgs': _has_personal(f), 'title': _title(f),
+        }
+    rows = []
+    for stem, d in docs.items():
+        v = d['variants'].get('plain') or d['variants'].get('artifact')
+        num = (m.group(1) if (m := re.match(r'^(\d+)', Path(stem).name)) else '')
+        rows.append({
+            'id': f'{gid}/{stem}', 'stem': stem, 'num': '' if newest_first else num,
+            'title': v['title'], 'size': v['size'], 'mtime': v['mtime'],
+            'imgs': v['imgs'], 'path': v['path'],
+            'also': sorted(k for k in d['variants'] if d['variants'][k] is not v),
+        })
+    if newest_first:            # log pages are named by date: newest first
+        return sorted(rows, key=lambda r: r['stem'], reverse=True)
+    return sorted(rows, key=lambda r: (r['num'] == '', r['num'], r['stem']))
+
+
+def is_kb(root: Path) -> bool:
+    return (root / 'KB.md').is_file() and (root / '.kb').is_dir()
+
+
 def scan(root: Path) -> dict:
-    """Build {project: [doc, ...]}. Only .html, only within two levels of a project."""
+    """Build {group: [doc, ...]} from .html files only.
+
+    A devlog root groups by project (two levels deep). A knowledge-base root
+    (has KB.md) lists the daily and weekly logs newest first, then each KB
+    project's reports."""
     out: dict[str, list[dict]] = {}
+    if is_kb(root):
+        for label, sub in (('Daily log', 'reports/daily'), ('Weekly log', 'reports/weekly')):
+            d = root / sub
+            if d.is_dir():
+                rows = _rows(sub, d, sorted(d.glob('*.html')), newest_first=True)
+                if rows:
+                    out[label] = rows
+        for kind in ('repos', 'topics'):
+            for proj in sorted(p for p in (root / kind).glob('*/*') if p.is_dir()):
+                files = sorted(p for p in proj.rglob('*.html')
+                               if not any(x.startswith('.') for x in p.relative_to(proj).parts))
+                gid = f'{kind}/{proj.parent.name}/{proj.name}'
+                rows = _rows(gid, proj, files)
+                if rows:
+                    out[gid] = rows
+        return out
     for proj in sorted(d for d in root.iterdir() if d.is_dir() and not d.name.startswith('_')):
-        docs: dict[str, dict] = {}
-        for f in sorted(proj.glob('*.html')) + sorted(proj.glob('*/*.html')):
-            rel = f.relative_to(proj)
-            # `X.artifact.html` is the published twin of `X.html`; collapse to one row.
-            stem = str(rel)[:-len('.artifact.html')] if str(rel).endswith('.artifact.html') \
-                else str(rel)[:-len('.html')]
-            st = f.stat()
-            d = docs.setdefault(stem, {'stem': stem, 'variants': {}})
-            d['variants']['artifact' if str(rel).endswith('.artifact.html') else 'plain'] = {
-                'path': f, 'size': st.st_size, 'mtime': st.st_mtime,
-                'imgs': _has_personal(f), 'title': _title(f),
-            }
-        rows = []
-        for stem, d in docs.items():
-            v = d['variants'].get('plain') or d['variants'].get('artifact')
-            num = (m.group(1) if (m := re.match(r'^(\d+)', Path(stem).name)) else '')
-            rows.append({
-                'id': f'{proj.name}/{stem}', 'stem': stem, 'num': num,
-                'title': v['title'], 'size': v['size'], 'mtime': v['mtime'],
-                'imgs': v['imgs'], 'path': v['path'],
-                'also': sorted(k for k in d['variants'] if d['variants'][k] is not v),
-            })
+        rows = _rows(proj.name, proj, sorted(proj.glob('*.html')) + sorted(proj.glob('*/*.html')))
         if rows:
-            out[proj.name] = sorted(rows, key=lambda r: (r['num'] == '', r['num'], r['stem']))
+            out[proj.name] = rows
     return out
 
 
@@ -133,10 +164,11 @@ footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--line);color:v
 def render_index(tree: dict, include_personal: bool, root: Path) -> bytes:
     n_doc = sum(len(v) for v in tree.values())
     n_lock = sum(1 for v in tree.values() for d in v if d['imgs'] and not include_personal)
+    title = 'knowledge base — daily · weekly log' if is_kb(root) else 'devlog 보고서'
     parts = [f"""<!doctype html><html lang="ko"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>devlog 보고서</title><style>{INDEX_CSS}</style><div class="wrap">
-<header><h1>devlog 보고서</h1>
+<title>{title}</title><style>{INDEX_CSS}</style><div class="wrap">
+<header><h1>{title}</h1>
 <p class="sub">{len(tree)}개 주제 · 문서 {n_doc}개 ·
  <span style="font-variant-numeric:tabular-nums">{datetime.now(timezone.utc):%Y-%m-%d %H:%MZ}</span> 기준</p></header>"""]
 

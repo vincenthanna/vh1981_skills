@@ -1,5 +1,5 @@
 {
-  "description": "vh1981 plugin hooks — injects the default guidelines into every session and keeps the devlog status line installed and pointed at the shipped script",
+  "description": "vh1981 plugin hooks — injects the default guidelines, keeps the devlog status line installed, and checks the checkout in to the knowledge base",
   "hooks": {
     "SessionStart": [
       {
@@ -13,6 +13,11 @@
             "type": "command",
             "command": "/bin/sh \"${CLAUDE_PLUGIN_ROOT}/scripts/check-statusline.sh\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "/bin/sh \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-checkin.sh\"",
+            "timeout": 5
           }
         ]
       }
