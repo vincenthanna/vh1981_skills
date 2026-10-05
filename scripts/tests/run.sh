@@ -312,6 +312,36 @@ python3 -c "import json;json.load(open('$KBT/kb/.kb/manifest/repos/repo/proj.jso
 assert_eq "concurrent uploads leave a valid manifest" "0" "$?"
 assert_eq "no lock is left behind" "no" "$([ -d "$KBT/kb/.kb/lock" ] && echo yes || echo no)"
 
+LP="$KBT/plain/docs/devlog/proj"
+cat > "$LP/02_dated.md" <<'MD'
+# Dated
+
+### Finding 3: cache miss explained (2026-09-03)
+
+- note: 2026-09-20 mentioned mid-sentence
+
+## Progress
+
+### Done
+- 2026-09-02: measured baseline
+- 2026-09-10: fixed the leak
+- undated old item
+
+### Remaining / Next
+- [High] rerun eval (added 2026-09-05)
+MD
+printf '# h\n\n## Changes\n- 2026-09-04: edited config\n' > "$LP/history/02_h.md"
+out=$(cd "$KBT/plain" && python3 "$KBPY" log --local --since 2026-09-01 --until 2026-09-05)
+assert_contains "log picks a dated Done bullet" "done · 02_dated.md:10 · measured baseline" "$out"
+assert_contains "log picks a dated Finding heading" "finding · 02_dated.md:3 · Finding 3: cache miss explained" "$out"
+assert_contains "log picks a dated history bullet" "history · history/02_h.md:4 · edited config" "$out"
+assert_contains "log picks an added Remaining item" "added · 02_dated.md:15" "$out"
+assert_not_contains "log honours --until" "fixed the leak" "$out"
+assert_not_contains "a mid-sentence date is not a work entry" "mid-sentence" "$(cd "$KBT/plain" && python3 "$KBPY" log --local)"
+assert_contains "--loose takes mid-sentence dates too" "mention" "$(cd "$KBT/plain" && python3 "$KBPY" log --local --loose --since 2026-09-20)"
+kbr "$KBT/plain" upload proj --topic notes --yes >/dev/null
+assert_contains "log reads the whole KB without --local" "topics/notes/proj" "$(kbr "$KBT/plain" log --since 2026-09-10 --until 2026-09-10)"
+
 where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
 out=$(where)
 assert_contains "built-in default is the ds35 KB" "ssh://yeonhui@192.168.100.135/home/yeonhui/kb  (출처: built-in default)" "$out"

@@ -210,6 +210,21 @@ devlog의 `templates/readme.md` 에 이 frontmatter를 추가하고, `create` �
 
 `/kb status` 는 이 파일을 읽어 보여 준다. 업로드가 오래돼 보이면 등록부의 checkout으로 live fetch를 제안한다.
 
+### 작업 기록 추출
+
+기간 안에 한 일을 뽑을 수 있도록, devlog에 새로 넣는 항목에는 날짜를 정해진 위치에 붙인다. 이 규칙은 `plugins/vh1981/skills/devlog/reference/writing.md` 의 "Date every entry you add" 에 있다.
+
+| 위치 | 형식 |
+|---|---|
+| 조사 문서 `### Done` 항목 | `- 2026-10-05: <한 일>` |
+| `### Remaining / Next` 항목 | `- [High] <할 일> (added 2026-10-05)`. 끝나면 날짜를 붙여 Done으로 옮긴다 |
+| 새 Finding 헤딩 | `### Finding 7: <제목> (2026-10-05)` |
+| history의 Changes, Decisions, Issues 항목 | `- 2026-10-05: <내용>` |
+
+`kb.py log --since <날짜> --until <날짜>` 가 이 위치의 날짜만 읽어 날짜순으로 출력한다. `--local` 은 현재 checkout의 devlog만, 기본은 KB 전체를 읽는다.
+문장 중간의 날짜는 "그날 한 일"이 아닐 수 있어 기본으로는 세지 않는다. 규칙 이전 문서는 `--loose` 로 날짜가 든 모든 bullet을 근사로 뽑는다.
+조사 시점의 Done 항목 725개 중 날짜가 있던 것은 89개였고 형식도 제각각이었으므로, 이전 기록은 근사로만 뽑힌다.
+
 ### KB 위치 설정
 
 KB 위치는 머신 단위로 한 번 정한다. 아래 순서로 찾는다.

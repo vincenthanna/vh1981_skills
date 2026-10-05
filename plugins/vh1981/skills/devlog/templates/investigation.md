@@ -20,10 +20,10 @@ Copy the block below. Optional sections are marked — **omit the whole section
 
 ## Findings
 
-### <Finding 1 Title>
+### <Finding 1 Title> (<YYYY-MM-DD>)
 <Analysis content — tables, code references (file:line), data flows>
 
-### <Finding 2 Title>
+### <Finding 2 Title> (<YYYY-MM-DD>)
 <Analysis content>
 
 ## Data Flow *(optional — omit this section entirely if N/A)*
@@ -38,10 +38,11 @@ Copy the block below. Optional sections are marked — **omit the whole section
 ## Progress
 
 ### Done
-<What has been done — code changes, analysis completed, decisions made>
+- <YYYY-MM-DD>: <what was done — code change, analysis completed, decision made>
 
 ### Remaining / Next
-<What remains — prioritized with [Critical], [High], [Medium], [Low] tags>
+- [High] <what remains> (added <YYYY-MM-DD>)
+<!-- Dating rule: reference/writing.md "Date every entry you add". -->
 
 ## Conclusion
 <Design intent / problems found / recommendations with priority>

@@ -61,6 +61,16 @@ This single form is what makes `reorg rename`, `reorg cleanup`, and `reorg conso
 - **Period field**: the first-to-last date this doc was *edited* — not the calendar span of the underlying work. Always update the end date to today when editing, using the resolved `Today` from the context header (never a remembered or guessed date). If the work's calendar span matters, record it separately in the body.
 - **Read before writing**: Always read relevant source code before producing findings. Never guess.
 - **Progress section is mandatory**: Every investigation doc must have a `Progress` section with `Done` and `Remaining / Next` subsections. Use priority tags: `[Critical]`, `[High]`, `[Medium]`, `[Low]`.
+- **Date every entry you add** — so work in a period can be pulled out with `kb.py log --since <date> --until <date>`. Use the ISO date the work was done: the resolved `Today` for this session's work, or the actual day when recording earlier work (from git log or the conversation). Never guess a date, and never back-fill dates onto existing undated items.
+
+  | Where | Form |
+  |---|---|
+  | `### Done` bullet | `- 2026-10-05: <what was done>` — one bullet per dated unit of work |
+  | `### Remaining / Next` bullet | `- [High] <item> (added 2026-10-05)`; when it is completed, move it to Done as a new dated bullet |
+  | new Finding heading | `### Finding 7: <title> (2026-10-05)` |
+  | history `Changes` / `Decisions` / `Issues & Blockers` bullet | `- 2026-10-05: <change>` |
+
+  The date leads the bullet (after the bullet marker) or ends the heading in parentheses — the extractor matches only those positions, so a date mentioned mid-sentence does not count as "work done that day".
 - **Be conservative with edits** — preserve historical accuracy. Only remove content that is fully obsolete.
 
 ## Investigation depth levels

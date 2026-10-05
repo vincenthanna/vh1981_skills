@@ -486,6 +486,80 @@ def store_search(root, meta, _payload):
             "top_files": [{"file": rel, "hits": cnt} for cnt, rel, _ in hits[:15]]}
 
 
+DATE = r"(\d{4}-\d{2}-\d{2})"
+LOG_BULLET = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(?:\[[A-Za-z]+\]\s*)?\**" + DATE + r"\**\s*[:·—–-]?\s*(.+)$")
+LOG_ADDED = re.compile(r"\(added " + DATE + r"\)")
+LOG_HEAD_START = re.compile(r"^#{2,4}\s+" + DATE + r"\b\s*[:·—–-]?\s*(.*)$")
+LOG_HEAD_END = re.compile(r"^#{2,4}\s+(.*?)\s*\(" + DATE + r"\)\s*$")
+LOG_ANY = re.compile(DATE)
+
+
+def scan_log(projects, since, until, loose=False):
+    """Collect dated entries from devlog docs. `projects` is [(id, dir)].
+
+    Strict forms (the devlog dating rule): a bullet that starts with a date,
+    a heading that starts or ends with a date, and `(added DATE)` on a
+    Remaining item. --loose also takes any bullet holding an ISO date, for
+    docs written before the rule."""
+    out = []
+    for pid, pdir in projects:
+        for dp, dns, fns in os.walk(pdir):
+            dns[:] = sorted(d for d in dns if not d.startswith("."))
+            for fn in sorted(fns):
+                if not fn.endswith(".md"):
+                    continue
+                full = os.path.join(dp, fn)
+                rel = os.path.relpath(full, pdir)
+                in_history = rel.split(os.sep)[0] == "history"
+                section = ""
+                try:
+                    lines = open(full, encoding="utf-8", errors="replace").read().splitlines()
+                except OSError:
+                    continue
+                for no, ln in enumerate(lines, 1):
+                    if ln.startswith("#"):
+                        section = ln.lstrip("#").strip()
+                        m = LOG_HEAD_START.match(ln)
+                        mm = None if m else LOG_HEAD_END.match(ln)
+                        if m or mm:
+                            d, text = (m.group(1), section) if m else (mm.group(2), mm.group(1))
+                            kind = "history" if in_history else "finding" if "finding" in ln.lower() else "heading"
+                            out.append((d, pid, rel, no, kind, text.strip()))
+                        continue
+                    m = LOG_BULLET.match(ln)
+                    if m:
+                        sec = section.lower()
+                        kind = "history" if in_history else "done" if sec.startswith("done") else "dated"
+                        out.append((m.group(1), pid, rel, no, kind, m.group(2).strip()))
+                        continue
+                    m = LOG_ADDED.search(ln)
+                    if m:
+                        out.append((m.group(1), pid, rel, no, "added", re.sub(r"^\s*[-*]\s+", "", ln).strip()))
+                        continue
+                    if loose and re.match(r"^\s*(?:[-*]|\d+\.|\|)\s", ln):
+                        m = LOG_ANY.search(ln)
+                        if m:
+                            out.append((m.group(1), pid, rel, no, "mention", re.sub(r"^\s*[-*|]\s*", "", ln).strip()))
+    out = [e for e in out if (not since or e[0] >= since) and (not until or e[0] <= until)]
+    out.sort(key=lambda e: (e[0], e[1], e[2], e[3]))
+    return [{"date": d, "id": i, "file": f, "line": n, "kind": k, "text": t[:300]} for d, i, f, n, k, t in out]
+
+
+def store_log(root, meta, _payload):
+    scope = meta.get("scope") or ""
+    projects = []
+    for kind in ("repos", "topics"):
+        kd = os.path.join(root, kind)
+        if not os.path.isdir(kd):
+            continue
+        for name in sorted(os.listdir(kd)):
+            for proj in sorted(os.listdir(os.path.join(kd, name))):
+                pid = f"{kind}/{name}/{proj}"
+                if os.path.isdir(os.path.join(kd, name, proj)) and pid.startswith(scope):
+                    projects.append((pid, os.path.join(kd, name, proj)))
+    return {"status": "ok", "entries": scan_log(projects, meta.get("since"), meta.get("until"), meta.get("loose"))}
+
+
 def store_cat(root, meta, _payload):
     rel = safe_rel(meta["path"])
     if rel.split("/")[0] not in ("repos", "topics", "registry") and rel not in ("KB.md", "INDEX.md", "NOW.md"):
@@ -536,7 +610,7 @@ def store_check(root, meta, _payload):
     return {"status": "ok", "issues": issues}
 
 
-STORE_CMDS = {"init": store_init, "upload": store_upload, "register": store_register,
+STORE_CMDS = {"init": store_init, "upload": store_upload, "register": store_register, "log": store_log,
               "registry": store_registry, "search": store_search, "cat": store_cat, "check": store_check}
 
 
@@ -973,6 +1047,32 @@ def cmd_cat(a):
     return 0
 
 
+def cmd_log(a):
+    if a.local:
+        idt = ident(os.getcwd())
+        projects = [(p, os.path.join(idt["devlog"], p)) for p in idt["projects"]
+                    if not a.scope or p.startswith(a.scope)]
+        entries = scan_log(projects, a.since, a.until, a.loose)
+    else:
+        entries = call(resolve_loc(a.kb), "log", {"since": a.since, "until": a.until,
+                                                  "scope": a.scope or "", "loose": a.loose})["entries"]
+    if a.json:
+        print(json.dumps(entries, ensure_ascii=False, indent=1))
+        return 0
+    last = None
+    for e in entries:
+        if e["date"] != last:
+            print(f"\n## {e['date']}")
+            last = e["date"]
+        print(f"- `{e['id']}` · {e['kind']} · {e['file']}:{e['line']} · {e['text']}")
+    kinds = {}
+    for e in entries:
+        kinds[e["kind"]] = kinds.get(e["kind"], 0) + 1
+    print(f"\n-- {len(entries)}건 ({', '.join(f'{k} {v}' for k, v in sorted(kinds.items())) or '없음'})"
+          f" · 기간 {a.since or '처음'} ~ {a.until or '지금'}")
+    return 0
+
+
 def cmd_status(a):
     loc = resolve_loc(a.kb)
     sys.stdout.write(call(loc, "cat", {"path": "NOW.md"})["text"])
@@ -1122,6 +1222,15 @@ def main(argv=None):
     p = sp.add_parser("cat", help="KB 문서 읽기. 디렉토리면 파일 목록")
     p.add_argument("path")
     p.set_defaults(fn=cmd_cat)
+
+    p = sp.add_parser("log", help="기간 안에 날짜가 붙은 devlog 항목 뽑기 (작업 기록)")
+    p.add_argument("--since", help="YYYY-MM-DD (포함)")
+    p.add_argument("--until", help="YYYY-MM-DD (포함)")
+    p.add_argument("--scope", help="KB ID 접두어, --local 이면 프로젝트 이름 접두어")
+    p.add_argument("--local", action="store_true", help="KB 대신 현재 checkout 의 docs/devlog")
+    p.add_argument("--loose", action="store_true", help="날짜 규칙 이전 문서용: 날짜가 든 모든 bullet")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_log)
 
     sp.add_parser("status", help="NOW.md 출력").set_defaults(fn=cmd_status)
     sp.add_parser("check", help="KB 점검").set_defaults(fn=cmd_check)

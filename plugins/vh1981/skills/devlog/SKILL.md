@@ -28,9 +28,10 @@ Parse the arguments to determine which command to run:
 | `run <condition-name>` | **Validation** — register a measurement run |
 | `compare <condition> ...` | **Validation** — build/grow a comparison report |
 | `upload [<project>] [--to <path>]` | **Upload** — publish to the knowledge base via `vh1981:kb` |
+| `log [--since <date>] [--until <date>] [<project>]` | **Log** — list dated entries (work done) in a period |
 | *(no args)* | **Update** |
 
-If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `consolidate`, `run`, `compare`, `upload`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
+If the first token is not one of the reserved commands above (`create`, `list`, `select`, `update`, `reorg`, `rename`, `consolidate`, `run`, `compare`, `upload`, `log`), treat the whole argument as `create <argument>` (assume the user wants a new project with that name).
 
 Detailed procedures live in `commands/*.md` in this skill's directory (`update`, `upload`, `reorg`, `validation`) — read the relevant file when routing lands on that command. Doc-writing rules (what goes where, templates, split triggers, output quality) live in `reference/writing.md` — read it once per session before writing or editing devlog docs.
 
@@ -201,6 +202,21 @@ For validation/ablation campaigns — each measurement adds a *condition* to the
 Publishes a devlog project to the knowledge base (KB) by delegating to the `vh1981:kb` skill, which selects text files, detects conflicts between checkouts holding copies of the same project, and maintains the KB index. The KB may be a local path or `ssh://user@host/path`. Syntax: `upload [<project>] [--to <path>]` (positional `upload <project> <path>` also accepted). `update` also uploads automatically as its last step when a KB is configured.
 
 **Read `commands/upload.md` (in this skill's directory) for the syntax mapping and the auto-upload rules.**
+
+---
+
+## Command: Log
+
+Lists the dated entries — Done bullets, history bullets, dated Finding headings, `(added …)` Remaining items — that fall in a period, for "what did I do between X and Y". It reads only what the dating rule in `reference/writing.md` produces.
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/kb/scripts/kb.py log --local --since 2026-09-01 --until 2026-09-30 [--scope <project>]
+```
+
+- `--local` reads this checkout's `docs/devlog/`. Without it, the same command reads the whole KB (every repo and machine uploaded there) — use that when the user asks about all their work, not just this repo.
+- `--loose` also takes any bullet holding an ISO date, for docs written before the dating rule; label those results as approximate.
+- `--json` gives machine-readable entries when you will summarize them.
+- Summarize the output per project, then per day, quoting the file paths it prints. Do not read `history/` beyond what `log` returns.
 
 ---
 

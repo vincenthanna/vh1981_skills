@@ -81,8 +81,8 @@ the collision. Never guess from memory.
    d. **If topic already has a file** (same theme as existing entry):
       - Update that `.md` file using Edit tool.
       - Update the `Period` end date to today.
-      - Append new findings to relevant sections.
-      - Update `Progress` (completed items, next steps).
+      - Append new findings to relevant sections. A new Finding heading ends with `(YYYY-MM-DD)`.
+      - Update `Progress`: every new Done bullet starts with `YYYY-MM-DD: `, every new Remaining item ends with `(added YYYY-MM-DD)`, and a completed Remaining item moves to Done as a new dated bullet (`reference/writing.md` "Date every entry you add").
       - Be conservative: only remove content that is fully obsolete.
 
    e. **If topic is new** (no existing file for this theme):
@@ -107,7 +107,7 @@ the collision. Never guess from memory.
    c. **If same topic** (work continues the same theme):
       - Update the last `.md` file in `history/` using Edit tool.
       - Update the `Period` end date to today.
-      - Append new information to relevant sections (Changes, Decisions, Issues, Next Steps).
+      - Append new information to relevant sections (Changes, Decisions, Issues, Next Steps). Each new bullet in Changes / Decisions / Issues starts with `YYYY-MM-DD: `.
       - Remove completed items from Next Steps.
       - Be conservative: only remove content that is fully obsolete.
 

@@ -43,6 +43,7 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
 | `register` | 아래 §등록 |
 | `fetch <repo> [<project>]` | `$KB fetch <repo> [<project>] [--file <문서>]`. 등록된 checkout에 접속해 최신 devlog를 읽는다 |
 | `check` | `$KB check` 결과를 종류별로 묶어 보여 주고, 고칠 방법을 한 줄씩 붙인다 |
+| `log`, "이번 달 한 일", "기간 내 진행한 일" | `$KB log --since <날짜> --until <날짜> [--scope <ID>]`. 날짜 규칙으로 기록된 항목(Done, history, 날짜 붙은 Finding)을 날짜순으로 뽑는다. 규칙 이전 문서까지 보려면 `--loose` 를 붙이고 결과가 근사라고 밝힌다. 결과는 프로젝트별, 날짜별로 요약한다 |
 | `survey <작업 디렉토리>...` | `$KB survey <dir>...`. 첫 일괄 업로드 전에 갈라진 사본을 비교해 소유자를 고르게 한다 |
 | 인자 없음 | `status` |
 

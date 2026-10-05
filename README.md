@@ -79,6 +79,7 @@ git clone git@github.com:vincenthanna/vh1981_skills.git ~/repos/vh1981_skills
 | `/devlog reorg readme` | README의 `<!-- AUTO-GENERATED -->` 영역 재생성 |
 | `/devlog run <condition>` | 측정 run manifest 를 `runs/<condition>/` 에 등록 (실험 자체를 실행하지는 않음) |
 | `/devlog compare <조건들>` | `comparisons/` 에 비교 리포트 생성·확장 |
+| `/devlog log [--since <date>] [--until <date>]` | 기간 안에 날짜가 붙은 항목(Done, history, Finding)을 뽑아 그 기간에 한 일을 정리 |
 | `/devlog upload [<project>] [--to <path>]` | knowledge base(KB)에 업로드. `vh1981:kb` 로 위임하며, KB가 설정돼 있으면 `/devlog update` 끝에 자동으로 올라감 |
 
 **디렉토리 구조:**
@@ -170,12 +171,14 @@ KB는 로컬 경로나 `ssh://user@host/abs/path` 이며, 원격에는 `python3`
 | `/kb status` | `NOW.md`: 진행 중, 열린 Critical/High, 갈라진 사본, 멈춘 것 |
 | `/kb register` | repo가 하는 일, 분야, checkout별 branch·하는 일·ssh 접속 방법 등록 |
 | `/kb fetch <repo> [<project>]` | 등록된 checkout에 직접 접속해 최신 devlog 읽기 |
+| `/kb log --since <날짜> --until <날짜>` | 모든 repo·머신에 걸쳐 기간 안에 한 일을 날짜순으로 뽑기 |
 | `/kb check`, `/kb survey <dir>` | KB 점검, 작업 디렉토리들의 갈라진 사본 비교 |
 
 같은 프로젝트가 여러 worktree나 clone에 갈라진 사본으로 있을 수 있어, 프로젝트마다 소유 checkout 하나만 KB에 쓰고
 다른 사본은 차이를 보고만 합니다(`--take-over` 로 소유자 변경). repo는 정규화한 origin URL과 `git --git-common-dir` 로
 식별하므로 https/`git@` 표기 차이와 worktree 가 한 repo로 묶입니다. 512KB 이하 텍스트와 이미지가 내장되지 않은 HTML만 올리고,
 이미지·`npy`·압축 파일은 올리지 않습니다. 프로젝트 카드는 devlog `README.md` 의 `kb:` frontmatter 입니다.
+devlog에 새로 넣는 Done, history 항목은 `- YYYY-MM-DD: ...`, 새 Finding 헤딩은 `(YYYY-MM-DD)` 로 끝나도록 날짜를 붙입니다. `log` 가 이 날짜로 기간을 거릅니다.
 설계 근거는 `docs/projects/knowledge-base/01_spec-and-plan.md` 에 있습니다.
 
 ### techreport
