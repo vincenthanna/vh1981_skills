@@ -4,6 +4,7 @@
 #
 #   kb-report-run.sh daily  [YYYY-MM-DD]   # default: yesterday
 #   kb-report-run.sh weekly [YYYY-MM-DD]   # week ending that day; default: today
+#   kb-report-run.sh techdoc [KB project id]  # one tech doc from the KB (kb-techdoc skill)
 #
 # It makes sure the report server is up, then runs headless claude in the KB
 # directory with only the tools the kb-report skill needs. Writes outside the
@@ -24,28 +25,41 @@ day() { date -d "$1" +%F 2>/dev/null || date -j -v"$2" +%F; }
 case "$MODE" in
   daily)  D="${2:-$(day yesterday -1d)}"; OUT="$KB/reports/daily/$D.html"; ARGS="daily $D" ;;
   weekly) D="${2:-$(date +%F)}"; ARGS="weekly $D"; OUT="" ;;
+  techdoc) ARGS="run${2:+ $2}"; OUT="" ;;
   *) echo "usage: $0 daily|weekly [YYYY-MM-DD]"; exit 2 ;;
 esac
 
 # install.sh copies the skill next to the KB, so a run does not depend on which
 # plugin version this host has installed. Point claude at that copy explicitly.
-SKILL="${KB_REPORT_SKILL:-$KB/.kb/kb-report/SKILL.md}"
+if [ "$MODE" = "techdoc" ]; then
+  SKILL="${KB_REPORT_SKILL:-$KB/.kb/kb-techdoc/SKILL.md}"; NAME=kb-techdoc
+  EXTRA_TOOLS="WebSearch WebFetch"; LIMIT=3600
+else
+  SKILL="${KB_REPORT_SKILL:-$KB/.kb/kb-report/SKILL.md}"; NAME=kb-report
+  EXTRA_TOOLS=""; LIMIT=1800
+fi
 [ -f "$SKILL" ] || { echo "$(ts) FAIL skill copy missing: $SKILL (rerun install.sh)"; exit 1; }
 
 bash "$HERE/serve_devlog.sh" "$KB" "$PORT" >/dev/null 2>&1 || echo "$(ts) WARN report server did not start"
 
 cd "$KB" || exit 1
-TO=""; command -v timeout >/dev/null 2>&1 && TO="timeout 1800"
+TO=""; command -v timeout >/dev/null 2>&1 && TO="timeout $LIMIT"
 echo "$(ts) START $ARGS (skill $SKILL)"
-$TO "$CLAUDE" -p "kb-report 스킬을 실행한다: $ARGS
+$TO "$CLAUDE" -p "$NAME 스킬을 실행한다: $ARGS
 스킬 본문은 $SKILL 이다. Read로 읽고 그대로 따른다. 스킬의 '<이 skill 디렉토리>' 는 $(dirname "$SKILL") 다.
 이 실행은 cron이 띄운 무인 실행이다. 질문하지 말고 끝까지 진행한다." \
   --allowedTools "Bash(python3 $KB/.kb/bin/kb.py:*)" "Bash(bash $KB/.kb/bin/serve_devlog.sh:*)" \
-                 "Read" "Write" "Edit" "Glob" "Grep" \
+                 "Read" "Write" "Edit" "Glob" "Grep" $EXTRA_TOOLS \
   --permission-mode acceptEdits
 rc=$?
 if [ "$MODE" = "weekly" ]; then
   OUT=$(ls -1t "$KB"/reports/weekly/*.html 2>/dev/null | head -1)
+fi
+if [ "$MODE" = "techdoc" ]; then
+  # A run may legitimately make nothing (no candidate, or all skipped); the
+  # state file records every decision, so success = claude finished cleanly.
+  [ "$rc" -eq 0 ] && { echo "$(ts) OK $ARGS ($(ls -1t "$KB"/reports/techdocs/*.html 2>/dev/null | head -1))"; exit 0; }
+  echo "$(ts) FAIL $ARGS (claude exit $rc)"; exit 1
 fi
 if [ "$rc" -eq 0 ] && [ -n "$OUT" ] && [ -f "$OUT" ] && [ "$(find "$OUT" -mmin -60 2>/dev/null)" ]; then
   echo "$(ts) OK $ARGS -> $OUT"

@@ -178,8 +178,9 @@ KB 위치는 코드에 넣지 않습니다. 머신마다 `/kb init <위치>` 로
 | `/kb log --since <날짜> --until <날짜>` | 모든 repo·머신에 걸쳐 기간 안에 한 일을 날짜순으로 뽑기 |
 | `/kb check`, `/kb survey <dir>` | KB 점검, 작업 디렉토리들의 갈라진 사본 비교 |
 
-같은 프로젝트가 여러 worktree나 clone에 갈라진 사본으로 있을 수 있어, 프로젝트마다 소유 checkout 하나만 KB에 쓰고
-다른 사본은 차이를 보고만 합니다(`--take-over` 로 소유자 변경). repo는 정규화한 origin URL과 `git --git-common-dir` 로
+업로드는 파일마다 그 checkout이 마지막으로 올린 판, KB 판, 지금 판을 비교해(3-way) 한쪽만 바꾼 파일은 자동으로 반영하고,
+양쪽이 다르게 바꾼 파일만 충돌로 남깁니다. 충돌은 `kb.py conflicts` 로 두 판을 받아 합친 뒤 `--resolve` 로 올립니다.
+checkout은 그 안에 저장한 ID로 식별하므로 NFS로 공유하는 디렉토리는 호스트가 달라도 한 checkout입니다. repo는 정규화한 origin URL과 `git --git-common-dir` 로
 식별하므로 https/`git@` 표기 차이와 worktree 가 한 repo로 묶입니다. 512KB 이하 텍스트와 이미지가 내장되지 않은 HTML만 올리고,
 이미지·`npy`·압축 파일은 올리지 않습니다. 프로젝트 카드는 devlog `README.md` 의 `kb:` frontmatter 입니다.
 devlog에 새로 넣는 Done, history 항목은 `- YYYY-MM-DD: ...`, 새 Finding 헤딩은 `(YYYY-MM-DD)` 로 끝나도록 날짜를 붙입니다. `log` 가 이 날짜로 기간을 거릅니다.
@@ -194,11 +195,27 @@ KB가 있는 머신의 cron이 KB 디렉토리에서 headless claude로 이 스�
 |------|------|
 | `/kb-report daily [YYYY-MM-DD]` | 그날(기본: 어제)의 daily log 생성 |
 | `/kb-report weekly [YYYY-MM-DD]` | 그날로 끝나는 7일의 weekly log 생성 |
-| `/kb-report install` | KB 머신에 cron(06:30 daily, 일 22:00 weekly, 재부팅 시 서버)과 실행 파일 설치 |
+| `/kb-report install` | KB 머신에 cron(06:30 daily, 일 22:00 weekly, 01:15·13:15 techdoc, 재부팅 시 서버)과 실행 파일 설치 |
 | `/kb-report status` | 최근 실행 로그와 최신 로그 페이지 |
 
 수집은 `kb.py collect` 가 합니다. KB 머신에서 ssh로 들어갈 수 있는 checkout은 그 자리에서(live), 들어갈 수 없는 checkout(노트북 등)은
 세션 시작 때 자동 checkin이 올린 KB 사본으로 읽습니다. cron의 claude는 `kb.py`, 서버 스크립트, Read/Write/Edit/Glob/Grep만 쓸 수 있습니다.
+
+### kb-techdoc
+
+KB에 쌓인 devlog를 12시간마다 훑어, 기술문서로 만들 가치가 있는 프로젝트 하나를 골라 단일 HTML 기술 보고서로 만들고
+KB 웹 서버의 **Tech docs** 에 올립니다. KB 내용만 옮기지 않고 기초 논문과 외부 자료를 찾아 붙이며, techreport 형식
+(0장 비유, 용어집과 팝업, arXiv API로 확인한 논문의 요약과 링크, 검증 기록)을 따릅니다.
+
+| 명령 | 설명 |
+|------|------|
+| `/kb-techdoc` | 후보 하나로 기술문서 한 편 생성 (cron이 01:15, 13:15에 실행) |
+| `/kb-techdoc <KB 프로젝트 ID>` | 지정한 프로젝트로 생성 |
+| `/kb-techdoc list` | 후보 목록 (`kb.py candidates`) |
+
+후보는 md 문서가 3개 이상이고 지난 처리 뒤 새로 업로드된 프로젝트입니다. 만들 가치가 없다고 본 프로젝트는 이유와 함께
+건너뛴 것으로 기록하고(`kb.py mark`), 새 업로드가 생기면 다시 후보가 됩니다. 완성본은 `kb.py htmlcheck` 로 앵커, 인용,
+이미지, 외부 자원, 스크립트 문법을 기계 검사합니다. cron은 `/kb-report install` 이 함께 설치합니다.
 
 ### techreport
 
@@ -365,7 +382,8 @@ plugins/
       humanizer/            # /humanizer 스킬 (SKILL.md + references/patterns.md)
       techreport/           # /techreport 스킬 (템플릿, 검사 목록, 보고서 서버)
       kb/                   # /kb 스킬 (kb.py 클라이언트·store, KB.md 템플릿)
-      kb-report/            # /kb-report 스킬 (daily·weekly log, cron 설치)
+      kb-report/            # /kb-report 스킬 (daily·weekly log, KB 머신 cron 설치)
+      kb-techdoc/           # /kb-techdoc 스킬 (KB → 기술문서, 12시간 cron)
   prompts-pack/
     .claude-plugin/plugin.json
     agents/                 # debugger, code-reviewer, ...

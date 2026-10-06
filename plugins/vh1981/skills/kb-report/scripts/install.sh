@@ -11,6 +11,7 @@
 #
 #   30 6 * * *   daily log for yesterday
 #   0 22 * * 0   weekly log for the week ending that Sunday
+#   15 1,13 * * * one tech doc from the KB (kb-techdoc skill), every 12 hours
 #   @reboot      report server on port ${KB_REPORT_PORT:-8800}, root = KB
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,6 +55,13 @@ mkdir -p "$KB/.kb/kb-report/templates"
 cp "$HERE/../SKILL.md" "$KB/.kb/kb-report/SKILL.md"
 cp "$HERE/../templates/log.html" "$KB/.kb/kb-report/templates/log.html"
 cp "$PLUG/guidelines/output-principles.md" "$KB/.kb/kb-report/output-principles.md"
+TD="$KB/.kb/kb-techdoc"
+mkdir -p "$TD/techreport/templates" "$TD/techreport/reference" "$KB/reports/techdocs"
+cp "$PLUG/skills/kb-techdoc/SKILL.md" "$TD/SKILL.md"
+cp "$PLUG/guidelines/output-principles.md" "$TD/output-principles.md"
+cp "$PLUG/skills/techreport/SKILL.md" "$TD/techreport/SKILL.md"
+cp "$PLUG/skills/techreport/templates/report.html" "$TD/techreport/templates/report.html"
+cp "$PLUG/skills/techreport/reference/checklist.md" "$TD/techreport/reference/checklist.md"
 chmod +x "$KB/.kb/bin/"*.sh "$KB/.kb/bin/kb.py"
 printf '%s\n' "$CLAUDE" > "$KB/.kb/claude-path"
 
@@ -62,14 +70,23 @@ LOG="$KB/.kb/logs/kb-report.log"
   [ -n "$current" ] && printf '%s\n' "$current"
   echo "30 6 * * * $KB/.kb/bin/kb-report-run.sh daily >> $LOG 2>&1  $MARK daily"
   echo "0 22 * * 0 $KB/.kb/bin/kb-report-run.sh weekly >> $LOG 2>&1  $MARK weekly"
+  echo "15 1,13 * * * $KB/.kb/bin/kb-report-run.sh techdoc >> $LOG 2>&1  $MARK techdoc"
   echo "@reboot bash $KB/.kb/bin/serve_devlog.sh $KB $PORT >> $KB/.kb/logs/serve.log 2>&1  $MARK serve"
 } | sed '/^$/d' | crontab -
 
+# A running server keeps the code it started with; restart it so a reinstall
+# (new index groups, fixes) takes effect immediately.
+PIDF="/tmp/serve_devlog.$PORT.pid"
+if [ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; then
+  kill "$(cat "$PIDF")" 2>/dev/null || true
+  for _ in 1 2 3 4 5; do kill -0 "$(cat "$PIDF")" 2>/dev/null || break; sleep 1; done
+  rm -f "$PIDF"
+fi
 bash "$KB/.kb/bin/serve_devlog.sh" "$KB" "$PORT" || true
 echo
 echo "설치 완료"
 echo "  KB:      $KB"
 echo "  claude:  $CLAUDE ($("$CLAUDE" --version 2>/dev/null | head -1))"
-echo "  cron:    매일 06:30 daily(어제) · 일요일 22:00 weekly · 재부팅 시 서버"
+echo "  cron:    매일 06:30 daily(어제) · 일요일 22:00 weekly · 01:15/13:15 techdoc · 재부팅 시 서버"
 echo "  로그:    $LOG"
 echo "  수동 실행: $KB/.kb/bin/kb-report-run.sh daily [YYYY-MM-DD]"

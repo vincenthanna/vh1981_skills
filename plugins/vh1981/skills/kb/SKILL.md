@@ -45,9 +45,11 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
 | `fetch <repo> [<project>]` | `$KB fetch <repo> [<project>] [--file <문서>]`. 등록된 checkout에 접속해 최신 devlog를 읽는다 |
 | `check` | `$KB check` 결과를 종류별로 묶어 보여 주고, 고칠 방법을 한 줄씩 붙인다 |
 | `collect --since <날짜> [--until <날짜>]` | 등록된 모든 checkout에서 기간의 작업(날짜 붙은 항목, 수정된 devlog 문서, 본인 커밋)을 JSON으로 모은다. KB 머신에서 직접 들어갈 수 있으면 live로, 아니면 KB 사본으로 읽는다. `vh1981:kb-report` 의 재료다 |
+| `candidates`, `mark`, `htmlcheck` | `vh1981:kb-techdoc` 이 쓰는 도구다. 기술문서 후보 목록, 처리 기록, 단일 HTML 기계 검사 |
 | `checkin` | SessionStart hook이 자동으로 부른다. 직접 부를 일은 없다. `--force` 는 오늘 이미 했어도 다시 한다 |
 | `log`, "이번 달 한 일", "기간 내 진행한 일" | `$KB log --since <날짜> --until <날짜> [--scope <ID>]`. 날짜 규칙으로 기록된 항목(Done, history, 날짜 붙은 Finding)을 날짜순으로 뽑는다. 규칙 이전 문서까지 보려면 `--loose` 를 붙이고 결과가 근사라고 밝힌다. 결과는 프로젝트별, 날짜별로 요약한다 |
-| `survey <작업 디렉토리>...` | `$KB survey <dir>...`. 첫 일괄 업로드 전에 갈라진 사본을 비교해 소유자를 고르게 한다 |
+| `survey <작업 디렉토리>...` | `$KB survey <dir>...`. 같은 프로젝트의 사본이 여러 checkout에 있는지 비교한다. 가장 최신 사본을 먼저 올리면 나머지는 충돌 없이 맞춰진다 |
+| `conflicts <project>` | 충돌 파일의 KB 판을 내려받아 로컬 판과 나란히 보여 준다. 아래 §충돌 합치기 |
 | 인자 없음 | `status` |
 
 ## 업로드
@@ -67,19 +69,43 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
    ```
 
    카드가 없거나 status, summary가 조사 문서의 결론과 어긋나면 README와 최신 조사 문서를 읽고 채운다. 태그 어휘는 `$KB cat KB.md` 로 본다. 채운 카드를 사용자에게 보여 주고 README에 쓴다.
-3. `$KB upload <project>` 를 실행한다. 결과 상태별로 아래처럼 한다.
+3. `$KB upload <project>` 를 실행한다. 업로드는 파일마다 세 판을 비교해 계획을 세운다: 이 checkout이 마지막으로 올린 판(base), KB 판, 지금 checkout 판.
+
+   | 파일 상태 | 처리 |
+   |---|---|
+   | 이 checkout만 바꿈 (KB 판 = base) | 수정 |
+   | KB만 바뀜 (checkout 판 = base) | KB 판 유지 |
+   | 새 파일 | 추가 |
+   | 이 checkout이 지움 (KB 판 = base) | 삭제. `--yes` 가 있어야 지운다 |
+   | 양쪽이 다르게 바꿈, 또는 이 checkout이 처음 올리는데 내용이 다름 | 충돌. 쓰지 않는다 |
+   | KB에서 지워졌는데 이 checkout에 남음 | 보고만 한다 |
+
+   결과 상태별로 아래처럼 한다.
 
    | 상태 | 할 일 |
    |---|---|
-   | `ok` | 쓴 것, 지운 것, 제외한 것을 한 줄로 보고한다 |
+   | `ok`, `up-to-date` | 추가, 수정, 삭제, 제외한 것을 한 줄로 보고한다 |
    | `needs-confirm` | KB에서 지울 파일 목록을 보여 주고, 사용자가 동의하면 `--yes` 로 다시 실행한다 |
-   | `conflict` | 다른 checkout이 소유한 프로젝트다. 차이 표를 보여 주고 `--take-over` 로 이 사본을 정본으로 할지 묻는다. 묻지 않고 take-over 하지 않는다 |
-   | `same-as-owner` | 소유 checkout과 내용이 같다는 것만 알린다 |
+   | `partial`, `conflict` | 충돌이 아닌 파일은 이미 올라갔다(`partial`). 충돌 파일은 아래 §충돌 합치기로 해결한다 |
    | `repo-collision` | 같은 이름의 다른 repo가 있다. `--as <org>__<repo>` 로 다시 올릴지 묻는다 |
    | origin remote 없음 | 제안된 이름을 보여 주고 확인받은 topic 이름으로 `--topic <topic>` 를 붙여 다시 실행한다 |
 
 4. 첫 업로드라 출처 등록이 비어 있으면(`$KB check` 의 `registry-no-work`, `checkout-no-work`) §등록을 이어서 한다.
 5. KB가 git repo면 출력된 커밋 명령을 전달만 한다. KB에서 커밋하지 않는다.
+
+## 충돌 합치기
+
+1. `$KB conflicts <project>` 를 실행한다. 충돌 파일마다 로컬 판 경로와, KB 판을 내려받은 경로를 보여 준다.
+2. 두 판을 읽고 합친다. devlog 문서는 Done 항목, Finding, 날짜 bullet 단위로 합집합을 만든다. 같은 항목의 결론이 서로 다르면 둘 다 남기고 어느 쪽이 측정으로 확인됐는지 적는다. 한쪽을 임의로 고르지 않는다.
+3. 합친 내용을 사용자에게 보여 주고 확인받는다. 확인받으면 로컬 문서에도 반영하고 올린다.
+
+   ```bash
+   $KB upload <project> --resolve <파일>=<합친 파일>
+   ```
+
+4. `--take-over` 는 충돌 파일까지 이 checkout 판으로 덮어쓴다. 사용자가 "이 판이 맞다"고 할 때만 쓴다.
+
+무인 실행(checkin, devlog 자동 업로드, cron)에서는 합치지 않는다. 충돌은 `NOW.md` 의 "풀리지 않은 충돌"에 남고, 사람이 있는 세션에서 해결한다.
 
 ## 검색
 
@@ -88,7 +114,7 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
    `history/`, `rejected/`, `_archived/` 는 사용자가 과거 경위나 버린 방법을 물을 때만 `--all` 로 포함한다.
 3. 일치한 문서만 `$KB cat <ID>/<파일>` 로 읽는다. 파일 목록이 필요하면 `$KB cat <ID>` 를 쓴다.
 4. 답에는 프로젝트 ID와 파일 경로를 함께 적는다. 예: `repos/<repo>/<project>/03_latency-analysis.md`.
-5. KB 사본이 오래돼 보이면(INDEX의 마지막 업로드 날짜) `$KB fetch` 로 소유 checkout의 최신 내용을 읽자고 제안한다.
+5. KB 사본이 오래돼 보이면(INDEX의 마지막 업로드 날짜) `$KB fetch` 로 마지막으로 올린 checkout의 최신 내용을 읽자고 제안한다.
 
 문서 안의 절대경로는 그 문서를 쓴 머신의 경로다. 지금 머신에 있다고 가정하지 않는다. 그 경로를 봐야 하면 등록부의 checkout `access` 로 `$KB fetch` 한다.
 
@@ -104,14 +130,19 @@ KB 안의 프로젝트 ID(`repos/<repo>/<project>`)는 위치와 무관하므로
    $KB register --work "<repo가 하는 일>" --domains "<쉼표 구분>" --checkout-work "<이 checkout의 일>" --access ssh://user@host
    ```
 
+## checkout 신원과 NFS
+
+checkout은 그 안에 저장된 무작위 ID로 식별한다. git이면 `<git-dir>/kb-checkout-id`, 아니면 `docs/devlog/.kb-checkout-id` 다. `/home` 을 NFS로 공유하는 여러 호스트는 같은 ID를 읽으므로 한 checkout으로 묶이고, 다른 호스트는 등록부의 `also_at` 에 기록된다.
+표시용 호스트 이름은 `VH1981_KB_HOST`, 다른 머신이 이 checkout에 들어올 ssh 주소의 기본값은 `VH1981_KB_ACCESS` 로 정한다. 호스트 이름이 다른 머신에서 풀리지 않는 환경이면 둘 다 공용 설정에 두는 편이 낫다.
+
 ## 자동 checkin
 
 vh1981 플러그인이 설치된 세션이 시작하면 `scripts/kb-checkin.sh` 가 백그라운드로 `kb.py checkin` 을 실행한다. 세션을 기다리게 하지 않는다.
-checkin은 이 checkout을 등록부에 올리고(branch, devlog 프로젝트, 마지막 활동 시각) 소유한 devlog 프로젝트를 업로드한다. 충돌이나 삭제가 필요한 업로드는 건너뛴다.
+checkin은 이 checkout을 등록부에 올리고(branch, devlog 프로젝트, 마지막 활동 시각) devlog 프로젝트를 업로드한다. 충돌 파일과 삭제는 건너뛰고, 나머지 추가·수정만 반영한다.
 checkout마다 하루 한 번만 돌고, KB 위치를 직접 정한 머신(`kb init` 이나 `VH1981_KB`)에서만 돈다. 결과는 `~/.cache/vh1981/kb-checkin.log` 에 한 줄씩 남는다. 끄려면 `VH1981_KB_CHECKIN=0` 이다.
 
 ## 하지 않는 것
 
-- KB 안의 사본을 고치지 않는다. 고칠 곳은 소유 checkout의 `docs/devlog/` 다.
+- KB 안의 사본을 고치지 않는다. 고칠 곳은 checkout의 `docs/devlog/` 다.
 - 사용자 확인 없이 `--take-over` 나 `--yes` 를 붙이지 않는다.
 - 제외 규칙을 우회하려고 파일 확장자를 바꾸거나 KB에 직접 복사하지 않는다. 이미지와 바이너리는 개인정보와 용량 때문에 KB에 들어가지 않는다.

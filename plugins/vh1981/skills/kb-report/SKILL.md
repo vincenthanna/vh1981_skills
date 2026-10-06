@@ -87,8 +87,9 @@ KB가 지금 머신에 없으면(`kb.py where` 가 `ssh://` 를 내면) 직접 �
 | `$KBDIR/.kb/bin/` | `kb.py`, `serve_devlog.py`, `serve_devlog.sh`, `kb-report-run.sh` 복사본. cron은 플러그인 캐시 경로가 아니라 이 복사본을 부른다 |
 | `$KBDIR/.kb/kb-report/` | 이 스킬의 `SKILL.md`, `templates/log.html`, 작성 원칙 `output-principles.md` 복사본. 무인 실행은 플러그인 버전과 상관없이 이 사본을 따른다 |
 | `$KBDIR/.kb/claude-path` | 쓸 claude 경로. 버전 2 이상이고 `~/.local/bin/claude` 를 먼저 고른다 |
-| crontab | `30 6 * * *` daily, `0 22 * * 0` weekly, `@reboot` 서버. 줄 끝에 `# vh1981-kb-report` 표시가 있다 |
-| 서버 | `serve_devlog.sh <KB> 8800`. KB 루트에서는 Daily log, Weekly log를 최신순으로, 이어서 KB 프로젝트의 HTML 보고서를 보여 준다 |
+| crontab | `30 6 * * *` daily, `0 22 * * 0` weekly, `15 1,13 * * *` techdoc(`vh1981:kb-techdoc`), `@reboot` 서버. 줄 끝에 `# vh1981-kb-report` 표시가 있다 |
+| `$KBDIR/.kb/kb-techdoc/` | kb-techdoc 스킬, techreport 스킬(본문, 템플릿, 검사 목록), 작성 원칙의 사본 |
+| 서버 | `serve_devlog.sh <KB> 8800`. KB 루트에서는 Daily log, Tech docs, Weekly log를 최신순으로, 이어서 KB 프로젝트의 HTML 보고서를 보여 준다 |
 
 시간과 포트는 `install.sh` 실행 전에 `KB_REPORT_PORT` 로, claude 경로는 `KB_REPORT_CLAUDE` 로 바꾼다. cron 시각을 바꾸려면 crontab의 표시된 줄을 고친다.
 플러그인을 업데이트한 뒤에는 `install.sh` 를 다시 실행해 `.kb/bin` 의 복사본을 맞춘다.

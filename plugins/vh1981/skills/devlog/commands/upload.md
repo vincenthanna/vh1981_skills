@@ -2,7 +2,9 @@
 
 Read this file when the user invokes `/devlog upload ...` or when `update`
 finishes with a KB configured. Uploading is owned by the `vh1981:kb` skill:
-its `scripts/kb.py` selects files, detects conflicts between checkouts that
+its `scripts/kb.py` selects files, plans a three-way update per file (this
+checkout's last upload, the KB copy, the local copy), adds and updates what
+only one side changed, holds back files both sides changed (conflicts), and
 hold copies of the same project, and maintains the KB index. This command only
 maps the old syntax onto it.
 
@@ -42,7 +44,9 @@ timeouts). In that mode:
 
 - Upload once with no flags. Report the result in one line inside the update
   summary.
-- `ok` and `same-as-owner` need nothing more. For `needs-confirm` or
-  `conflict`, show the list and ask; do not retry with `--yes` or
-  `--take-over` on your own.
+- `ok` and `up-to-date` need nothing more. For `needs-confirm`, show the
+  deletions and ask. For `partial` or `conflict`, the non-conflicting files
+  are already up; list the conflicting files and offer the kb skill's merge
+  step (`kb.py conflicts`, then `--resolve`). Do not retry with `--yes`,
+  `--take-over` or `--resolve` on your own.
 - If `where --configured` exits 1, skip silently.

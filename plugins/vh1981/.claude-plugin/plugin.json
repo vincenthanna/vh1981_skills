@@ -1,7 +1,7 @@
 {
   "name": "vh1981",
-  "description": "vh1981's productivity skills — devlog / worklog / prjdocs / md-to-html / md-tidy / humanizer / techreport / kb / kb-report for session work logs, project investigation docs, markdown-to-HTML export, conservative markdown whitespace/syntax cleanup, de-AI polishing of outgoing Slack/PR/email text, standalone HTML technical reports served by topic, a cross-repo devlog knowledge base reachable locally or over ssh, and cron-built daily/weekly work logs served from it, plus default guidelines injected into every session",
-  "version": "1.12.0",
+  "description": "vh1981's productivity skills — devlog / worklog / prjdocs / md-to-html / md-tidy / humanizer / techreport / kb / kb-report / kb-techdoc for session work logs, project investigation docs, markdown-to-HTML export, conservative markdown whitespace/syntax cleanup, de-AI polishing of outgoing Slack/PR/email text, standalone HTML technical reports served by topic, a cross-repo devlog knowledge base reachable locally or over ssh, cron-built daily/weekly work logs, and tech docs generated from it with verified references, plus default guidelines injected into every session",
+  "version": "1.13.0",
   "author": {
     "name": "vh1981"
   }

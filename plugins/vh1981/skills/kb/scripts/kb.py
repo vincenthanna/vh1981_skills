@@ -52,6 +52,7 @@ HTML_MAX = 1024 * 1024
 SEARCH_SKIP = {"history", "rejected", "_archived"}
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 STALE_DAYS = 30
+BULK_DIR = 200          # a directory with more files than this is a data dump, not knowledge
 SSH_OPTS = ["-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
             # Reuse one connection across the probe and the store call: sshd's
             # MaxStartups dropped back-to-back connections ("banner exchange").
@@ -208,6 +209,20 @@ def short_at(at: str) -> str:
     return f"{host}:{os.path.basename(path.rstrip('/'))}"
 
 
+def infer_status(period: str) -> str:
+    """Status for a project without a card, from its README Period line. Marked
+    with * in the index so nobody mistakes it for a decision."""
+    if not period:
+        return "?"
+    if re.search(r"ongoing|진행", period, re.I):
+        return "active*"
+    dates = re.findall(r"\d{4}-\d{2}-\d{2}", period)
+    if not dates:
+        return "?"
+    age = (datetime.now() - datetime.strptime(dates[-1], "%Y-%m-%d")).days
+    return "active*" if age <= 14 else "paused*"
+
+
 def regenerate(root):
     """Rebuild INDEX.md, NOW.md and catalog.json from manifests and registries."""
     mans = list(iter_manifests(root))
@@ -218,12 +233,13 @@ def regenerate(root):
         own = next((c for c in regs.get(f"{m['kind']}/{m['name']}", {}).get("checkouts", [])
                     if c.get("at") == m["owner"]), {})
         rows.append({
-            "id": m["id"], "status": card.get("status") or "?", "tags": card.get("tags") or [],
-            "summary": " ".join((card.get("summary") or "").split()) or f"{m.get('title') or m['project']} (카드 없음)",
+            "id": m["id"], "status": card.get("status") or infer_status(m.get("period", "")), "tags": card.get("tags") or [],
+            "summary": " ".join((card.get("summary") or "").split())
+                       or "[카드 없음] " + (m.get("scope") or m.get("title") or m["project"]),
             "related": card.get("related") or [], "updated": m.get("updated", ""), "owner": m["owner"],
             "branch": own.get("branch", ""), "title": m.get("title", ""), "period": m.get("period", ""),
             "open_items": m.get("open_items", []), "files": len(m.get("files", {})),
-            "copies": {k: v for k, v in (m.get("sources") or {}).items() if k != m["owner"] and v.get("diverged")},
+            "copies": {v.get("at", k): v for k, v in (m.get("sources") or {}).items() if v.get("diverged")},
             "has_card": bool(card),
         })
     rows.sort(key=lambda r: r["updated"], reverse=True)
@@ -234,7 +250,8 @@ def regenerate(root):
         "<!-- kb.py가 만든 파일이다. 손으로 고치지 않는다. 이 파일을 먼저 통째로 읽고, 본문은 `kb.py search` 로 찾는다. -->", "",
         f"갱신: {ts} · 프로젝트 {len(rows)}개", "",
         "## 프로젝트", "",
-        "형식: `ID` · status · tags · 마지막 업로드 · 소유 checkout(branch) · summary", "",
+        "형식: `ID` · status · tags · 마지막 업로드 · 소유 checkout(branch) · summary",
+        "status 뒤의 `*` 는 카드가 없어 README Period로 추정한 값이고, `[카드 없음]` summary는 README Scope 줄이다.", "",
     ]
     for r in rows:
         br = f"@{r['branch']}" if r["branch"] else ""
@@ -247,17 +264,17 @@ def regenerate(root):
     write_atomic(os.path.join(root, "INDEX.md"), "\n".join(idx) + "\n")
 
     cut = (datetime.now(timezone.utc) - timedelta(days=STALE_DAYS)).isoformat()
-    active = [r for r in rows if r["status"] == "active"]
+    active = [r for r in rows if r["status"] in ("active", "active*")]
     now = ["# NOW", "", "<!-- kb.py가 업로드마다 다시 만든다. 손으로 고치지 않는다. -->", "",
            f"갱신: {ts}", "", "## 진행 중", ""]
-    now += [f"- `{r['id']}` · {r['updated'][:10]} · {short_at(r['owner'])}"
+    now += [f"- `{r['id']}`{' (추정)' if r['status'] == 'active*' else ''} · {r['updated'][:10]} · {short_at(r['owner'])}"
             f"{'@' + r['branch'] if r['branch'] else ''} · {r['summary']}" for r in active] or ["- 없음"]
     now += ["", "## 열린 항목 (Critical, High)", ""]
     items = [f"- `{r['id']}` {it}" for r in active for it in r["open_items"]]
     now += items or ["- 없음"]
-    now += ["", "## 갈라진 사본", "", "소유 checkout 밖에서 내용이 다른 사본이 올라온 프로젝트다. `kb.py upload --take-over` 로 소유자를 바꿀 수 있다.", ""]
-    div = [f"- `{r['id']}` 소유 {short_at(r['owner'])}, 다른 사본 {short_at(at)} "
-           f"(그쪽에만 {c.get('only_source', 0)}, 내용 다름 {c.get('differ', 0)}, KB에만 {c.get('only_kb', 0)}; {c.get('last_seen', '')[:10]})"
+    now += ["", "## 풀리지 않은 충돌", "", "checkout과 KB가 같은 파일을 서로 다르게 바꾼 프로젝트다. 그 checkout에서 `kb.py conflicts <project>` 로 두 판을 보고 합친 뒤 `--resolve` 로 올린다.", ""]
+    div = [f"- `{r['id']}` {short_at(at)}: 충돌 {c.get('differ', 0)}, KB에서 지워졌는데 checkout에 남은 파일 {c.get('only_source', 0)} "
+           f"({c.get('last_seen', '')[:10]})"
            for r in rows for at, c in r["copies"].items()]
     now += div or ["- 없음"]
     now += ["", f"## 멈춘 것 ({STALE_DAYS}일 넘게 업로드 없음)", ""]
@@ -290,12 +307,29 @@ def diff_sets(src: dict, kb: dict) -> dict:
     return {"only_source": only_source, "differ": differ, "only_kb": only_kb}
 
 
-def upsert_checkout(reg: dict, co: dict, project: str, copy_only: bool):
-    entry = next((c for c in reg["checkouts"] if c.get("at") == co["at"]), None)
+def find_checkout(reg: dict, co: dict):
+    """A checkout is found by its id (a token stored inside the checkout, so hosts
+    sharing one filesystem over NFS see the same id), falling back to host:path."""
+    cid = co.get("id")
+    if cid:
+        hit = next((c for c in reg["checkouts"] if c.get("id") == cid), None)
+        if hit:
+            return hit
+    return next((c for c in reg["checkouts"] if c.get("at") == co["at"]), None)
+
+
+def upsert_checkout(reg: dict, co: dict, project: str, copy_only: bool = False):
+    entry = find_checkout(reg, co)
     if entry is None:
         entry = {"at": co["at"], "access": co.get("access", ""), "branch": co.get("branch", ""),
                  "work": "", "projects": [], "copies": []}
         reg["checkouts"].append(entry)
+    if co.get("id"):
+        entry["id"] = co["id"]
+    if co["at"] != entry["at"]:          # same checkout reached from another host
+        hosts = entry.setdefault("also_at", [])
+        if co["at"] not in hosts:
+            hosts.append(co["at"])
     entry["branch"] = co.get("branch", entry.get("branch", ""))
     if not entry.get("access"):
         entry["access"] = co.get("access", "")
@@ -311,6 +345,38 @@ def upsert_checkout(reg: dict, co: dict, project: str, copy_only: bool):
     entry["last_upload"] = now_iso()
 
 
+def plan_upload(src: dict, kbf: dict, base, force: bool, resolved: set) -> dict:
+    """Three-way plan per file from this checkout's last upload (base), the
+    server copy (kbf) and the local copy (src). Values are sha256 strings.
+
+    base is None when this checkout never uploaded: then nothing local can be
+    proven newer than a differing server file, so those are conflicts."""
+    plan = {"add": [], "update": [], "delete": [], "conflict": [], "keep_server": [], "server_deleted": [],
+            "same": 0}
+    b = base or {}
+    for p in sorted(set(src) | set(kbf)):
+        l, s, o = src.get(p), kbf.get(p), b.get(p)
+        if l == s:
+            if l is not None:
+                plan["same"] += 1
+            continue
+        if p in resolved or (force and l is not None):
+            plan["update" if s is not None else "add"].append(p)
+        elif force and l is None:
+            plan["delete"].append(p)
+        elif s is None:                                   # only local has it
+            (plan["add"] if o is None else plan["server_deleted"]).append(p)
+        elif l is None:                                   # only the server has it
+            (plan["delete"] if base is not None and o == s else plan["keep_server"]).append(p)
+        elif base is not None and s == o:                 # server unchanged since my last upload
+            plan["update"].append(p)
+        elif base is not None and l == o:                 # I am behind the server
+            plan["keep_server"].append(p)
+        else:
+            plan["conflict"].append(p)
+    return plan
+
+
 def store_upload(root, meta, payload):
     if not is_kb(root):
         raise StoreError(f"not a KB: {root} (run `kb.py init` first)")
@@ -320,101 +386,119 @@ def store_upload(root, meta, payload):
     name = safe_name(meta["name"], "repo/topic name")
     project = safe_name(meta["project"], "project name")
     co = meta["checkout"]
-    me = co["at"]
-    src = {safe_rel(f["path"]): f for f in meta["files"]}
+    me = co.get("id") or co["at"]
+    src_meta = {safe_rel(f["path"]): f for f in meta["files"]}
+    src = {p: f["sha256"] for p, f in src_meta.items()}
+    resolved = {safe_rel(p) for p in meta.get("resolved", [])}
     dest = os.path.join(root, kind, name, project)
     mpath = manifest_path(root, kind, name, project)
     dry = meta.get("dry_run", False)
+    pid = f"{kind}/{name}/{project}"
 
     with Lock(root):
         reg, prose = load_registry(root, kind, name)
         if kind == "repos" and meta.get("remote") and reg.get("remote") and reg["remote"] != meta["remote"]:
             return {"status": "repo-collision", "existing_remote": reg["remote"], "remote": meta["remote"],
                     "hint": "같은 이름의 다른 repo가 이미 있다. --as <org>__<repo> 로 다시 올린다"}
-        man = load_json(mpath)
-        kbf = (man or {}).get("files", {})
-        owner = (man or {}).get("owner")
-        d = diff_sets(src, kbf)
-        if owner and owner != me and not meta.get("take_over"):
-            diverged = bool(d["only_source"] or d["differ"] or d["only_kb"])
-            res = {"status": "conflict" if diverged else "same-as-owner",
-                   "id": f"{kind}/{name}/{project}", "owner": owner, **d}
-            if not dry:
-                man.setdefault("sources", {})[me] = {"last_seen": now_iso(), "diverged": diverged,
-                                                     **{k: len(v) for k, v in d.items()}}
-                write_atomic(mpath, json.dumps(man, ensure_ascii=False, indent=1))
-                if meta.get("remote"):
-                    reg["remote"] = meta["remote"]
-                upsert_checkout(reg, co, project, copy_only=True)
-                save_registry(root, kind, name, reg, prose)
-                regenerate(root)
-            return res
-
-        to_write = sorted(p for p in src if kbf.get(p, {}).get("sha256") != src[p]["sha256"])
-        to_delete = d["only_kb"]
-        res = {"id": f"{kind}/{name}/{project}", "owner_before": owner, "write": to_write,
-               "delete": to_delete, "unchanged": len(src) - len(to_write)}
-        if owner and owner != me:
-            res["displaced"] = sorted(set(d["only_kb"]) | set(d["differ"]))
+        man = load_json(mpath) or {}
+        kbf = {p: v["sha256"] for p, v in man.get("files", {}).items()}
+        sources = man.get("sources", {})
+        mine = sources.get(me)
+        if mine is None and co.get("id"):                 # legacy entry keyed by host:path
+            mine = sources.get(co["at"])
+        base = (mine or {}).get("base")
+        if base is None and man.get("owner") in (me, co["at"]):
+            base = dict(kbf)                              # legacy owner: the server copy is its last upload
+        if base is None and not man:
+            base = {}                                     # brand-new project: everything is an add
+        plan = plan_upload(src, kbf, base, meta.get("take_over", False), resolved)
+        writes = plan["add"] + plan["update"]
+        res = {"id": pid, **{k: plan[k] for k in ("add", "update", "delete", "conflict", "keep_server",
+                                                  "server_deleted")}, "same": plan["same"]}
         if dry:
             return {"status": "dry-run", **res}
-        if to_delete and not meta.get("yes"):
+        if plan["delete"] and not meta.get("yes"):
             return {"status": "needs-confirm", **res}
 
-        stage = os.path.join(root, ".kb", "staging", uuid.uuid4().hex)
-        os.makedirs(stage)
-        try:
-            seen = set()
-            with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as tf:
-                for m in tf.getmembers():
-                    if not m.isfile():
-                        continue
-                    rel = safe_rel(m.name)
-                    data = tf.extractfile(m).read()
-                    if rel not in src or sha256_bytes(data) != src[rel]["sha256"]:
-                        raise StoreError(f"payload does not match the file list: {rel}")
-                    out = os.path.join(stage, rel)
-                    os.makedirs(os.path.dirname(out), exist_ok=True)
-                    with open(out, "wb") as f:
-                        f.write(data)
-                    seen.add(rel)
-            missing = sorted(set(src) - seen)
-            if missing:
-                raise StoreError(f"payload is missing files: {missing[:5]}")
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
-            old = None
-            if os.path.exists(dest):
-                old = stage + ".old"
-                os.rename(dest, old)
-            os.rename(stage, dest)
-            if old:
-                shutil.rmtree(old, ignore_errors=True)
-        finally:
-            shutil.rmtree(stage, ignore_errors=True)
+        if writes or plan["delete"]:
+            stage = os.path.join(root, ".kb", "staging", uuid.uuid4().hex)
+            try:
+                if os.path.isdir(dest):
+                    shutil.copytree(dest, stage)
+                else:
+                    os.makedirs(stage)
+                need, seen = set(writes), set()
+                with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as tf:
+                    for m in tf.getmembers():
+                        if not m.isfile():
+                            continue
+                        rel = safe_rel(m.name)
+                        if rel not in need:
+                            continue
+                        data = tf.extractfile(m).read()
+                        if sha256_bytes(data) != src[rel]:
+                            raise StoreError(f"payload does not match the file list: {rel}")
+                        out = os.path.join(stage, rel)
+                        os.makedirs(os.path.dirname(out), exist_ok=True)
+                        with open(out, "wb") as fh:
+                            fh.write(data)
+                        seen.add(rel)
+                missing = sorted(need - seen)
+                if missing:
+                    raise StoreError(f"payload is missing files: {missing[:5]}")
+                for p in plan["delete"]:
+                    try:
+                        os.remove(os.path.join(stage, p))
+                    except FileNotFoundError:
+                        pass
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                old = None
+                if os.path.exists(dest):
+                    old = stage + ".old"
+                    os.rename(dest, old)
+                os.rename(stage, dest)
+                if old:
+                    shutil.rmtree(old, ignore_errors=True)
+            finally:
+                shutil.rmtree(stage, ignore_errors=True)
 
         ts = now_iso()
-        files = {p: {"sha256": src[p]["sha256"], "size": src[p]["size"],
-                     "by": me, "at": ts if p in to_write else kbf.get(p, {}).get("at", ts)} for p in src}
-        sources = (man or {}).get("sources", {})
-        sources[me] = {"last_seen": ts, "diverged": False}
-        new = {"id": f"{kind}/{name}/{project}", "kind": kind, "name": name, "project": project,
-               "owner": me, "updated": ts, "files": files, "sources": sources,
-               "card": meta.get("card") or {}, "title": meta.get("title", ""),
-               "period": meta.get("period", ""), "open_items": meta.get("open_items", [])}
-        if owner and owner != me:
-            new["previous_owner"] = owner
+        files = dict(man.get("files", {}))
+        for p in writes:
+            files[p] = {"sha256": src[p], "size": src_meta[p]["size"], "by": me, "at": ts}
+        for p in plan["delete"]:
+            files.pop(p, None)
+        new_server = {p: v["sha256"] for p, v in files.items()}
+        # Base = what this checkout and the server now agree on. Files left in
+        # conflict keep their old base so they stay conflicts until resolved.
+        new_base = {p: h for p, h in src.items() if new_server.get(p) == h}
+        for p in plan["conflict"] + plan["keep_server"] + plan["server_deleted"]:
+            if base and p in base:
+                new_base[p] = base[p]
+        unresolved = plan["conflict"] + plan["server_deleted"]
+        sources.pop(co["at"], None) if co.get("id") and co["at"] != me else None
+        sources[me] = {"last_seen": ts, "at": co["at"], "base": new_base, "diverged": bool(unresolved),
+                       "only_source": len(plan["server_deleted"]), "differ": len(plan["conflict"]),
+                       "only_kb": len(plan["keep_server"])}
+        wrote = bool(writes or plan["delete"])
+        new = dict(man)
+        new.update({"id": pid, "kind": kind, "name": name, "project": project, "files": files, "sources": sources})
+        if wrote or not man:
+            new.update({"owner": co["at"], "updated": ts, "card": meta.get("card") or {},
+                        "title": meta.get("title", ""), "period": meta.get("period", ""),
+                        "open_items": meta.get("open_items", []), "scope": meta.get("scope", "")})
+        new.setdefault("owner", co["at"])
+        new.setdefault("updated", ts)
         write_atomic(mpath, json.dumps(new, ensure_ascii=False, indent=1))
         if meta.get("remote"):
             reg["remote"] = meta["remote"]
-        upsert_checkout(reg, co, project, copy_only=False)
-        if owner and owner != me:
-            prev = next((c for c in reg["checkouts"] if c.get("at") == owner), None)
-            if prev and project in prev.get("projects", []):
-                prev["projects"].remove(project)
-                prev.setdefault("copies", []).append(project)
+        upsert_checkout(reg, co, project)
         save_registry(root, kind, name, reg, prose)
         regenerate(root)
-        return {"status": "ok", **res}
+        status = "ok" if not unresolved else ("partial" if wrote else "conflict")
+        if not wrote and not unresolved:
+            status = "up-to-date"
+        return {"status": status, **res}
 
 
 def store_register(root, meta, _payload):
@@ -575,18 +659,20 @@ def store_cat(root, meta, _payload):
 
 
 def store_check(root, meta, _payload):
+    with Lock(root):              # summaries may be stale after a manual fix; rebuild them
+        regenerate(root)
     mans = list(iter_manifests(root))
     regs = list(iter_registries(root))
     issues = []
     for m in mans:
-        for at, c in (m.get("sources") or {}).items():
-            if at != m["owner"] and c.get("diverged"):
-                issues.append({"kind": "diverged-copy", "id": m["id"], "owner": m["owner"], "copy": at,
-                               "detail": {k: c.get(k) for k in ("only_source", "differ", "only_kb")}})
+        for key, c in (m.get("sources") or {}).items():
+            if c.get("diverged"):
+                issues.append({"kind": "unresolved-conflict", "id": m["id"], "checkout": c.get("at", key),
+                               "detail": {"conflict": c.get("differ"), "server_deleted": c.get("only_source")}})
         if not m.get("card"):
             issues.append({"kind": "no-card", "id": m["id"]})
         reg = next((r for r in regs if r["id"] == f"{m['kind']}/{m['name']}"), None)
-        if not reg or not any(c.get("at") == m["owner"] for c in reg["checkouts"]):
+        if not reg or not any(m["owner"] in [c.get("at")] + c.get("also_at", []) for c in reg["checkouts"]):
             issues.append({"kind": "owner-unregistered", "id": m["id"], "owner": m["owner"]})
     have = {m["id"] for m in mans}
     for r in regs:
@@ -609,7 +695,58 @@ def store_check(root, meta, _payload):
     return {"status": "ok", "issues": issues}
 
 
-STORE_CMDS = {"init": store_init, "upload": store_upload, "register": store_register, "log": store_log,
+TECHDOC_STATE = ".kb/techdocs.json"
+
+
+def _project_md(root, m):
+    d = os.path.join(root, m["kind"], m["name"], m["project"])
+    return sum(1 for p in m.get("files", {}) if p.endswith(".md") and not p.startswith("history/")
+               and not p.startswith("_archived/")), d
+
+
+def store_candidates(root, meta, _payload):
+    """Rank KB projects that may deserve a technical document. A project is
+    eligible until it has been handled (made or skipped) at its current upload;
+    a newer upload makes it eligible again."""
+    state = load_json(os.path.join(root, TECHDOC_STATE), {}) or {}
+    min_md = meta.get("min_md", 3)
+    now_dt = datetime.now(timezone.utc)
+    out = []
+    for m in iter_manifests(root):
+        md, pdir = _project_md(root, m)
+        if md < min_md:
+            continue
+        prev = state.get(m["id"])
+        if prev and prev.get("project_updated", "") >= m.get("updated", ""):
+            continue
+        card = m.get("card") or {}
+        try:
+            age = (now_dt - datetime.fromisoformat(m.get("updated", ""))).days
+        except ValueError:
+            age = 999
+        score = min(md, 40) + (20 if age <= 14 else 0) + (10 if card else 0) + (15 if prev and prev.get("status") == "made" else 0)
+        out.append({"id": m["id"], "title": m.get("title", ""), "summary": card.get("summary") or m.get("scope", ""),
+                    "md": md, "updated": m.get("updated", ""), "dir": pdir, "score": score,
+                    "previous": prev or None})
+    out.sort(key=lambda c: -c["score"])
+    return {"status": "ok", "candidates": out[:meta.get("limit", 5)], "eligible": len(out)}
+
+
+def store_mark(root, meta, _payload):
+    path = os.path.join(root, TECHDOC_STATE)
+    with Lock(root):
+        state = load_json(path, {}) or {}
+        mid = meta["id"]
+        m = next((x for x in iter_manifests(root) if x["id"] == mid), None)
+        if not m:
+            raise StoreError(f"unknown KB project: {mid}")
+        state[mid] = {"status": meta["status"], "at": now_iso(), "project_updated": m.get("updated", ""),
+                      "file": meta.get("file", ""), "reason": meta.get("reason", "")}
+        write_atomic(path, json.dumps(state, ensure_ascii=False, indent=1))
+    return {"status": "ok", "entry": state[mid]}
+
+
+STORE_CMDS = {"candidates": store_candidates, "mark": store_mark, "init": store_init, "upload": store_upload, "register": store_register, "log": store_log,
               "registry": store_registry, "search": store_search, "cat": store_cat, "check": store_check}
 
 
@@ -727,14 +864,21 @@ def _resolve(explicit):
     return Loc(default_spec(), "built-in default") if default_spec() else None
 
 
-_pushed = set()
+_pushed = {}
+
+
+def remote_script_path(loc, me: bytes) -> str:
+    """Each client version gets its own store script on the KB host. A shared
+    `.kb/bin/kb.py` was overwritten back and forth by clients on different plugin
+    versions, and the KB host's own cron (which uses that file) lost new commands."""
+    return f"{loc.path}/.kb/bin/store-{sha256_bytes(me)[:12]}.py"
 
 
 def ensure_remote_script(loc: Loc):
     if loc.spec in _pushed:
-        return
+        return _pushed[loc.spec]
     me = open(SCRIPT, "rb").read()
-    target = f"{loc.path}/.kb/bin/kb.py"
+    target = remote_script_path(loc, me)
     probe = ("import hashlib,sys\n"
              "assert sys.version_info >= (3, 8), sys.version\n"
              f"p={target!r}\n"
@@ -749,7 +893,8 @@ def ensure_remote_script(loc: Loc):
         r = run_ssh([*loc.ssh_base(), cmd], input=me, capture_output=True)
         if r.returncode != 0:
             die(f"원격에 kb.py 복사 실패: {r.stderr.decode(errors='replace').strip()[-300:]}")
-    _pushed.add(loc.spec)
+    _pushed[loc.spec] = target
+    return target
 
 
 def call(loc: Loc, cmd: str, meta: dict, payload: bytes = b"") -> dict:
@@ -757,8 +902,8 @@ def call(loc: Loc, cmd: str, meta: dict, payload: bytes = b"") -> dict:
     if loc.kind == "local":
         argv = [sys.executable, SCRIPT, "store", cmd, "--root", loc.path]
     else:
-        ensure_remote_script(loc)
-        remote = f"python3 {shlex.quote(loc.path + '/.kb/bin/kb.py')} store {cmd} --root {shlex.quote(loc.path)}"
+        script = ensure_remote_script(loc)
+        remote = f"python3 {shlex.quote(script)} store {cmd} --root {shlex.quote(loc.path)}"
         argv = [*loc.ssh_base(), remote]
     r = (subprocess.run if loc.kind == "local" else run_ssh)(argv, input=data, capture_output=True)
     out = r.stdout.decode("utf-8", errors="replace").strip()
@@ -792,7 +937,38 @@ def normalize_remote(url: str) -> str:
 
 
 def host_name():
-    return socket.gethostname().split(".")[0]
+    """VH1981_KB_HOST names this machine for the KB, e.g. one name for every host
+    that mounts the same NFS /home."""
+    return os.environ.get("VH1981_KB_HOST") or socket.gethostname().split(".")[0]
+
+
+def checkout_id(top: str, devlog: str) -> str:
+    """A random id stored inside the checkout. Every host that mounts the same
+    directory reads the same id, so an NFS-shared checkout is one checkout.
+    git: <git-dir>/kb-checkout-id (untracked, one per worktree); otherwise
+    docs/devlog/.kb-checkout-id (dotfiles are never uploaded)."""
+    gd = git(["rev-parse", "--git-dir"], top)
+    if gd:
+        path = os.path.join(gd if os.path.isabs(gd) else os.path.join(top, gd), "kb-checkout-id")
+    elif os.path.isdir(devlog):
+        path = os.path.join(devlog, ".kb-checkout-id")
+    else:
+        return ""
+    try:
+        v = open(path, encoding="utf-8").read().strip()
+        if v:
+            return v
+    except OSError:
+        pass
+    v = uuid.uuid4().hex[:16]
+    try:
+        with open(path, "x", encoding="utf-8") as fh:   # another host may create it at the same moment
+            fh.write(v + "\n")
+    except FileExistsError:
+        v = open(path, encoding="utf-8").read().strip()
+    except OSError:
+        return ""
+    return v
 
 
 def ident(cwd: str) -> dict:
@@ -818,7 +994,8 @@ def ident(cwd: str) -> dict:
         "name": parts[-1] if parts else os.path.basename(main),
         "org": parts[-2] if len(parts) >= 2 else "",
         "remote": remote, "top": top, "main_checkout": main, "branch": branch, "host": host,
-        "at": f"{host}:{top}", "access": f"ssh://{getpass.getuser()}@{host}",
+        "at": f"{host}:{top}", "id": checkout_id(top, devlog),
+        "access": os.environ.get("VH1981_KB_ACCESS") or f"ssh://{getpass.getuser()}@{host}",
         "devlog": devlog, "projects": projects,
     }
 
@@ -827,6 +1004,10 @@ def select_files(projdir: str):
     inc, exc = [], []
     for dp, dns, fns in os.walk(projdir):
         dns[:] = sorted(d for d in dns if not d.startswith("."))
+        if len(fns) > BULK_DIR:
+            # e.g. 10,000 per-image JSON sidecars: searchable noise and slow to ship.
+            exc += [(os.path.relpath(os.path.join(dp, fn), projdir), f"bulk-dir>{BULK_DIR}") for fn in sorted(fns)]
+            continue
         for fn in sorted(fns):
             full = os.path.join(dp, fn)
             rel = os.path.relpath(full, projdir)
@@ -908,8 +1089,9 @@ def parse_readme(projdir: str) -> dict:
         # ~~struck~~ items are done; their tag must not count as open.
         items = [ln.strip() for ln in sec.group(1).splitlines()
                  if re.search(r"\[(critical|high)\]", re.sub(r"~~.*?~~", "", ln), re.I)][:10]
+    sm = re.search(r"\*\*Scope\*\*:\s*(.+)", text)
     return {"card": parse_card(text), "title": title, "period": pm.group(1).strip() if pm else "",
-            "open_items": items}
+            "open_items": items, "scope": sm.group(1).strip() if sm else ""}
 
 
 def make_tar(files) -> bytes:
@@ -927,15 +1109,24 @@ def summarize_excluded(exc):
     return by
 
 
-def upload_one(loc, idt, kind, name, p, take_over=False, dry_run=False, yes=False):
+def upload_one(loc, idt, kind, name, p, take_over=False, dry_run=False, yes=False, resolve=None):
     pdir = os.path.join(idt["devlog"], p)
     inc, exc = select_files(pdir)
+    for rel, merged in (resolve or {}).items():      # a merged version replaces the local file in the upload
+        data = open(merged, "rb").read()
+        f = next((x for x in inc if x["path"] == rel), None)
+        if f is None:
+            f = {"path": rel}
+            inc.append(f)
+        f.update({"sha256": sha256_bytes(data), "size": len(data), "abs": merged})
     rd = parse_readme(pdir)
-    co = {"at": idt["at"], "host": idt["host"], "path": idt["top"], "branch": idt["branch"], "access": idt["access"]}
+    co = {"at": idt["at"], "id": idt.get("id", ""), "host": idt["host"], "path": idt["top"],
+          "branch": idt["branch"], "access": idt["access"]}
     meta = {"kind": kind, "name": name, "project": p, "remote": idt["remote"] if kind == "repos" else "",
             "checkout": co, "files": [{k: f[k] for k in ("path", "sha256", "size")} for f in inc],
-            "take_over": take_over, "dry_run": dry_run, "yes": yes,
-            "card": rd["card"], "title": rd["title"], "period": rd["period"], "open_items": rd["open_items"]}
+            "take_over": take_over, "dry_run": dry_run, "yes": yes, "resolved": sorted(resolve or {}),
+            "card": rd["card"], "title": rd["title"], "period": rd["period"], "open_items": rd["open_items"],
+            "scope": rd.get("scope", "")}
     return call(loc, "upload", meta, b"" if dry_run else make_tar(inc)), inc, exc
 
 
@@ -959,9 +1150,16 @@ def cmd_upload(a):
             print(f"[{p}] 없음: {os.path.join(idt['devlog'], p)}")
             rc = 1
             continue
-        res, inc, exc = upload_one(loc, idt, kind, name, p, take_over=a.take_over, dry_run=a.dry_run, yes=a.yes)
+        resolve = {}
+        for spec in a.resolve or []:
+            rel, _, merged = spec.partition("=")
+            if not merged or not os.path.isfile(merged):
+                die(f"--resolve 는 <파일>=<합친 파일 경로> 형식이다: {spec}")
+            resolve[rel] = os.path.abspath(merged)
+        res, inc, exc = upload_one(loc, idt, kind, name, p, take_over=a.take_over, dry_run=a.dry_run,
+                                   yes=a.yes, resolve=resolve)
         print(render_upload(p, res, inc, exc, a.verbose))
-        if res["status"] not in ("ok", "dry-run", "same-as-owner"):
+        if res["status"] not in ("ok", "dry-run", "up-to-date"):
             rc = 2
     if rc == 0 and not a.dry_run:
         print(f"KB: {loc}  (git 이면 그쪽에서 커밋: git -C {loc.path} add -A && git -C {loc.path} commit -m 'kb: upload')")
@@ -974,34 +1172,55 @@ def render_upload(p, res, inc, exc, verbose):
     if st == "repo-collision":
         out.append(f"  기존 remote {res['existing_remote']} ≠ 이 checkout {res['remote']}. {res['hint']}")
         return "\n".join(out)
-    if st in ("conflict", "same-as-owner"):
-        out.append(f"  소유 checkout: {res['owner']}")
-        if st == "same-as-owner":
-            out.append("  이 사본은 소유 checkout과 내용이 같다. 쓸 것이 없다")
-            return "\n".join(out)
-        for k, label in (("only_source", "이 사본에만"), ("differ", "내용 다름"), ("only_kb", "KB에만")):
-            v = res.get(k, [])
-            out.append(f"  {label} {len(v)}개" + (": " + ", ".join(v[:8]) + (" …" if len(v) > 8 else "") if v else ""))
-        out.append("  아무것도 쓰지 않았다. 이 사본을 정본으로 하려면 --take-over, 아니면 그대로 둔다")
-        return "\n".join(out)
-    w, dl = res.get("write", []), res.get("delete", [])
-    out.append(f"  포함 {len(inc)}개 · 쓸 것 {len(w)} · 지울 것 {len(dl)} · 그대로 {res.get('unchanged', 0)}")
-    if res.get("owner_before") and res.get("displaced") is not None:
-        out.append(f"  소유자 변경: {res['owner_before']} → 이 checkout. 밀려난 파일 {len(res['displaced'])}개: "
-                   + ", ".join(res["displaced"][:8]))
-    if dl:
-        out.append("  지울 파일: " + ", ".join(dl[:10]) + (" …" if len(dl) > 10 else ""))
+    lst = lambda v: (": " + ", ".join(v[:8]) + (" …" if len(v) > 8 else "")) if v else ""
+    out.append(f"  추가 {len(res.get('add', []))} · 수정 {len(res.get('update', []))} · 삭제 {len(res.get('delete', []))}"
+               f" · 같음 {res.get('same', 0)} · KB 쪽 유지 {len(res.get('keep_server', []))}")
+    for k, label in (("add", "추가"), ("update", "수정"), ("delete", "삭제")):
+        if verbose and res.get(k):
+            out.append(f"  {label}{lst(res[k])}")
+    if res.get("keep_server"):
+        out.append(f"  KB 쪽이 더 새롭거나 이 checkout에 없어 그대로 둔 파일 {len(res['keep_server'])}개{lst(res['keep_server'])}")
+    if res.get("conflict"):
+        out.append(f"  충돌 {len(res['conflict'])}개{lst(res['conflict'])}")
+        out.append(f"  양쪽이 다르게 바뀌어 쓰지 않았다. `kb.py conflicts {p}` 로 두 판을 받아 합친 뒤 "
+                   f"`kb.py upload {p} --resolve <파일>=<합친 파일>` 로 올린다")
+    if res.get("server_deleted"):
+        out.append(f"  KB에서는 지워졌는데 이 checkout에 남은 파일 {len(res['server_deleted'])}개{lst(res['server_deleted'])}")
     if st == "needs-confirm":
-        out.append("  KB에서 지울 파일이 있어 멈췄다. 목록을 확인하고 --yes 로 다시 실행한다")
+        out.append("  KB에서 지울 파일이 있어 멈췄다(이 checkout이 지운 파일). 목록을 확인하고 --yes 로 다시 실행한다")
     if exc:
         by = summarize_excluded(exc)
         out.append("  제외: " + ", ".join(f"{why} {len(v)}" for why, v in sorted(by.items())))
         if verbose:
             for why, v in sorted(by.items()):
                 out.append(f"    {why}: " + ", ".join(v[:10]) + (" …" if len(v) > 10 else ""))
-    if verbose and w:
-        out.append("  쓸 파일: " + ", ".join(w[:15]) + (" …" if len(w) > 15 else ""))
     return "\n".join(out)
+
+
+def cmd_conflicts(a):
+    """Write the KB version of each conflicting file next to a scratch dir so it can
+    be merged with the local one, and print both paths."""
+    loc = resolve_loc(a.kb)
+    idt = ident(os.getcwd())
+    kind, name = ("topics", a.topic) if a.topic else (idt["kind"], a.as_name or idt["name"])
+    res, _, _ = upload_one(loc, idt, kind, name, a.project, dry_run=True)
+    paths = res.get("conflict", []) + res.get("server_deleted", [])
+    if not paths:
+        print("충돌 없음")
+        return 0
+    out_dir = a.out or os.path.join(os.environ.get("TMPDIR", "/tmp"), f"kb-conflicts-{a.project}")
+    for rel in paths:
+        local = os.path.join(idt["devlog"], a.project, rel)
+        try:
+            text = call(loc, "cat", {"path": f"{res['id']}/{rel}"})["text"]
+            kbp = os.path.join(out_dir, rel + ".kb")
+            os.makedirs(os.path.dirname(kbp), exist_ok=True)
+            write_atomic(kbp, text)
+        except SystemExit:
+            kbp = "(KB에 없음)"
+        print(f"{rel}\n  local: {local}\n  kb:    {kbp}")
+    print(f"-- 합친 결과를 파일로 쓰고: kb.py upload {a.project} --resolve <파일>=<합친 파일>")
+    return 0
 
 
 def cmd_init(a):
@@ -1086,7 +1305,8 @@ def cmd_checkin(a):
     kind, name = ("repos", idt["name"]) if idt["kind"] == "repos" else ("topics", idt["name"])
     if kind == "topics":              # reuse the topic this checkout was registered under
         for r in call(loc, "registry", {})["registries"]:
-            if r["id"].startswith("topics/") and any(c.get("at") == idt["at"] for c in r["checkouts"]):
+            if r["id"].startswith("topics/") and any(
+                    (idt.get("id") and c.get("id") == idt["id"]) or c.get("at") == idt["at"] for c in r["checkouts"]):
                 name = r["id"].split("/", 1)[1]
                 break
     call(loc, "register", {"kind": kind, "name": name, **({"remote": idt["remote"]} if idt["remote"] else {}),
@@ -1219,6 +1439,57 @@ def cmd_log(a):
     return 0
 
 
+def cmd_candidates(a):
+    res = call(resolve_loc(a.kb), "candidates", {"limit": a.limit, "min_md": a.min_md})
+    if a.json:
+        print(json.dumps(res, ensure_ascii=False, indent=1))
+        return 0
+    for c in res["candidates"]:
+        prev = c["previous"]
+        print(f"- `{c['id']}` score {c['score']} · md {c['md']} · {c['updated'][:10]}"
+              + (f" · 이전 {prev['status']} {prev['at'][:10]}" if prev else "") + f" · {c['summary'][:120]}")
+    print(f"-- 후보 {res['eligible']}개 중 상위 {len(res['candidates'])}개")
+    return 0
+
+
+def cmd_mark(a):
+    res = call(resolve_loc(a.kb), "mark", {"id": a.id, "status": a.status, "file": a.file or "", "reason": a.reason or ""})
+    print(json.dumps(res["entry"], ensure_ascii=False))
+    return 0
+
+
+def cmd_htmlcheck(a):
+    """Machine checks for a single-file HTML report (techreport §7), in Python so
+    an unattended run needs no extra tools."""
+    h = open(a.file, encoding="utf-8").read()
+    ids = set(re.findall(r'id="([^"]+)"', h))
+    anch = set(re.findall(r'href="#([^"]+)"', h))
+    refs = set(re.findall(r'id="(r\d+)"', h))
+    used = set(re.findall(r'href="#(r\d+)"', h))
+    doms = sorted({re.sub(r"(https?://[^/]+).*", r"\1", u) for u in re.findall(r'(?:href|src)="(https?://[^"]+)"', h)})
+    problems = {
+        "broken_anchors": sorted(anch - ids),
+        "missing_refs": sorted(used - refs),
+        "unused_refs": sorted(refs - used, key=lambda x: int(x[1:])),
+        "images": len(re.findall(r"<img|data:image", h)),
+        "placeholders": sorted(set(re.findall(r"\{\{[^}]{0,40}", h)))[:10],
+        "external_src": re.findall(r'<(?:script|link|img)[^>]+(?:src|href)="https?://', h)[:5],
+    }
+    info = {"domains": doms, "glossary_links": len(re.findall(r'class="t" href="#g-', h)),
+            "glossary_entries": h.count('<dt id="g-'), "figures": len(re.findall(r"<svg", h)), "bytes": len(h.encode())}
+    js = "\n".join(re.findall(r"<script>(.*?)</script>", h, re.S))
+    node = shutil.which("node")
+    if js and node:
+        tmp = a.file + ".check.js"
+        write_atomic(tmp, js)
+        r = subprocess.run([node, "--check", tmp], capture_output=True, text=True)
+        os.remove(tmp)
+        problems["script_syntax"] = r.stderr.strip()[-300:] if r.returncode else ""
+    bad = {k: v for k, v in problems.items() if v}
+    print(json.dumps({"ok": not bad, "problems": bad, "info": info}, ensure_ascii=False, indent=1))
+    return 0 if not bad else 1
+
+
 def cmd_status(a):
     loc = resolve_loc(a.kb)
     sys.stdout.write(call(loc, "cat", {"path": "NOW.md"})["text"])
@@ -1294,7 +1565,7 @@ def cmd_fetch(a):
 def cmd_survey(a):
     """Group every devlog project under the given workspace dirs by KB id.
     Used before the first bulk upload to pick an owner among diverged copies."""
-    groups = {}
+    groups, seen_at = {}, set()
     for base in a.dirs:
         base = os.path.realpath(os.path.expanduser(base))
         cands = [base] + [os.path.join(base, d) for d in sorted(os.listdir(base))
@@ -1303,6 +1574,9 @@ def cmd_survey(a):
             if not os.path.isdir(os.path.join(top, "docs", "devlog")):
                 continue
             idt = ident(top)
+            if idt["at"] in seen_at:        # the same checkout reached twice
+                continue
+            seen_at.add(idt["at"])
             for p in idt["projects"]:
                 pdir = os.path.join(idt["devlog"], p)
                 mds = [os.path.join(dp, f) for dp, _, fs in os.walk(pdir) for f in fs if f.endswith(".md")]
@@ -1351,11 +1625,19 @@ def main(argv=None):
     p.add_argument("--all", action="store_true")
     p.add_argument("--topic")
     p.add_argument("--as", dest="as_name")
-    p.add_argument("--take-over", action="store_true")
+    p.add_argument("--take-over", action="store_true", help="충돌 파일까지 이 checkout 판으로 덮어쓴다")
+    p.add_argument("--resolve", action="append", help="<파일>=<합친 파일>: 충돌을 합친 판으로 해결해 올린다")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--yes", action="store_true", help="KB에서 지울 파일이 있어도 진행")
     p.add_argument("-v", "--verbose", action="store_true")
     p.set_defaults(fn=cmd_upload)
+
+    p = sp.add_parser("conflicts", help="충돌 파일의 KB 판을 받아 로컬 판과 나란히 보여 준다")
+    p.add_argument("project")
+    p.add_argument("--topic")
+    p.add_argument("--as", dest="as_name")
+    p.add_argument("--out")
+    p.set_defaults(fn=cmd_conflicts)
 
     p = sp.add_parser("search", help="KB 본문 검색 (정규식, 대소문자 무시, 여러 개는 OR)")
     p.add_argument("patterns", nargs="+")
@@ -1368,6 +1650,23 @@ def main(argv=None):
     p = sp.add_parser("cat", help="KB 문서 읽기. 디렉토리면 파일 목록")
     p.add_argument("path")
     p.set_defaults(fn=cmd_cat)
+
+    p = sp.add_parser("candidates", help="기술문서로 만들 만한 KB 프로젝트 후보(점수순)")
+    p.add_argument("--limit", type=int, default=5)
+    p.add_argument("--min-md", type=int, default=3)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_candidates)
+
+    p = sp.add_parser("mark", help="후보 처리 기록. 같은 업로드 상태에서는 다시 후보가 되지 않는다")
+    p.add_argument("id")
+    p.add_argument("status", choices=["made", "skipped"])
+    p.add_argument("--file")
+    p.add_argument("--reason")
+    p.set_defaults(fn=cmd_mark)
+
+    p = sp.add_parser("htmlcheck", help="단일 HTML 보고서 기계 검사(앵커, 인용, 이미지, 외부 자원, 스크립트 문법)")
+    p.add_argument("file")
+    p.set_defaults(fn=cmd_htmlcheck)
 
     p = sp.add_parser("checkin", help="SessionStart 용: 이 checkout 등록 + 소유 devlog 업로드 (하루 1회)")
     p.add_argument("--force", action="store_true", help="오늘 이미 했어도, 기본값 KB여도 실행")

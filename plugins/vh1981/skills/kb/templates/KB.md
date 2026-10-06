@@ -15,7 +15,7 @@ registry/repos/<repo>.md      repo의 하는 일, 분야, checkout 목록과 접
 registry/topics/<topic>.md    repo 없는 작업의 같은 정보
 repos/<repo>/<project>/       repo에서 온 devlog 사본
 topics/<topic>/<project>/     repo 없이 만든 devlog 사본
-.kb/manifest/                 파일별 sha256과 소유 checkout (생성물)
+.kb/manifest/                 파일별 sha256, checkout별 마지막 업로드 판(base) (생성물)
 .kb/catalog.json              INDEX.md의 기계용 사본 (생성물)
 .kb/bin/kb.py                 ssh 접근 시 클라이언트가 복사해 두는 스크립트
 ```
@@ -25,8 +25,9 @@ topics/<topic>/<project>/     repo 없이 만든 devlog 사본
 ## 업로드 규칙
 
 - 업로드는 checkout에서 `kb.py upload` 로만 한다. KB에 파일을 직접 복사하지 않는다.
-- 프로젝트마다 소유 checkout이 하나 있다. 다른 checkout이 같은 프로젝트를 올리면 아무것도 쓰지 않고 차이를 보고한다. 그 사본을 정본으로 바꾸려면 `--take-over` 를 쓴다.
-- 소유 checkout에서 사라진 파일은 KB에서도 지운다. 지울 파일이 있으면 목록을 보여 주고 `--yes` 를 받은 뒤에만 지운다.
+- 업로드는 파일마다 이 checkout이 마지막으로 올린 판, KB 판, 지금 판을 비교한다. 이 checkout만 바꾼 파일은 수정하고, KB만 바뀐 파일은 KB 판을 유지하고, 새 파일은 추가한다.
+- 양쪽이 다르게 바꾼 파일은 충돌이다. 쓰지 않고 보고하며, `kb.py conflicts` 로 두 판을 받아 합친 뒤 `--resolve` 로 올린다.
+- 이 checkout이 지운 파일은 KB에서도 지운다. 지울 파일이 있으면 목록을 보여 주고 `--yes` 를 받은 뒤에만 지운다.
 - 올라가는 파일은 512KB 이하의 텍스트(`md`, `txt`, `py`, `sh`, `yaml`, `yml`, `json`, `jsonl`, `csv`, `log`, `toml`, `cfg`, `ini`, `patch`, `diff`)와, 이미지가 내장되지 않은 1MB 이하 HTML이다.
 - 이미지, `npy`, 압축 파일, 그 밖의 바이너리, 점으로 시작하는 파일은 올리지 않는다. 개인정보가 담긴 이미지가 KB로 퍼지지 않게 하기 위해서다.
 - 프로젝트 카드는 source devlog `README.md` 의 frontmatter `kb:` 블록이다. status, tags, summary, related를 담는다.

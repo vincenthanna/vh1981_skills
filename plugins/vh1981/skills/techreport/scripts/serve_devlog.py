@@ -60,7 +60,7 @@ def _has_personal(p: Path) -> int:
     return n
 
 
-def _rows(gid: str, base: Path, files, newest_first: bool = False) -> list:
+def _rows(gid: str, base: Path, files, newest_first: bool = False, by_mtime: bool = False) -> list:
     docs: dict[str, dict] = {}
     for f in files:
         rel = f.relative_to(base)
@@ -83,6 +83,8 @@ def _rows(gid: str, base: Path, files, newest_first: bool = False) -> list:
             'imgs': v['imgs'], 'path': v['path'],
             'also': sorted(k for k in d['variants'] if d['variants'][k] is not v),
         })
+    if by_mtime:                # tech docs: most recently (re)written first
+        return sorted(rows, key=lambda r: r['mtime'], reverse=True)
     if newest_first:            # log pages are named by date: newest first
         return sorted(rows, key=lambda r: r['stem'], reverse=True)
     return sorted(rows, key=lambda r: (r['num'] == '', r['num'], r['stem']))
@@ -100,10 +102,11 @@ def scan(root: Path) -> dict:
     project's reports."""
     out: dict[str, list[dict]] = {}
     if is_kb(root):
-        for label, sub in (('Daily log', 'reports/daily'), ('Weekly log', 'reports/weekly')):
+        for label, sub, mt in (('Daily log', 'reports/daily', False), ('Tech docs', 'reports/techdocs', True),
+                               ('Weekly log', 'reports/weekly', False)):
             d = root / sub
             if d.is_dir():
-                rows = _rows(sub, d, sorted(d.glob('*.html')), newest_first=True)
+                rows = _rows(sub, d, sorted(d.glob('*.html')), newest_first=True, by_mtime=mt)
                 if rows:
                     out[label] = rows
         for kind in ('repos', 'topics'):

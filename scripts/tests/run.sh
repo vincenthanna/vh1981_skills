@@ -276,10 +276,10 @@ assert_eq "plain html is uploaded" "yes" "$([ -f "$KBT/kb/repos/repo/proj/plain.
 
 out=$(kbr "$KBT/clone" upload proj; echo "rc=$?")
 assert_contains "another checkout's diverged copy is a conflict" "[proj] conflict" "$out"
-assert_contains "conflict lists the differing file" "내용 다름 1개: 01_a.md" "$out"
+assert_contains "conflict lists the file both sides changed" "충돌 1개: 01_a.md" "$out"
 assert_contains "conflict exits non-zero" "rc=2" "$out"
 assert_eq "conflict writes nothing" "needle finding" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
-assert_contains "NOW.md shows the diverged copy" "다른 사본" "$(cat "$KBT/kb/NOW.md")"
+assert_contains "NOW.md shows the unresolved conflict" "충돌 1" "$(cat "$KBT/kb/NOW.md")"
 assert_contains "NOW.md carries Critical open items" "[Critical] fix leak" "$(cat "$KBT/kb/NOW.md")"
 assert_not_contains "NOW.md drops Low items" "[Low] later" "$(cat "$KBT/kb/NOW.md")"
 assert_contains "INDEX.md has the card summary" "line one line two" "$(cat "$KBT/kb/INDEX.md")"
@@ -297,11 +297,30 @@ assert_eq "nothing deleted before --yes" "yes" "$([ -f "$KBT/kb/repos/repo/proj/
 kbr "$KBT/wt" upload proj --yes >/dev/null
 assert_eq "--yes deletes the vanished file" "no" "$([ -f "$KBT/kb/repos/repo/proj/plain.html" ] && echo yes || echo no)"
 
-out=$(kbr "$KBT/clone" upload proj --take-over --yes)
-assert_contains "take-over reports the displaced files" "밀려난 파일" "$out"
-assert_eq "take-over writes the new owner's content" "different" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
-reg=$(cat "$KBT/kb/registry/repos/repo.md")
-assert_contains "previous owner is recorded as a copy" '"copies": [' "$reg"
+# three-way: a merged version resolves the conflict; later edits fast-forward
+printf '%s\n' "needle finding" "different" > "$KBT/merged.md"
+out=$(kbr "$KBT/clone" upload proj --resolve "01_a.md=$KBT/merged.md")
+assert_contains "--resolve uploads the merged version" "수정 1" "$out"
+assert_eq "the KB now holds the merged text" "$(cat "$KBT/merged.md")" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
+cp "$KBT/merged.md" "$KBT/clone/docs/devlog/proj/01_a.md"
+echo "new note" > "$KBT/clone/docs/devlog/proj/02_new.md"
+out=$(kbr "$KBT/clone" upload proj)
+assert_contains "a new local file is simply added" "추가 1" "$out"
+assert_not_contains "nothing conflicts once resolved" "충돌" "$out"
+out=$(kbr "$KBT/wt" upload proj)
+assert_contains "a checkout behind the KB keeps the newer KB file" "KB 쪽이 더 새롭거나" "$out"
+assert_eq "being behind never overwrites the KB" "$(cat "$KBT/merged.md")" "$(cat "$KBT/kb/repos/repo/proj/01_a.md")"
+echo "wt edit" >> "$KBT/wt/docs/devlog/proj/01_a.md"
+out=$(kbr "$KBT/wt" upload proj)
+assert_contains "editing a file the KB changed since is a conflict" "충돌 1개: 01_a.md" "$out"
+
+# one checkout seen from two hosts (NFS-shared /home) is one checkout
+kbr "$KBT/plain" upload proj --topic notes --yes >/dev/null
+out=$(cd "$KBT/plain" && VH1981_KB_HOST=otherhost python3 "$KBPY" --kb "$KBT/kb" upload proj --topic notes 2>&1)
+assert_contains "the same checkout from another host is up to date" "[proj] up-to-date" "$out"
+reg=$(cat "$KBT/kb/registry/topics/notes.md")
+assert_contains "the second host is recorded on the same checkout" '"also_at"' "$reg"
+assert_eq "no separate checkout entry for the second host" "0" "$(grep -c '"at": "otherhost:' "$KBT/kb/registry/topics/notes.md")"
 
 out=$(kbr "$KBT/plain" upload proj; echo "rc=$?")
 assert_contains "a checkout without origin must name a topic" "--topic" "$out"
@@ -343,6 +362,30 @@ assert_contains "--loose takes mid-sentence dates too" "mention" "$(cd "$KBT/pla
 kbr "$KBT/plain" upload proj --topic notes --yes >/dev/null
 assert_contains "log reads the whole KB without --local" "topics/notes/proj" "$(kbr "$KBT/plain" log --since 2026-09-10 --until 2026-09-10)"
 
+# a directory holding a data dump is not uploaded; an uncarded project falls back to its README
+BP="$KBT/plain/docs/devlog/bulk"; mkdir -p "$BP/assets/sidecars"
+printf '# Bulk\n\n- **Scope**: dump-heavy study\n- **Period**: 2026-01-01 ~ ongoing\n' > "$BP/README.md"
+i=0; while [ $i -lt 205 ]; do echo '{}' > "$BP/assets/sidecars/$i.json"; i=$((i+1)); done
+out=$(kbr "$KBT/plain" upload bulk --topic notes)
+assert_contains "a directory over 200 files is skipped as bulk" "bulk-dir>200 205" "$out"
+idx=$(cat "$KBT/kb/INDEX.md")
+assert_contains "an uncarded project shows its README Scope" "[카드 없음] dump-heavy study" "$idx"
+assert_contains "an uncarded ongoing project is inferred active" "topics/notes/bulk\` · active*" "$idx"
+
+# kb-techdoc support: candidates, marks, html check
+out=$(kbr "$KBT/plain" candidates --min-md 1)
+assert_contains "candidates lists KB projects" "topics/notes/proj" "$out"
+kbr "$KBT/plain" mark topics/notes/proj skipped --reason "ops log only" >/dev/null
+assert_not_contains "a handled project is not a candidate again" "topics/notes/proj\`" "$(kbr "$KBT/plain" candidates --min-md 1)"
+printf '<h2 id="a">x</h2><a href="#a">ok</a><a href="#gone">bad</a><sup class="c"><a href="#r1">[1]</a></sup><li id="r1">ref</li><li id="r2">unused</li>' > "$KBT/t.html"
+out=$(python3 "$KBPY" htmlcheck "$KBT/t.html"; echo "rc=$?")
+assert_contains "htmlcheck finds a broken anchor" '"gone"' "$out"
+assert_contains "htmlcheck finds an unused reference" '"r2"' "$out"
+assert_contains "htmlcheck fails a bad page" "rc=1" "$out"
+mkdir -p "$KBT/kb/reports/techdocs"; printf '<title>TD</title>' > "$KBT/kb/reports/techdocs/repos__repo__proj.html"
+out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;print(list(s.scan(Path('$KBT/kb')))[:3])")
+assert_contains "KB index lists tech docs first among projects" "['Tech docs', " "$out"
+
 # checkin: only with a configured KB, once per checkout per day
 CH="$KBT/chome"; mkdir -p "$CH/.config/vh1981"
 ci() { (cd "$KBT/wt" && env -u VH1981_KB HOME="$CH" XDG_CACHE_HOME="$CH/.cache" python3 "$KBPY" checkin 2>&1); }
@@ -364,8 +407,8 @@ assert_contains "collect carries dated entries" "fixed the leak" "$out"
 mkdir -p "$KBT/kb/reports/daily" "$KBT/kb/reports/weekly"
 for d in 2026-10-01 2026-10-03 2026-10-02; do printf '<title>Daily %s</title>' "$d" > "$KBT/kb/reports/daily/$d.html"; done
 printf '<title>W40</title>' > "$KBT/kb/reports/weekly/2026-W40.html"
-out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;t=s.scan(Path('$KBT/kb'));print(list(t)[:2]);print([r['stem'] for r in t['Daily log']])")
-assert_contains "KB index starts with the daily and weekly logs" "['Daily log', 'Weekly log']" "$out"
+out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;t=s.scan(Path('$KBT/kb'));print(list(t)[:3]);print([r['stem'] for r in t['Daily log']])")
+assert_contains "KB index starts with the daily log, tech docs, weekly log" "['Daily log', 'Tech docs', 'Weekly log']" "$out"
 assert_contains "daily logs are newest first" "['2026-10-03', '2026-10-02', '2026-10-01']" "$out"
 
 where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
