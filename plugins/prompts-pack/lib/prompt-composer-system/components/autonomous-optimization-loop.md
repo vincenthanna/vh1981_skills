@@ -50,27 +50,14 @@
 
 ## 2. 작업 모델 (Architecture)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Optimizer (메인 세션 — 무인 루프)                            │
-│  phases: setup → (modify → measure → judge → log) × N        │
-│  - 단일 변수 가설 1개 선정 (proposer 자세)                   │
-│  - editable_surface 수정 + commit                            │
-│  - measure_command 실행 (고정 budget)                        │
-│  - 지표 파싱 + best 대비 keep/revert 판정                    │
-│  - results_log append + 학습 메모                            │
-└─────────────────────────────────────────────────────────────┘
-        │ (proposer 자세로 다음 시도 설계)        ▲ devils-advocate / risk-auditor 자세로 review
-        ▼                                         │
-┌──────────────────────────────────────────────────────────┐
-│  Gaming / overfit auditor (별도 LLM 또는 reviewer)       │
-│  (agent role: systems-researcher × devils-advocate       │
-│   또는 risk-auditor — domain에 따라 ml-researcher)       │
-│  - 지표가 eval에 overfit / 측정 코드 우회로 gaming?       │
-│  - frozen_surface 침범 여부 감사                          │
-│  - 개선이 노이즈 수준인지 (tie-breaker 적용 정당)         │
-│  - 숨은 비용(VRAM/복잡도/가독성) 누락 여부                │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+
+box1["Optimizer (메인 세션 — 무인 루프)<br/>phases: setup → (modify → measure → judge → log) × N<br/>- 단일 변수 가설 1개 선정 (proposer 자세)<br/>- editable_surface 수정 + commit<br/>- measure_command 실행 (고정 budget)<br/>- 지표 파싱 + best 대비 keep/revert 판정<br/>- results_log append + 학습 메모"]
+box2["Gaming / overfit auditor (별도 LLM 또는 reviewer)<br/>(agent role: systems-researcher × devils-advocate<br/>또는 risk-auditor — domain에 따라 ml-researcher)<br/>- 지표가 eval에 overfit / 측정 코드 우회로 gaming?<br/>- frozen_surface 침범 여부 감사<br/>- 개선이 노이즈 수준인지 (tie-breaker 적용 정당)<br/>- 숨은 비용(VRAM/복잡도/가독성) 누락 여부"]
+
+box1 -->|"proposer 자세로 다음 시도 설계"| box2
+box2 -->|"devils-advocate / risk-auditor 자세로 review"| box1
 ```
 
 > **Lens 분리 원칙** (`agent-role-dictionary.md §0`): proposer는 최적화 가설을 *생성*하고, devil's advocate/risk-auditor는 *gaming·overfit·scope 침범*을 감사. 같은 세션이 둘 다 하면 자기 변경에 anchoring — 주기적(예: 10 trial마다 또는 종료 시) 별도 agent로 감사. 무인 단발 루프이면 종료 시 1회 감사 의무.
@@ -182,12 +169,19 @@ iter	timestamp	metric	delta_vs_best	kept	commit	idea_summary	notes
 
 ## 5. 산출물 디렉토리 구조
 
-```
-.optimize/<run-id>/
-├── 00_slots.yaml       # Step 0 — 10 slot 정의
-├── results.tsv         # Step 1-4 — 누적 trial 로그 (성공/실패 모두)
-├── run.log             # 최근(채택) trial 의 raw 측정 로그
-└── 05_summary.md       # Step 5 — best 요약 + 감사 + 학습
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1[".optimize/#lt;run-id#gt;/"]:::dir
+  n2("00_slots.yaml<br/>Step 0 — 10 slot 정의"):::file
+  n1 --> n2
+  n3("results.tsv<br/>Step 1-4 — 누적 trial 로그 (성공/실패 모두)"):::file
+  n1 --> n3
+  n4("run.log<br/>최근(채택) trial 의 raw 측정 로그"):::file
+  n1 --> n4
+  n5("05_summary.md<br/>Step 5 — best 요약 + 감사 + 학습"):::file
+  n1 --> n5
 ```
 
 > commit 정책: `00_slots.yaml` / `05_summary.md` / `results.tsv`는 외부 보고 대상이면 commit. trial별 코드 변경은 작업 브랜치의 commit 이력에 자연히 남으므로 best commit sha만 요약에 인용. `run.log`는 대용량이면 .gitignore.

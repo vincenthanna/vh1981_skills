@@ -362,18 +362,16 @@ P1~P5 중 하나라도 실패면 사용 금지 권고. P6~P7은 warning.
 
 ## 모드 선택 결정 트리 (v1.2)
 
-```
-이번 task 처음 돌리는 패턴인가?
-├─ Yes → A-1 step-by-step (학습 모드)
-└─ No
-    └─ spec.G == [IRREVERSIBLE] 또는 spec.J == High?
-        ├─ Yes → A-1 step-by-step (high-stakes 통제)
-        └─ No
-            └─ 시스템이 작동만 하는지 보고 싶나? (production X)
-                ├─ Yes → A-3 smoke-test (warning 모드)
-                └─ No → A-2 compose-only auto (DEFAULT)
-                          → C-6 execute (다른 conversation)
-                          → C-7 evaluate (다른 conversation)
+```mermaid
+flowchart TD
+
+q1{"이번 task 처음 돌리는 패턴인가?"}
+q1 -->|Yes| a1["A-1 step-by-step (학습 모드)"]
+q1 -->|No| q2{"spec.G == [IRREVERSIBLE] 또는 spec.J == High?"}
+q2 -->|Yes| a2["A-1 step-by-step (high-stakes 통제)"]
+q2 -->|No| q3{"시스템이 작동만 하는지 보고 싶나? (production X)"}
+q3 -->|Yes| a3["A-3 smoke-test (warning 모드)"]
+q3 -->|No| a4["A-2 compose-only auto (DEFAULT)<br/>→ C-6 execute (다른 conversation)<br/>→ C-7 evaluate (다른 conversation)"]
 ```
 
 ---

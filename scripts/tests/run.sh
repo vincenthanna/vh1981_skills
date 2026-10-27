@@ -370,9 +370,9 @@ kill "$LLMPID" 2>/dev/null; wait "$LLMPID" 2>/dev/null
 echo
 echo "# draw-tree.py and the text-tree ban"
 
-# The guidelines ban text trees; the docs that state the rule must not break it.
-hits=$(grep -rln -E '^[[:space:]]*(│|├|└)' "$ROOT/plugins/vh1981" --include='*.md' 2>/dev/null)
-assert_eq "no box-drawing text trees in vh1981 docs" "" "$hits"
+# The guidelines ban text trees; no plugin doc may break the rule.
+hits=$(grep -rln -E '^[[:space:]]*(│|├|└|┌)' "$ROOT/plugins" --include='*.md' 2>/dev/null)
+assert_eq "no box-drawing text trees in plugin docs" "" "$hits"
 assert_contains "the injected rule names draw-tree.py at this install" "$ROOT/plugins/vh1981/guidelines/../scripts/draw-tree.py" "$(run_inject "$ROOT/plugins/vh1981")"
 
 if python3 -c 'import matplotlib' 2>/dev/null; then

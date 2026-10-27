@@ -49,24 +49,14 @@
 
 ## 2. 작업 모델 (Architecture)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Researcher (메인 세션)                                       │
-│  phases: design → execute → analyze → write-up               │
-│  - hypothesis 정의 + falsifiability 검증                     │
-│  - baseline / ablation 결정                                  │
-│  - 실험 실행 (또는 dispatch)                                 │
-│  - 결과 종합 + 재현 manifest 작성                            │
-└─────────────────────────────────────────────────────────────┘
-        │ (proposer 자세로 design)                ▲ devils-advocate 자세로 review
-        ▼                                         │
-┌──────────────────────────────────────────────────────────┐
-│  Hypothesis devil's advocate (별도 LLM 또는 reviewer)    │
-│  (agent role: ml-researcher × devils-advocate)           │
-│  - 실험이 무의미한 시나리오 가설 생성                     │
-│  - 측정 metric의 proxy / intrinsic 한계 지적              │
-│  - confound / leak 후보 식별                              │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+
+box1["Researcher (메인 세션)<br/>phases: design → execute → analyze → write-up<br/>- hypothesis 정의 + falsifiability 검증<br/>- baseline / ablation 결정<br/>- 실험 실행 (또는 dispatch)<br/>- 결과 종합 + 재현 manifest 작성"]
+box2["Hypothesis devil's advocate (별도 LLM 또는 reviewer)<br/>(agent role: ml-researcher × devils-advocate)<br/>- 실험이 무의미한 시나리오 가설 생성<br/>- 측정 metric의 proxy / intrinsic 한계 지적<br/>- confound / leak 후보 식별"]
+
+box1 -->|"proposer 자세로 design"| box2
+box2 -->|"devils-advocate 자세로 review"| box1
 ```
 
 > **Lens 분리 원칙** (`agent-role-dictionary.md §0`): proposer는 실험을 *설계*하고, devil's advocate는 *깨는 시나리오*를 생성. 같은 사람/LLM이 둘 다 하면 anchoring — 별도 agent로 분리.
@@ -174,13 +164,21 @@
 
 산출물: `.experiments/<exp-id>/04_runs/`
 
-```
-04_runs/
-├── manifest.json       # 실행 환경 (commit hash, seed, hw, sw versions)
-├── C0/result.json
-├── C1/result.json
-├── C2/result.json
-└── C3/result.json
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1["04_runs/"]:::dir
+  n2("manifest.json<br/>실행 환경 (commit hash, seed, hw, sw versions)"):::file
+  n1 --> n2
+  n3("C0/result.json"):::file
+  n1 --> n3
+  n4("C1/result.json"):::file
+  n1 --> n4
+  n5("C2/result.json"):::file
+  n1 --> n5
+  n6("C3/result.json"):::file
+  n1 --> n6
 ```
 
 manifest.json 의무 필드:
@@ -277,21 +275,37 @@ manifest.json 의무 필드:
 
 ## 5. 산출물 디렉토리 구조
 
-```
-.experiments/<exp-id>/
-├── 00_question.md
-├── 01_baselines.md
-├── 02_hypothesis.md
-├── 03_ablation.md
-├── 04_runs/
-│   ├── manifest.json
-│   ├── C0/result.json
-│   ├── C1/result.json
-│   ├── C2/result.json
-│   └── C3/result.json
-├── 05_analysis.md
-├── 06_writeup.md
-└── 99_repro.md
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1[".experiments/#lt;exp-id#gt;/"]:::dir
+  n2("00_question.md"):::file
+  n1 --> n2
+  n3("01_baselines.md"):::file
+  n1 --> n3
+  n4("02_hypothesis.md"):::file
+  n1 --> n4
+  n5("03_ablation.md"):::file
+  n1 --> n5
+  n6["04_runs/"]:::dir
+  n1 --> n6
+  n7("manifest.json"):::file
+  n6 --> n7
+  n8("C0/result.json"):::file
+  n6 --> n8
+  n9("C1/result.json"):::file
+  n6 --> n9
+  n10("C2/result.json"):::file
+  n6 --> n10
+  n11("C3/result.json"):::file
+  n6 --> n11
+  n12("05_analysis.md"):::file
+  n1 --> n12
+  n13("06_writeup.md"):::file
+  n1 --> n13
+  n14("99_repro.md"):::file
+  n1 --> n14
 ```
 
 > commit 정책: `manifest.json` 의 `code_commit` / `data_version` 은 의무 commit. `04_runs/*/result.json` 은 외부 보고 대상이면 commit, 내부 스냅샷이면 .gitignore.

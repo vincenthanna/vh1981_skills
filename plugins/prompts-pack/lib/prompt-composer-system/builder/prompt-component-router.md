@@ -49,52 +49,52 @@
 
 ## 2. Routing decision tree
 
-```
-1. Task Spec 작성 완료?
-   ├─ No → "task-spec-template만 활성화, 사용자에게 spec 보강 요청"
-   └─ Yes → 2
+```mermaid
+flowchart TD
+  q1{"1. Task Spec 작성 완료?"}
+  q1 -->|No| a1["task-spec-template만 활성화, 사용자에게 spec 보강 요청"]
+  q1 -->|Yes| q2{"2. spec.B Output Type = ?"}
 
-2. spec.B Output Type = ?
-   ├─ Decision (multi-topic) → multi-agent-template 후보 → 3으로
-   ├─ Analysis →
-   │    ├─ multi-topic 비교 → multi-agent-template → 3으로
-   │    ├─ 단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE → autonomous-optimization-loop → 5
-   │    └─ spec.L=ml/systems/hci-researcher + 가설/baseline 의도 → experiment-design-template → 5
-   ├─ Generation / Transformation →
-   │    ├─ spec.A에 "spec/plan/tasks/SDD/spec-driven/speckit" 키워드 + spec.G=REVERSIBLE → speckit-spec-generation + role-dict(consistency-checker) → 5
-   │    │       (rfc-writing-template과 상호 배타 — 키워드 우선)
-   │    ├─ spec.F=team/external + RFC/ADR/design doc 의도 → rfc-writing-template + role-dict(pedagogy-reviewer×proposer, consistency-checker) → 5
-   │    └─ 기본 → role-dictionary만 (proposer + domain lens) → 5
-   ├─ Review →
-   │    ├─ spec.H에 PR/diff/commit → code-review-rubric + role-dict(architect, security-researcher) → 5
-   │    │       (repo-local 규칙 파일 있으면 rubric §9 custom rule layer / changeset 1000+LOC·5+파일이면 rubric §10 번들링 — 같은 component 내부 분기, 별도 component 아님)
-   │    └─ 기본 → role-dictionary (devils-advocate + evidence-checker) → 5
-   └─ Mixed → ❌ task 분할 권고 (composition abort)
+  q2 -->|"Decision (multi-topic)"| a2["multi-agent-template 후보"] --> q3
+  q2 -->|Analysis| an{"Analysis 종류"}
+  an -->|"multi-topic 비교"| an1["multi-agent-template"] --> q3
+  an -->|"단일 스칼라 지표 자동 반복 최적화 + spec.G=REVERSIBLE"| an2["autonomous-optimization-loop"] --> q5
+  an -->|"spec.L=ml/systems/hci-researcher + 가설/baseline 의도"| an3["experiment-design-template"] --> q5
+  q2 -->|"Generation / Transformation"| ge{"Generation 종류"}
+  ge -->|"spec.A에 'spec/plan/tasks/SDD/spec-driven/speckit' 키워드 + spec.G=REVERSIBLE"| ge1["speckit-spec-generation + role-dict(consistency-checker)<br/>(rfc-writing-template과 상호 배타 — 키워드 우선)"]
+  ge -->|"spec.F=team/external + RFC/ADR/design doc 의도"| ge2["rfc-writing-template + role-dict(pedagogy-reviewer×proposer, consistency-checker)"] --> q5
+  ge -->|기본| ge3["role-dictionary만 (proposer + domain lens)"] --> q5
+  q2 -->|Review| rv{"Review 종류"}
+  rv -->|"spec.H에 PR/diff/commit"| rv1["code-review-rubric + role-dict(architect, security-researcher)<br/>(repo-local 규칙 파일 있으면 rubric §9 custom rule layer / changeset 1000+LOC·5+파일이면 rubric §10 번들링 — 같은 component 내부 분기, 별도 component 아님)"] --> q5
+  rv -->|기본| rv2["role-dictionary (devils-advocate + evidence-checker)"] --> q5
+  q2 -->|Mixed| mx["❌ task 분할 권고 (composition abort)"]
 
-3. spec.C topic_count = ?
-   ├─ 1     → BYPASS multi-agent-template, direct prompt + role-dictionary (§3)
-   ├─ 2     → BYPASS (template §0.5 warning 신호) → single-agent 권장
-   ├─ 3-10  → multi-agent-template 활성화 → 4
-   └─ 10+   → multi-agent-template + Large N 처리 (template §6.2) → 4
+  q3{"3. spec.C topic_count = ?"}
+  q3 -->|1| c1["BYPASS multi-agent-template, direct prompt + role-dictionary (§3)"]
+  q3 -->|2| c2["BYPASS (template §0.5 warning 신호) → single-agent 권장"]
+  q3 -->|3-10| c3["multi-agent-template 활성화"] --> q4
+  q3 -->|10+| c4["multi-agent-template + Large N 처리 (template §6.2)"] --> q4
 
-4. spec.G Reversibility = ?
-   ├─ REVERSIBLE          → eval-rubric optional (시간 압박 시 skip)
-   ├─ COSTLY-TO-REVERSE   → eval-rubric 필수, multi-LLM 검토 후보
-   └─ IRREVERSIBLE        → eval-rubric 필수 + judge persona 추가 (role-dict §3.1)
+  q4{"4. spec.G Reversibility = ?"}
+  q4 -->|REVERSIBLE| r1["eval-rubric optional (시간 압박 시 skip)"]
+  q4 -->|COSTLY-TO-REVERSE| r2["eval-rubric 필수, multi-LLM 검토 후보"]
+  q4 -->|IRREVERSIBLE| r3["eval-rubric 필수 + judge persona 추가 (role-dict §3.1)"]
 
-5. spec.L Domain Lens 명시?
-   ├─ Yes → role-dictionary §5의 해당 domain × 적절 stance 활성화
-   └─ No  → router가 spec.A Purpose에서 inference
-            → log에 inference 근거 명시
-            → high-stakes(spec.G=COSTLY/IRREVERSIBLE)이면 사용자 확인 권장
+  q5{"5. spec.L Domain Lens 명시?"}
+  q5 -->|Yes| l1["role-dictionary §5의 해당 domain × 적절 stance 활성화"]
+  q5 -->|No| l2["router가 spec.A Purpose에서 inference<br/>log에 inference 근거 명시<br/>high-stakes(spec.G=COSTLY/IRREVERSIBLE)이면 사용자 확인 권장"]
 
-6. spec.H Prior Context 있음?
-   ├─ Yes → context-injection-patterns 활성화
-   └─ No  → skip (over-injection 방지)
+  q6{"6. spec.H Prior Context 있음?"}
+  q6 -->|Yes| h1["context-injection-patterns 활성화"]
+  q6 -->|No| h2["skip (over-injection 방지)"]
 
-7. spec.K Multi-LLM 신호 1건 이상?
-   ├─ Yes → multi-LLM 활성화 추가 (multi-agent-template §6.8 pattern 선택)
-   └─ No  → claude single-LLM (default)
+  q7{"7. spec.K Multi-LLM 신호 1건 이상?"}
+  q7 -->|Yes| k1["multi-LLM 활성화 추가 (multi-agent-template §6.8 pattern 선택)"]
+  q7 -->|No| k2["claude single-LLM (default)"]
+
+  q4 -.->|"결정 후"| q5
+  q5 -.->|"결정 후"| q6
+  q6 -.->|"결정 후"| q7
 ```
 
 ---

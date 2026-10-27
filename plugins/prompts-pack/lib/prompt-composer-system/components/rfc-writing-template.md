@@ -56,28 +56,15 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 
 ## 2. 작업 모델 (Architecture)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ Author (메인 세션)                                            │
-│  phases: motivate → propose → critique → revise → finalize    │
-│  - 학습자/외부 reader 입장에서 명확성 우선                    │
-│  - 모든 정의/참조의 정합성 의무                               │
-└─────────────────────────────────────────────────────────────┘
-        │ (pedagogy-reviewer × proposer 자세)
-        ▼
-┌──────────────────────────────────────────────────────────┐
-│  Consistency-checker (별도 LLM 또는 reviewer)            │
-│  (agent role: §1.2 consistency-checker)                  │
-│  - 정의/명칭/참조 일관성 검토                             │
-│  - 깨진 참조, 미정의 용어, 모순 진술 식별                 │
-└──────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌──────────────────────────────────────────────────────────┐
-│  Stakeholder reviewer panel (사람)                       │
-│  - 영향 받는 팀 / OSS 기여자 / 의사결정자                 │
-│  - 결정 권한과 review 기한 명시                           │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+
+box1["Author (메인 세션)<br/>phases: motivate → propose → critique → revise → finalize<br/>- 학습자/외부 reader 입장에서 명확성 우선<br/>- 모든 정의/참조의 정합성 의무"]
+box2["Consistency-checker (별도 LLM 또는 reviewer)<br/>(agent role: §1.2 consistency-checker)<br/>- 정의/명칭/참조 일관성 검토<br/>- 깨진 참조, 미정의 용어, 모순 진술 식별"]
+box3["Stakeholder reviewer panel (사람)<br/>- 영향 받는 팀 / OSS 기여자 / 의사결정자<br/>- 결정 권한과 review 기한 명시"]
+
+box1 -->|"pedagogy-reviewer × proposer 자세"| box2
+box2 --> box3
 ```
 
 > **Lens 분리** (`agent-role-dictionary.md §0`): author 가 자신의 RFC를 자기가 정합성 검토하면 anchoring. consistency-checker는 별도 agent.
@@ -152,7 +139,7 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 <아키텍처 / API / 데이터 모델 / 흐름>
 
 [그림 / 다이어그램 위치]
-- mermaid 또는 ASCII 권장. 외부 image 의존 최소.
+- mermaid 로 그린다. 텍스트 도형(ASCII 트리, 상자 그림)은 쓰지 않는다. 외부 image 의존 최소.
 
 ### 4.3 핵심 결정 (Decisions)
 | Decision | 선택 | 근거 | 대안 |
@@ -286,25 +273,43 @@ ADR (Architecture Decision Record) 은 RFC의 단축 변형:
 
 ## 5. 산출물 디렉토리 구조
 
-```
-docs/rfcs/<rfc-id>/
-├── <rfc-id>.md            # 본 RFC 본문 (Step 0~6 통합)
-├── alternatives/          # (선택) 대안별 상세 분석
-│   ├── alt-a.md
-│   └── alt-b.md
-├── diagrams/              # (선택) 다이어그램 source (mermaid / draw.io)
-│   └── overview.mmd
-└── reviews/               # stakeholder feedback raw
-    ├── reviewer-A-round1.md
-    └── consistency-check.md
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1["docs/rfcs/#lt;rfc-id#gt;/"]:::dir
+  n2("#lt;rfc-id#gt;.md<br/>본 RFC 본문 (Step 0~6 통합)"):::file
+  n1 --> n2
+  n3["alternatives/<br/>(선택) 대안별 상세 분석"]:::dir
+  n1 --> n3
+  n4("alt-a.md"):::file
+  n3 --> n4
+  n5("alt-b.md"):::file
+  n3 --> n5
+  n6["diagrams/<br/>(선택) 다이어그램 source (mermaid / draw.io)"]:::dir
+  n1 --> n6
+  n7("overview.mmd"):::file
+  n6 --> n7
+  n8["reviews/<br/>stakeholder feedback raw"]:::dir
+  n1 --> n8
+  n9("reviewer-A-round1.md"):::file
+  n8 --> n9
+  n10("consistency-check.md"):::file
+  n8 --> n10
 ```
 
 ADR 변형:
-```
-docs/adrs/
-├── 0001-<title>.md
-├── 0002-<title>.md
-└── ...
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1["docs/adrs/"]:::dir
+  n2("0001-#lt;title#gt;.md"):::file
+  n1 --> n2
+  n3("0002-#lt;title#gt;.md"):::file
+  n1 --> n3
+  n4("..."):::file
+  n1 --> n4
 ```
 
 > commit 정책: RFC 본문은 PR로 review 후 commit. accepted 상태 변경은 별도 PR (revision history 누적).

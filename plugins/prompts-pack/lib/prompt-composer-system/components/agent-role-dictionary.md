@@ -681,14 +681,17 @@ Round 5: implementer → consistency-checker (final pass)
 
 동일 작업물을 *서로 다른 분야 lens*로 동시에 비판:
 
-```
-1 작업물 (예: 시스템 설계 PR)
-  ├─ backend-engineer × devils-advocate  (서버 측 약점)
-  ├─ frontend-engineer × devils-advocate (사용자 인지 약점)
-  ├─ security-researcher × evidence-checker (보안 가정 검증)
-  ├─ devops-sre × risk-auditor (운영 risk)
-  └─ ml-researcher × consistency-checker (통계 / 재현성 일관성)
-→ synthesizer가 분야별 blind spot 합성
+```mermaid
+flowchart TD
+  root["1 작업물 (예: 시스템 설계 PR)"]
+  n1["backend-engineer × devils-advocate (서버 측 약점)"]
+  n2["frontend-engineer × devils-advocate (사용자 인지 약점)"]
+  n3["security-researcher × evidence-checker (보안 가정 검증)"]
+  n4["devops-sre × risk-auditor (운영 risk)"]
+  n5["ml-researcher × consistency-checker (통계 / 재현성 일관성)"]
+  syn["synthesizer가 분야별 blind spot 합성"]
+  root --> n1 & n2 & n3 & n4 & n5
+  n1 & n2 & n3 & n4 & n5 --> syn
 ```
 
 → 동일 stance(`devils-advocate`)도 분야가 다르면 발견하는 약점이 다르다. cross-domain coverage가 cross-model heterogeneity와 *곱셈*으로 작동.

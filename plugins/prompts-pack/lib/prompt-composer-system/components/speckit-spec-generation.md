@@ -57,19 +57,32 @@
 - ⚠️ slash command는 **Claude Code 등 에이전트 세션 내부에서 사용자가 입력**해야 동작. `specify init`은 템플릿·constitution을 부트스트랩하는 1회성 작업이고, 실제 산출물은 slash command가 만든다. 본 component는 slash command를 *직접 호출하지 않는다* — 사용자에게 안내만 한다.
 
 ### 2.3 표준 산출물 경로
-```
-.specify/
-├── memory/constitution.md       ← /speckit.constitution 산출
-├── scripts/bash/                ← 템플릿 스크립트
-└── templates/
-specs/<feature-name>/
-├── spec.md                      ← /speckit.specify
-├── plan.md                      ← /speckit.plan
-├── tasks.md                     ← /speckit.tasks
-├── data-model.md                ← /speckit.plan 부속
-├── quickstart.md
-├── research.md
-└── contracts/
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1[".specify/"]:::dir
+  n2("memory/constitution.md<br/>/speckit.constitution 산출"):::file
+  n1 --> n2
+  n3["scripts/bash/<br/>템플릿 스크립트"]:::dir
+  n1 --> n3
+  n4["templates/"]:::dir
+  n1 --> n4
+  n5["specs/#lt;feature-name#gt;/"]:::dir
+  n6("spec.md<br/>/speckit.specify"):::file
+  n5 --> n6
+  n7("plan.md<br/>/speckit.plan"):::file
+  n5 --> n7
+  n8("tasks.md<br/>/speckit.tasks"):::file
+  n5 --> n8
+  n9("data-model.md<br/>/speckit.plan 부속"):::file
+  n5 --> n9
+  n10("quickstart.md"):::file
+  n5 --> n10
+  n11("research.md"):::file
+  n5 --> n11
+  n12["contracts/"]:::dir
+  n5 --> n12
 ```
 
 ---

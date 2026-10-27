@@ -650,21 +650,37 @@ topics_dir: .analysis/<run-id>/topics
 
 각 분석 실행을 고유 ID로 격리. 재분석 시 이전 결과를 덮어쓰지 않고 비교 가능.
 
-```
-.analysis/
-├── 20260519-legacy-cleanup/        # <run-id> = <YYYYMMDD>-<slug>
-│   ├── 00_plan.md                  # Step 1: 작업 정의
-│   ├── 00_manifest.json            # 실행 기록: agent 버전, timestamp, commit hash
-│   ├── baseline.md                 # Step 2: baseline collector 산출
-│   ├── topics/                     # Step 3: per-topic 결과
-│   │   ├── T1.md
-│   │   ├── T2.md
-│   │   └── ...
-│   ├── 99_synthesis.md             # Step 4: 최종 합성
-│   └── review/                     # Step 5: 리뷰 결과 (선택)
-│       └── synthesis-issues.md
-└── 20260622-legacy-reanalysis/     # 재분석은 새 디렉토리
-    └── ...
+```mermaid
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+  n1[".analysis/"]:::dir
+  n2["20260519-legacy-cleanup/<br/>#lt;run-id#gt; = #lt;YYYYMMDD#gt;-#lt;slug#gt;"]:::dir
+  n1 --> n2
+  n3("00_plan.md<br/>Step 1: 작업 정의"):::file
+  n2 --> n3
+  n4("00_manifest.json<br/>실행 기록: agent 버전, timestamp, commit hash"):::file
+  n2 --> n4
+  n5("baseline.md<br/>Step 2: baseline collector 산출"):::file
+  n2 --> n5
+  n6["topics/<br/>Step 3: per-topic 결과"]:::dir
+  n2 --> n6
+  n7("T1.md"):::file
+  n6 --> n7
+  n8("T2.md"):::file
+  n6 --> n8
+  n9("..."):::file
+  n6 --> n9
+  n10("99_synthesis.md<br/>Step 4: 최종 합성"):::file
+  n2 --> n10
+  n11["review/<br/>Step 5: 리뷰 결과 (선택)"]:::dir
+  n2 --> n11
+  n12("synthesis-issues.md"):::file
+  n11 --> n12
+  n13["20260622-legacy-reanalysis/<br/>재분석은 새 디렉토리"]:::dir
+  n1 --> n13
+  n14("..."):::file
+  n13 --> n14
 ```
 
 > 모든 산출물을 파일로 떨어뜨리면 (a) context 보존, (b) git diff로 분석 변화 추적, (c) 후속 작업의 reference가 가능.
