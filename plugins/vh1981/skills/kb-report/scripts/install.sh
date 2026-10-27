@@ -50,6 +50,8 @@ done
 mkdir -p "$KB/.kb/bin" "$KB/.kb/logs" "$KB/reports/daily" "$KB/reports/weekly" "$KB/reports/.data"
 cp "$PLUG/skills/kb/scripts/kb.py" "$KB/.kb/bin/kb.py"
 cp "$PLUG/skills/techreport/scripts/serve_devlog.py" "$PLUG/skills/techreport/scripts/serve_devlog.sh" "$KB/.kb/bin/"
+mkdir -p "$KB/.kb/bin/fonts"
+cp "$PLUG/skills/techreport/scripts/fonts/"* "$KB/.kb/bin/fonts/"
 cp "$HERE/run.sh" "$KB/.kb/bin/kb-report-run.sh"
 mkdir -p "$KB/.kb/kb-report/templates"
 cp "$HERE/../SKILL.md" "$KB/.kb/kb-report/SKILL.md"

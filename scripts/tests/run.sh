@@ -451,10 +451,18 @@ assert_contains "collect carries dated entries" "fixed the leak" "$out"
 # report server: a KB root lists daily and weekly logs newest first
 mkdir -p "$KBT/kb/reports/daily" "$KBT/kb/reports/weekly"
 for d in 2026-10-01 2026-10-03 2026-10-02; do printf '<title>Daily %s</title>' "$d" > "$KBT/kb/reports/daily/$d.html"; done
+printf '<p class="lede">Fixed the\n leak &amp; shipped</p>' >> "$KBT/kb/reports/daily/2026-10-03.html"
 printf '<title>W40</title>' > "$KBT/kb/reports/weekly/2026-W40.html"
 out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;t=s.scan(Path('$KBT/kb'));print(list(t)[:3]);print([r['stem'] for r in t['Daily log']])")
 assert_contains "KB index starts with the daily log, tech docs, weekly log" "['Daily log', 'Tech docs', 'Weekly log']" "$out"
 assert_contains "daily logs are newest first" "['2026-10-03', '2026-10-02', '2026-10-01']" "$out"
+out=$(python3 -c "import sys;sys.path.insert(0,'$ROOT/plugins/vh1981/skills/techreport/scripts');import serve_devlog as s;from pathlib import Path;r=Path('$KBT/kb');t=s.scan(r);from datetime import date;print(s.render_index(t,False,r,s.load_meta(r)).decode());print(s._calendar(t['Daily log'],t['Weekly log'],{},date(2026,10,5)));print(s.doc_navs(t)['reports/daily/2026-10-02'].decode())")
+assert_contains "KB index shows times in KST" "KST 기준" "$out"
+assert_contains "a daily row is named by its date" "10월 3일 (토)" "$out"
+assert_contains "a daily row shows the page's lede" "Fixed the leak &amp; shipped" "$out"
+assert_contains "KB index links a calendar day to its daily log" 'class="c lx" href="/d/reports/daily/2026-10-03"' "$out"
+assert_contains "a daily page steps back to the older day" 'rel="prev" href="/d/reports/daily/2026-10-01"' "$out"
+assert_contains "a daily page steps forward to the newer day" 'rel="next" href="/d/reports/daily/2026-10-03"' "$out"
 
 where() { (cd "$KBT/plain" && env -u VH1981_KB -u VH1981_KB_DEFAULT HOME="$KBT/home" "$@" python3 "$KBPY" where --configured 2>&1; echo "rc=$?"); }
 out=$(where)
