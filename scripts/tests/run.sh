@@ -368,6 +368,26 @@ assert_contains "the LLM summary replaces the plain one, without list markers" "
 kill "$LLMPID" 2>/dev/null; wait "$LLMPID" 2>/dev/null
 
 echo
+echo "# draw-tree.py and the text-tree ban"
+
+# The guidelines ban text trees; the docs that state the rule must not break it.
+hits=$(grep -rln -E '^[[:space:]]*(│|├|└)' "$ROOT/plugins/vh1981" --include='*.md' 2>/dev/null)
+assert_eq "no box-drawing text trees in vh1981 docs" "" "$hits"
+assert_contains "the injected rule names draw-tree.py at this install" "$ROOT/plugins/vh1981/guidelines/../scripts/draw-tree.py" "$(run_inject "$ROOT/plugins/vh1981")"
+
+if python3 -c 'import matplotlib' 2>/dev/null; then
+  DT="$ROOT/plugins/vh1981/scripts/draw-tree.py"
+  printf 'repo/docs/README.md  # 색인\nrepo/src/\nrepo/src/main.py\n' > "$TMP/tree.txt"
+  out=$(XDG_CACHE_HOME="$TMP/cache" python3 "$DT" "$TMP/tree.png" "$TMP/tree.txt" 2>&1; echo "rc=$?")
+  assert_contains "draw-tree renders a tree" "rc=0" "$out"
+  assert_eq "draw-tree writes a PNG" "PNG" "$(head -c 4 "$TMP/tree.png" 2>/dev/null | tail -c 3)"
+  out=$(printf '\n# only a comment\n' | python3 "$DT" "$TMP/empty.png" 2>&1; echo "rc=$?")
+  assert_contains "draw-tree refuses an empty path list" "rc=1" "$out"
+else
+  echo "skip draw-tree (no matplotlib)"
+fi
+
+echo
 echo "# kb.py (devlog knowledge base)"
 
 KBPY="$ROOT/plugins/vh1981/skills/kb/scripts/kb.py"

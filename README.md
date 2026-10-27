@@ -297,6 +297,7 @@ NFS 가 느려진 날 실제로 이렇게 규칙 없이 시작한 세션이 있�
 | `plugins/vh1981/scripts/kb-checkin.sh` | 세션 시작 때 백그라운드로 KB에 checkin 하는 SessionStart hook (`VH1981_KB_CHECKIN=0` 으로 끔) |
 | `plugins/vh1981/scripts/prompt-hook.py` | UserPromptSubmit·PreCompact hook. 주입이 빠진 세션에 규칙을 다시 넣고, prompt 를 기록합니다 |
 | `plugins/vh1981/scripts/sessions.py` | SessionStart·UserPromptSubmit·Stop·SessionEnd hook. repo 의 `.claude/sessions.md` 에 세션 목록을 남기고, `restore` 로 tmux 창을 되살립니다 |
+| `plugins/vh1981/scripts/draw-tree.py` | 경로 목록을 받아 상자와 연결선으로 그린 트리 이미지(PNG·SVG)를 만듭니다. 텍스트 트리 대신 터미널과 채팅에서 씁니다 |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
 컨텍스트에 들어갑니다. 긴 내용은 `doc-style.md` 처럼 별도 파일로 두고 `core.md` 에서
