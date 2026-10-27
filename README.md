@@ -443,58 +443,96 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 
 ## 디렉토리 구조
 
+파란 상자는 디렉터리, 흰 상자는 파일입니다. 파일마다 하는 일은 그림 아래 표에 있습니다.
+
+```mermaid
+%%{init: {"flowchart": {"curve": "step"}}}%%
+flowchart LR
+  classDef dir fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef file fill:#ffffff,stroke:#9ca3af,color:#111827
+
+  root["vh1981_skills/"]:::dir
+  root --> cp[".claude-plugin/"]:::dir --> mk("marketplace.json"):::file
+  root --> pl["plugins/"]:::dir
+  root --> pr["prompts/"]:::dir
+  root --> sc["scripts/"]:::dir
+  root --> gh[".github/workflows/"]:::dir --> ghy("statusline.yml"):::file
+
+  pl --> vh["vh1981/"]:::dir
+  vh --> vhm(".claude-plugin/plugin.json"):::file
+  vh --> hk("hooks/hooks.json"):::file
+  vh --> gl["guidelines/"]:::dir
+  vh --> vs["scripts/"]:::dir
+  vh --> sk["skills/"]:::dir
+
+  gl --> g1("core.md"):::file
+  gl --> g2("doc-style.md"):::file
+  gl --> g3("output-principles.md"):::file
+  gl --> g4("shell-pitfalls.md"):::file
+  gl --> g5("ml-training.md"):::file
+  gl --> g6("japanese-notation.md"):::file
+  gl --> g7("mcp-connectors.md"):::file
+  gl --> g8["references/"]:::dir
+
+  vs --> s1("inject-guidelines.sh"):::file
+  vs --> s2("prompt-hook.py"):::file
+  vs --> s3("kb-checkin.sh"):::file
+  vs --> s4("sessions.py"):::file
+  vs --> s5("draw-tree.py"):::file
+  vs --> s6("statusline.sh"):::file
+  vs --> s7("check-statusline.sh"):::file
+
+  sk --> k1["devlog/"]:::dir
+  sk --> k2["techreport/"]:::dir
+  sk --> k3["kb/"]:::dir
+  sk --> k4["kb-report/"]:::dir
+  sk --> k5["kb-techdoc/"]:::dir
+  sk --> k6["sessions/"]:::dir
+  sk --> k7["humanizer/"]:::dir
+  sk --> k8["md-to-html/"]:::dir
+  sk --> k9["md-tidy/"]:::dir
+  sk --> k10["worklog/, prjdocs/"]:::dir
+
+  pl --> pp["prompts-pack/"]:::dir
+  pp --> ppm(".claude-plugin/plugin.json"):::file
+  pp --> pa["agents/"]:::dir
+  pp --> pc["commands/"]:::dir
+  pp --> plb["lib/"]:::dir
+
+  pr --> pra["agents (symlink)"]:::dir
+  pr --> prc["commands (symlink)"]:::dir
+  pr --> prr["ai-reference/"]:::dir
+  pr --> prb("baseline.md"):::file
+  pr --> prt("commit_rules.md, translate_to_kr.md, ..."):::file
+
+  sc --> ss("statusline.sh (symlink)"):::file
+  sc --> si("install-statusline.sh"):::file
+  sc --> st("tests/run.sh"):::file
+  sc --> sr("README.md"):::file
 ```
-.claude-plugin/
-  marketplace.json          # Marketplace 정의
-plugins/
-  vh1981/
-    .claude-plugin/plugin.json   # name: vh1981 (plugin namespace)
-    hooks/hooks.json        # SessionStart 가이드라인 주입·상태줄 자동 복구·KB checkin, UserPromptSubmit 재주입·prompt 기록
-    guidelines/
-      core.md               # 매 세션 주입되는 기본 규칙 (정본)
-      doc-style.md          # 문서 작성 상세 규칙 (필요할 때 Read)
-      ml-training.md        # 모델 학습 체크포인트·재개 규칙 (필요할 때 Read)
-      japanese-notation.md  # 일본어 한글 발음 표기 규칙 (필요할 때 Read)
-      shell-pitfalls.md     # 셸·도구 실전 함정 (필요할 때 Read)
-      output-principles.md  # 보고서·문서 기본 원칙: 쉬운 문체 + 시각 자료 (필요할 때 Read)
-      references/           # 원칙의 근거 자료 (Karpathy 글 번역 등)
-      mcp-connectors.md     # MCP 커넥터 연결 실패 우회 (필요할 때 Read)
-    scripts/
-      inject-guidelines.sh  # core.md 주입 스크립트 (주입 표식도 남김)
-      prompt-hook.py        # 주입 누락 시 재주입 + prompt 기록
-      kb-checkin.sh         # 세션 시작 때 KB checkin
-      statusline.sh         # devlog 상태줄 (정본)
-      check-statusline.sh   # 자동 복구 스크립트
-    skills/
-      devlog/SKILL.md       # /devlog 스킬 (통합)
-      worklog/SKILL.md      # /worklog 스킬
-      prjdocs/SKILL.md      # /prjdocs 스킬
-      humanizer/            # /humanizer 스킬 (SKILL.md + references/patterns.md)
-      techreport/           # /techreport 스킬 (템플릿, 검사 목록, 보고서 서버)
-      kb/                   # /kb 스킬 (kb.py 클라이언트·store, KB.md 템플릿)
-      kb-report/            # /kb-report 스킬 (daily·weekly log, KB 머신 cron 설치)
-      kb-techdoc/           # /kb-techdoc 스킬 (KB → 기술문서, 12시간 cron)
-      sessions/             # /sessions 스킬 (tmux 창의 Claude 세션 되살리기)
-  prompts-pack/
-    .claude-plugin/plugin.json
-    agents/                 # debugger, code-reviewer, ...
-    commands/               # /bug-fix, /pr-audit, ...
-prompts/
-  agents -> ../plugins/prompts-pack/agents     # symlink
-  commands -> ../plugins/prompts-pack/commands # symlink
-  ai-reference/             # AI 참조 문서 (SDK, 튜토리얼 등)
-  baseline.md               # 기본 작업 규칙
-  commit_rules.md
-  translate_to_kr.md
-  code_visualization.md
-scripts/
-  statusline.sh -> ../plugins/vh1981/scripts/statusline.sh   # symlink
-  install-statusline.sh     # 수동 설치 + settings.json 등록
-  tests/run.sh              # 상태줄·설치·자동복구·가이드라인 주입 회귀 테스트
-  README.md                 # 설치·표시 규칙·자동 복구·문제 해결
-.github/workflows/
-  statusline.yml            # ubuntu + macos 매트릭스, shellcheck, 매니페스트 검증
-```
+
+| 경로 | 하는 일 |
+|---|---|
+| `.claude-plugin/marketplace.json` | marketplace 정의 |
+| `plugins/vh1981/.claude-plugin/plugin.json` | 플러그인 이름 `vh1981` 과 버전 |
+| `plugins/vh1981/hooks/hooks.json` | SessionStart 가이드라인 주입, 상태줄 자동 복구, KB checkin. UserPromptSubmit 재주입과 prompt 기록. 세션 목록 기록 |
+| `plugins/vh1981/guidelines/core.md` | 매 세션 주입되는 기본 규칙(정본) |
+| `plugins/vh1981/guidelines/doc-style.md`, `output-principles.md` | 문서 구조와 문장 규칙, 쉬운 문체와 시각 자료 원칙(필요할 때 Read) |
+| `plugins/vh1981/guidelines/shell-pitfalls.md`, `ml-training.md`, `japanese-notation.md`, `mcp-connectors.md` | 셸 함정, 학습 재개, 일본어 표기, MCP 커넥터 우회(필요할 때 Read) |
+| `plugins/vh1981/guidelines/references/` | 원칙의 근거 자료(Karpathy 글 번역 등) |
+| `plugins/vh1981/scripts/inject-guidelines.sh`, `prompt-hook.py` | `core.md` 주입과 주입 표식, 누락 시 재주입과 prompt 기록 |
+| `plugins/vh1981/scripts/kb-checkin.sh`, `sessions.py` | 세션 시작 때 KB checkin, repo 별 세션 목록과 tmux 창 복구 |
+| `plugins/vh1981/scripts/draw-tree.py` | 경로 목록으로 트리 이미지 만들기 |
+| `plugins/vh1981/scripts/statusline.sh`, `check-statusline.sh` | devlog 상태줄(정본)과 자동 복구 |
+| `plugins/vh1981/skills/` | 스킬마다 디렉터리 하나. `worklog`, `prjdocs` 는 devlog 로 대체된 옛 스킬 |
+| `plugins/prompts-pack/` | agents(debugger, code-reviewer, ...), commands(/bug-fix, /pr-audit, ...), lib |
+| `prompts/agents`, `prompts/commands` | `plugins/prompts-pack/` 아래로 가는 symlink |
+| `prompts/` 의 나머지 | AI 참조 문서(`ai-reference/`), 기본 작업 규칙(`baseline.md`), commit 규칙, 번역 같은 prompt 문서 |
+| `scripts/statusline.sh` | `plugins/vh1981/scripts/statusline.sh` 로 가는 symlink |
+| `scripts/install-statusline.sh` | 수동 설치와 settings.json 등록 |
+| `scripts/tests/run.sh` | 상태줄, 설치, 자동 복구, 가이드라인 주입, hook 회귀 테스트 |
+| `scripts/README.md` | 설치, 표시 규칙, 자동 복구, 문제 해결 |
+| `.github/workflows/statusline.yml` | ubuntu와 macos 매트릭스, shellcheck, 매니페스트 검증 |
 
 ## 라이선스
 
