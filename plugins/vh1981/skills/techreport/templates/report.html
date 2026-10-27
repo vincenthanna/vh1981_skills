@@ -136,8 +136,13 @@ html:not(.js) .steps .nav{display:none}
 .ba .after{display:none}
 .ba.flip .before{display:none}
 .ba.flip .after{display:block}
-.batog{font:inherit;font-size:13.5px;padding:6px 13px;border-radius:8px;
+.batog,.fl-re{font:inherit;font-size:13.5px;padding:6px 13px;border-radius:8px;
  border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;margin-top:10px}
+/* 흐름 — 표식과 지나온 자취는 JS 가 만든다. JS 가 없으면 경로와 값이 전부 보이는 정적 도식이다 */
+.flow .fl-val{transition:opacity .3s ease}
+.flow .fl-val.fl-off{opacity:0}
+.flow .fl-dot{fill:var(--blue)}
+.flow .fl-trail{fill:none;stroke:var(--blue)}
 
 @media (prefers-reduced-motion: reduce){
   .gw,.dr{transition:none !important}
@@ -147,6 +152,8 @@ html:not(.js) .steps .nav{display:none}
   .steps .step{display:block !important;margin-bottom:14px}
   .steps .nav{display:none}
   .ba .after{display:block}
+  .flow .fl-val{opacity:1 !important}
+  .flow .fl-dot,.fl-re{display:none}
 }
 </style>
 
@@ -256,6 +263,32 @@ html:not(.js) .steps .nav{display:none}
     <div class="after"><svg ...>{{후}}</svg></div>
     <button class="batog" type="button" data-b="후 →" data-a="← 전">후 →</button>
   </div>
+
+  ⑥ 흐름 — 데이터·요청·프레임이 경로를 따라 이동한다. 화면에 들어오면 한 번 돌고 멈추며,
+     다시 보기 버튼은 JS 가 붙인다. .fl-val 의 data-at 은 경로 위 위치(0~1)이고, 표식이 거기
+     닿으면 그 값이 나타난다. 경로가 여러 개면 문서 순서대로 차례로 돌고, 값은 data-p 에
+     경로 번호(0부터)를 쓴다. 구간은 data-hop(ms, 기본 700, 1000 이하)이고 전체는 8초를
+     넘지 않게 JS 가 줄인다. 화살촉은 경로의 marker-end 로 달아도 된다(자취에는 붙지 않는다).
+
+  <figure class="flow" data-hop="700">
+    <div class="svgwrap">
+    <svg viewBox="0 0 820 170" role="img" aria-label="{{흐름 전체를 한 문장으로}}">
+      <g font-family="inherit" font-size="13" fill="currentColor" text-anchor="middle">
+        <path class="fl-path" d="M100,70 H720" fill="none" style="stroke:var(--line)" stroke-width="3"/>
+        <rect x="40"  y="48" width="120" height="44" rx="8" style="fill:var(--card);stroke:var(--line)"/>
+        <text x="100" y="75">{{영상}}</text>
+        <rect x="350" y="48" width="120" height="44" rx="8" style="fill:var(--card);stroke:var(--line)"/>
+        <text x="410" y="75">{{검출}}</text>
+        <rect x="660" y="48" width="120" height="44" rx="8" style="fill:var(--card)" stroke="#cf4a3e"/>
+        <text x="720" y="75">{{추적}}</text>
+        <g class="fl-val" data-at="0"><text x="100" y="122" style="fill:var(--mut)">{{1920×1080, 30fps}}</text></g>
+        <g class="fl-val" data-at="0.5"><text x="410" y="122" style="fill:var(--mut)">{{박스 12개, 18ms}}</text></g>
+        <g class="fl-val" data-at="1"><text x="720" y="122" fill="#cf4a3e">{{ID 9개, 41ms}}</text></g>
+      </g>
+    </svg>
+    </div>
+    <figcaption>{{표식이 어디서 느려지는지, 값이 어디서 바뀌는지}}</figcaption>
+  </figure>
 -->
 
 <figure>
@@ -486,6 +519,87 @@ html:not(.js) .steps .nav{display:none}
       box.classList.toggle('flip');
       b.textContent = box.classList.contains('flip') ? (b.dataset.a || '← 전') : (b.dataset.b || '후 →');
     });
+  });
+
+  /* 5) 흐름 — 표식이 경로를 따라 가며 닿은 자리의 값을 띄운다. 한 번 돌고 멈춘다.
+     구간 이동 hop, 값이 뜰 때 rest 만큼 머물고, 전체가 8초를 넘으면 비율대로 줄인다 */
+  var NS = 'http://www.w3.org/2000/svg';
+  if (!reduce && 'IntersectionObserver' in window) document.querySelectorAll('.flow').forEach(function (box) {
+    var paths = [].slice.call(box.querySelectorAll('.fl-path'));
+    if (!paths.length || !paths[0].getTotalLength) return;
+    var vals = [].slice.call(box.querySelectorAll('.fl-val'));
+    var hop = Math.min(1000, +box.dataset.hop || 700), rest = 250, plan = [], t = 0, raf = 0;
+    var tracks = paths.map(function (p, pi) {
+      var len = p.getTotalLength();
+      var trail = p.cloneNode(false);
+      ['class', 'style', 'stroke-dasharray', 'marker-start', 'marker-mid', 'marker-end'].forEach(function (a) {
+        trail.removeAttribute(a);
+      });
+      trail.setAttribute('class', 'fl-trail');
+      trail.style.strokeDasharray = len;
+      var dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('class', 'fl-dot');
+      dot.setAttribute('r', 6);
+      p.parentNode.insertBefore(trail, p.nextSibling);
+      p.parentNode.insertBefore(dot, trail.nextSibling);
+      var mine = vals.filter(function (v) { return (+v.dataset.p || 0) === pi; });
+      var ats = [0, 1];
+      mine.forEach(function (v) { var a = +v.dataset.at || 0; if (ats.indexOf(a) < 0) ats.push(a); });
+      ats.sort(function (a, b) { return a - b; });
+      ats.forEach(function (a, k) {
+        if (k) { plan.push({ i: pi, a0: ats[k - 1], a1: a, t0: t, t1: t + hop }); t += hop; }
+        var here = mine.filter(function (v) { return (+v.dataset.at || 0) === a; });
+        if (here.length) { plan.push({ show: here, t0: t }); t += rest; }
+      });
+      return { p: p, len: len, trail: trail, dot: dot };
+    });
+    var k = Math.min(1, 8000 / t);
+    plan.forEach(function (s) { s.t0 *= k; if (s.t1) s.t1 *= k; });
+    var total = t * k;
+
+    function place(tr, a) {
+      var pt = tr.p.getPointAtLength(a * tr.len);
+      tr.dot.setAttribute('cx', pt.x);
+      tr.dot.setAttribute('cy', pt.y);
+      tr.dot.style.display = '';
+      tr.trail.style.strokeDashoffset = tr.len * (1 - a);
+    }
+    function reset() {
+      cancelAnimationFrame(raf);
+      vals.forEach(function (v) { v.classList.add('fl-off'); });
+      tracks.forEach(function (tr) { tr.dot.style.display = 'none'; tr.trail.style.strokeDashoffset = tr.len; });
+    }
+    function play() {
+      reset();
+      var t0 = 0;
+      function tick(ts) {
+        if (!t0) t0 = ts;
+        var e = ts - t0;
+        plan.forEach(function (s) {
+          if (e < s.t0) return;
+          if (s.show) { s.show.forEach(function (v) { v.classList.remove('fl-off'); }); return; }
+          var f = Math.min(1, (e - s.t0) / (s.t1 - s.t0));
+          f = f < .5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+          place(tracks[s.i], s.a0 + (s.a1 - s.a0) * f);
+        });
+        if (e < total) raf = requestAnimationFrame(tick);
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    var re = document.createElement('button');
+    re.type = 'button';
+    re.className = 'fl-re';
+    re.textContent = '↻ 다시 보기';
+    re.addEventListener('click', play);
+    box.insertBefore(re, box.querySelector('figcaption'));
+    reset();
+    var io3 = new IntersectionObserver(function (es) {
+      if (!es[0].isIntersecting) return;
+      io3.disconnect();
+      play();
+    }, { threshold: .4 });
+    io3.observe(box);
   });
 })();
 </script>
