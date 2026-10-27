@@ -262,6 +262,12 @@ KB 웹 서버의 **Tech docs** 에 올립니다. KB 내용만 옮기지 않고 �
 `subagentStatusLine` 키만 받습니다. 그래서 SessionStart hook 이 규칙을 stdout 으로 출력해 컨텍스트에
 넣습니다. matcher 를 두지 않았으므로 startup, resume, `/clear`, compact 때마다 다시 주입됩니다.
 
+SessionStart hook 이 timeout 에 걸리면 Claude Code 는 hook 을 취소하고 아무 경고 없이 세션을 시작합니다.
+NFS 가 느려진 날 실제로 이렇게 규칙 없이 시작한 세션이 있었습니다. 그래서 주입에 성공하면
+`inject-guidelines.sh` 가 세션별 표식(`${TMPDIR:-/tmp}/vh1981-<uid>/injected/<session_id>`)을 남기고,
+`prompt-hook.py` 가 prompt 마다 표식을 확인합니다. 표식이 없으면 그 prompt 에 규칙을 다시 넣고 사용자에게
+한 줄로 알립니다. PreCompact 때는 표식을 지워서, compact 뒤의 주입이 실패해도 다음 prompt 에서 잡히게 합니다.
+
 | 파일 | 역할 |
 |---|---|
 | `plugins/vh1981/guidelines/core.md` | 매 세션 주입되는 규칙 본문. 맨 위의 우선순위와 "정책 지도"가 주제마다 정본 문서 하나를 정하고, 다른 문서는 정본을 가리키기만 합니다 |
@@ -274,6 +280,7 @@ KB 웹 서버의 **Tech docs** 에 올립니다. KB 내용만 옮기지 않고 �
 | `plugins/vh1981/guidelines/mcp-connectors.md` | claude.ai 커넥터(Notion 등) 연결이 404로 실패할 때 읽는 우회 절차 |
 | `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
 | `plugins/vh1981/scripts/kb-checkin.sh` | 세션 시작 때 백그라운드로 KB에 checkin 하는 SessionStart hook (`VH1981_KB_CHECKIN=0` 으로 끔) |
+| `plugins/vh1981/scripts/prompt-hook.py` | UserPromptSubmit·PreCompact hook. 주입이 빠진 세션에 규칙을 다시 넣고, prompt 를 기록합니다 |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
 컨텍스트에 들어갑니다. 긴 내용은 `doc-style.md` 처럼 별도 파일로 두고 `core.md` 에서
@@ -287,6 +294,29 @@ export VH1981_GUIDELINES=0
 ```
 
 주입된 규칙이 subagent 에도 전달되는지는 확인하지 않았습니다(미검증).
+
+## 프롬프트 기록
+
+`vh1981` 플러그인을 설치하면 사용자가 보낸 prompt 가 모두 기록됩니다. `prompt-hook.py` 가 prompt 마다 한 줄씩
+붙이며, 머신마다 파일을 따로 씁니다. 여러 NFS 클라이언트가 한 파일에 덧붙이면 줄이 섞일 수 있기 때문입니다.
+
+```
+~/.local/share/vh1981/prompts/<host>/<YYYY-MM>.jsonl     # 권한 600
+{"ts": "2026-10-27T06:07:46+00:00", "host": "ds29", "session_id": "...", "cwd": "...",
+ "repo": "vh1981_skills", "branch": "main", "devlog": "test", "prompt": "..."}
+```
+
+| 항목 | 동작 |
+|---|---|
+| 비밀값 | API key·token(`sk-`, `ghp_`, `xox?-`, `AKIA` 등), Bearer token, private key 블록, `password=`·`token:` 류의 값을 `[SECRET]` 으로 바꿔 저장합니다 |
+| `ts` | 그 머신의 지역 시각에 UTC offset 을 붙여 씁니다 |
+| 긴 prompt | 앞 4000자만 저장하고 원래 길이를 `truncated_from` 에 남깁니다 |
+| `branch`·`devlog` | git 을 실행하지 않고 `.git/HEAD` 와 `docs/devlog/.active` 를 읽습니다. `devlog` 는 `.active` 값이라 동시에 도는 세션이 바꿨을 수 있는 참고값입니다 |
+| 위치 바꾸기 | `VH1981_PROMPT_LOG_DIR` (기본값 `${XDG_DATA_HOME:-~/.local/share}/vh1981/prompts`) |
+| 끄기 | `VH1981_PROMPT_LOG=0` |
+
+hook 은 python3 가 필요하고, 없으면 기록과 재주입을 건너뜁니다. 어떤 오류가 나도 prompt 를 막지 않습니다.
+subagent 에게 보내는 prompt 는 UserPromptSubmit 를 거치지 않으므로 기록되지 않습니다.
 
 ## 상태줄 — devlog 프로젝트 표시
 
@@ -361,7 +391,7 @@ claude --plugin-dir /path/to/vh1981_skills/plugins/prompts-pack
 plugins/
   vh1981/
     .claude-plugin/plugin.json   # name: vh1981 (plugin namespace)
-    hooks/hooks.json        # SessionStart 가이드라인 주입 + 상태줄 자동 복구
+    hooks/hooks.json        # SessionStart 가이드라인 주입·상태줄 자동 복구·KB checkin, UserPromptSubmit 재주입·prompt 기록
     guidelines/
       core.md               # 매 세션 주입되는 기본 규칙 (정본)
       doc-style.md          # 문서 작성 상세 규칙 (필요할 때 Read)
@@ -372,7 +402,9 @@ plugins/
       references/           # 원칙의 근거 자료 (Karpathy 글 번역 등)
       mcp-connectors.md     # MCP 커넥터 연결 실패 우회 (필요할 때 Read)
     scripts/
-      inject-guidelines.sh  # core.md 주입 스크립트
+      inject-guidelines.sh  # core.md 주입 스크립트 (주입 표식도 남김)
+      prompt-hook.py        # 주입 누락 시 재주입 + prompt 기록
+      kb-checkin.sh         # 세션 시작 때 KB checkin
       statusline.sh         # devlog 상태줄 (정본)
       check-statusline.sh   # 자동 복구 스크립트
     skills/

@@ -1,5 +1,5 @@
 {
-  "description": "vh1981 plugin hooks — injects the default guidelines, keeps the devlog status line installed, and checks the checkout in to the knowledge base",
+  "description": "vh1981 plugin hooks — injects the default guidelines (and re-injects on the next prompt when that was cancelled), keeps the devlog status line installed, checks the checkout in to the knowledge base, and logs prompts",
   "hooks": {
     "SessionStart": [
       {
@@ -17,6 +17,28 @@
           {
             "type": "command",
             "command": "/bin/sh \"${CLAUDE_PLUGIN_ROOT}/scripts/kb-checkin.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'command -v python3 >/dev/null 2>&1 && exec python3 \"$1\"; cat >/dev/null' sh \"${CLAUDE_PLUGIN_ROOT}/scripts/prompt-hook.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'command -v python3 >/dev/null 2>&1 && exec python3 \"$1\"; cat >/dev/null' sh \"${CLAUDE_PLUGIN_ROOT}/scripts/prompt-hook.py\"",
             "timeout": 5
           }
         ]

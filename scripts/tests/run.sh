@@ -1,6 +1,6 @@
 #!/bin/sh
-# Regression tests for the devlog status line, its installer, and the two
-# SessionStart hooks (status line self-repair, default guideline injection).
+# Regression tests for the devlog status line, its installer, the SessionStart
+# hooks (status line self-repair, default guideline injection) and the prompt hook.
 #
 #   ./scripts/tests/run.sh
 #
@@ -237,6 +237,51 @@ assert_eq "VH1981_GUIDELINES=0 disables injection" "" "$out"
 out=$(run_inject /nonexistent)
 assert_eq "injector exits 0 when the plugin root is missing" "0" "$?"
 assert_eq "injector stays quiet when the plugin root is missing" "" "$out"
+
+echo
+echo "# prompt-hook.py (UserPromptSubmit re-injection guard and prompt log)"
+
+PH="$TMP/ph"
+HOOK="$ROOT/plugins/vh1981/scripts/prompt-hook.py"
+hook() { env "VH1981_STATE_DIR=$PH/state" "VH1981_PROMPT_LOG_DIR=$PH/log" "CLAUDE_PLUGIN_ROOT=$ROOT/plugins/vh1981" "$@" python3 "$HOOK" 2>&1; }
+up() { sid=$1; prompt=$2; shift 2; printf '{"session_id":"%s","hook_event_name":"UserPromptSubmit","cwd":"%s","prompt":"%s"}' "$sid" "$PH/repo/sub" "$prompt" | hook "$@"; }
+# A checkout the hook reads without git: HEAD and the devlog hint, from a subdirectory.
+mkdir -p "$PH/repo/.git" "$PH/repo/sub" "$PH/repo/docs/devlog"
+printf 'ref: refs/heads/feat/x\n' > "$PH/repo/.git/HEAD"
+printf 'proj' > "$PH/repo/docs/devlog/.active"
+
+# Regression: a SessionStart run cancelled by its 10 s timeout left the session without guidelines.
+out=$(up s1 hello)
+assert_contains "re-injects when the session has no marker" '"additionalContext": "# vh1981 기본 가이드라인' "$out"
+assert_contains "tells the user it re-injected" '"systemMessage"' "$out"
+assert_eq "re-injects only once per session" "" "$(up s1 again)"
+
+printf '{"session_id":"s2","source":"startup"}' | env "VH1981_STATE_DIR=$PH/state" "CLAUDE_PLUGIN_ROOT=$ROOT/plugins/vh1981" /bin/sh "$INJECTOR" >/dev/null
+if [ -f "$PH/state/injected/s2" ]; then pass "SessionStart injection marks the session"
+else fail "SessionStart injection marks the session" "missing $PH/state/injected/s2"; fi
+assert_eq "a marked session is not re-injected" "" "$(up s2 hi)"
+printf '{"session_id":"s2","hook_event_name":"PreCompact"}' | hook >/dev/null
+assert_contains "PreCompact clears the marker so a failed compact injection is caught" "additionalContext" "$(up s2 hi)"
+
+assert_eq "VH1981_GUIDELINES=0 disables re-injection" "" "$(up s3 hi VH1981_GUIDELINES=0)"
+out=$(up ../x hi; echo "rc=$?")
+assert_eq "a malformed session id is ignored" "rc=0" "$out"
+assert_eq "a malformed session id writes no marker" "" "$(ls "$PH/state" | grep -v '^injected$')"
+
+up s4 'key sk-abcdefghijklmnopqrstuv password=hunter2 max_tokens=5' >/dev/null
+log=$(cat "$PH"/log/*/*.jsonl)
+assert_contains "logs the prompt with its session, repo, branch and devlog" '"session_id": "s1", "cwd": "'"$PH/repo/sub"'", "repo": "repo", "branch": "feat/x", "devlog": "proj"' "$log"
+assert_contains "logs a plain prompt verbatim" '"prompt": "hello"' "$log"
+assert_not_contains "masks an API key" "sk-abcdefghijklmnopqrstuv" "$log"
+assert_not_contains "masks a password value" "hunter2" "$log"
+assert_contains "keeps the masked key name and ordinary words" "password=[SECRET] max_tokens=5" "$log"
+before=$(cat "$PH"/log/*/*.jsonl | wc -l)
+up s5 hi VH1981_PROMPT_LOG=0 >/dev/null
+assert_eq "VH1981_PROMPT_LOG=0 disables the log" "$before" "$(cat "$PH"/log/*/*.jsonl | wc -l)"
+assert_eq "the log is private" "600" "$(stat -c %a "$PH"/log/*/*.jsonl 2>/dev/null || stat -f %Lp "$PH"/log/*/*.jsonl)"
+
+out=$(printf 'not json' | hook; echo "rc=$?")
+assert_eq "non-JSON input exits 0 quietly" "rc=0" "$out"
 
 echo
 echo "# kb.py (devlog knowledge base)"
