@@ -217,6 +217,21 @@ KB 웹 서버의 **Tech docs** 에 올립니다. KB 내용만 옮기지 않고 �
 건너뛴 것으로 기록하고(`kb.py mark`), 새 업로드가 생기면 다시 후보가 됩니다. 완성본은 `kb.py htmlcheck` 로 앵커, 인용,
 이미지, 외부 자원, 스크립트 문법을 기계 검사합니다. cron은 `/kb-report install` 이 함께 설치합니다.
 
+### sessions
+
+tmux 나 서버가 죽은 뒤 그 repo 디렉터리에서 claude 를 새로 띄워 부르면, 창마다 띄워 두었던 Claude 세션을
+같은 tmux 세션·창 이름·디렉터리로 다시 띄우고 각 창에서 그 대화를 이어 갑니다. 기록은 hook 이 남깁니다
+([세션 목록](#세션-목록--tmux-창-되살리기)).
+
+| 명령 | 설명 |
+|------|------|
+| `/sessions` | 이 repo 의 세션, 상태(실행 중·중단·다른 머신), 최근 한 일 두 줄 |
+| `/sessions 복구` | 이 머신에서 중단된 세션을 모두 되살리고, 창마다 대화가 이어졌는지 확인 |
+| `/sessions 복구 kb-ui` | 창 이름이나 세션 id 앞부분으로 고른 세션만 |
+
+"세션 복구해", "tmux 창 다시 띄워" 처럼 말해도 됩니다. 이 머신 세션이 없고 다른 머신 세션만 있으면 그 머신 것을
+여기서 이어 갈지 묻습니다.
+
 ### techreport
 
 조사·측정 결과를 그 분야를 모르는 사람도 혼자 읽을 수 있는 단일 HTML 기술 보고서로 만들고, 주제별 색인 웹서버에 올립니다.
@@ -281,6 +296,7 @@ NFS 가 느려진 날 실제로 이렇게 규칙 없이 시작한 세션이 있�
 | `plugins/vh1981/scripts/inject-guidelines.sh` | `core.md` 를 출력하는 SessionStart hook |
 | `plugins/vh1981/scripts/kb-checkin.sh` | 세션 시작 때 백그라운드로 KB에 checkin 하는 SessionStart hook (`VH1981_KB_CHECKIN=0` 으로 끔) |
 | `plugins/vh1981/scripts/prompt-hook.py` | UserPromptSubmit·PreCompact hook. 주입이 빠진 세션에 규칙을 다시 넣고, prompt 를 기록합니다 |
+| `plugins/vh1981/scripts/sessions.py` | SessionStart·UserPromptSubmit·Stop·SessionEnd hook. repo 의 `.claude/sessions.md` 에 세션 목록을 남기고, `restore` 로 tmux 창을 되살립니다 |
 
 `core.md` 는 매 세션 컨텍스트를 차지하므로 짧게 유지합니다. hook 출력이 크면 파일로 빠지고 미리보기만
 컨텍스트에 들어갑니다. 긴 내용은 `doc-style.md` 처럼 별도 파일로 두고 `core.md` 에서
@@ -317,6 +333,47 @@ export VH1981_GUIDELINES=0
 
 hook 은 python3 가 필요하고, 없으면 기록과 재주입을 건너뜁니다. 어떤 오류가 나도 prompt 를 막지 않습니다.
 subagent 에게 보내는 prompt 는 UserPromptSubmit 를 거치지 않으므로 기록되지 않습니다.
+
+## 세션 목록 — tmux 창 되살리기
+
+한 repo 에 tmux 를 띄우고 창마다 Claude 를 열어 두면, tmux 나 서버가 죽었을 때 어느 창에서 무슨 일을
+하고 있었는지 잃어버립니다. `sessions.py` hook 이 세션 시작, prompt, 답을 마칠 때마다 그 repo 의
+`.claude/sessions.md` 를 고쳐 써서, 세션마다 tmux 창 이름, 위치, 최근 한 일 두 줄, 복구 명령을 남깁니다.
+git repo 면 최상위, 아니면 세션을 띄운 디렉터리에 둡니다.
+
+```
+<repo>/.claude/sessions.md               # 사람이 읽는 목록, host 별로 묶음
+<repo>/.claude/sessions/<session id>.json  # 세션마다 하나, 이름 바꾸기로 저장
+```
+
+두 경로는 `.git/info/exclude` 에 자동으로 들어가 git 에 올라가지 않습니다(worktree 는 공용 exclude).
+세션마다 파일이 따로라 여러 NFS 클라이언트가 같은 파일을 동시에 쓰지 않습니다.
+
+tmux 나 서버가 죽은 뒤에는 그 repo 에서 claude 를 띄워 `/sessions 복구` 라고 하거나([sessions 스킬](#sessions)),
+목록 맨 위의 명령을 직접 실행합니다.
+
+```bash
+python3 <plugin>/scripts/sessions.py list <repo>                # 세션과 상태
+python3 <plugin>/scripts/sessions.py restore <repo> --dry-run   # 실행할 명령만 보기
+python3 <plugin>/scripts/sessions.py restore <repo>             # 창을 만들고 claude --resume 실행
+python3 <plugin>/scripts/sessions.py restore <repo> --host ds35 # 다른 머신의 세션을 이 머신에서
+python3 <plugin>/scripts/sessions.py restore <repo> --only kb-ui,a9e2  # 창 이름·id 앞부분으로 고르기
+```
+
+| 항목 | 동작 |
+|---|---|
+| 복구 | 기록된 tmux 세션 이름, 창 번호, 창 이름, 디렉터리로 창을 만들고 셸에 `claude <원래 플래그> --resume <id>` 를 입력합니다. 원래 플래그는 `--resume`·`--continue`·prompt 를 빼고 씁니다 |
+| 건너뜀 | 같은 머신에서 그 claude 프로세스(pid 와 시작 시각)가 아직 살아 있으면 띄우지 않습니다 |
+| 종료 | `/exit`·`/clear`·logout 이나 사용자가 창을 닫은 경우 기록을 지웁니다. tmux 서버가 죽어서 끝난 세션은 `종료(other)` 로 남겨 복구 대상이 됩니다 |
+| 요약 | `VH1981_SUMMARY_LLM` 또는 `~/.config/vh1981/summary-llm` 에 `<OpenAI 호환 base URL> <모델>` 을 한 줄로 두면, 답을 마칠 때마다 백그라운드에서 최근 요청과 답을 두 줄로 요약합니다. 설정이 없거나 호출이 실패하면 마지막 요청과 마지막 답의 첫 문장을 씁니다. 보내기 전에 비밀값을 가립니다 |
+| 비대화형 | `claude -p` 와 SDK 실행(cron 포함)은 되살릴 창이 없어 기록하지 않습니다 |
+| 오래된 기록 | 14일 동안 갱신되지 않은 세션은 지웁니다 |
+| 끄기 | `VH1981_SESSIONS=0` |
+
+tmux 창 이름은 hook 이 `tmux display-message` 로 읽습니다. tmux 서버에 닿지 않으면 `tmux 응답 없음` 으로
+pane 번호만 남기고, 복구 때는 `claude-restore` 세션에 디렉터리 이름으로 창을 만듭니다.
+`TMUX_TMPDIR` 를 NFS 홈에 두고 여러 머신에서 tmux 를 쓰면 머신끼리 같은 소켓 파일을 덮어써서 이렇게 됩니다.
+소켓은 머신마다 다른 곳(예: `/tmp`)에 둡니다.
 
 ## 상태줄 — devlog 프로젝트 표시
 
@@ -416,6 +473,7 @@ plugins/
       kb/                   # /kb 스킬 (kb.py 클라이언트·store, KB.md 템플릿)
       kb-report/            # /kb-report 스킬 (daily·weekly log, KB 머신 cron 설치)
       kb-techdoc/           # /kb-techdoc 스킬 (KB → 기술문서, 12시간 cron)
+      sessions/             # /sessions 스킬 (tmux 창의 Claude 세션 되살리기)
   prompts-pack/
     .claude-plugin/plugin.json
     agents/                 # debugger, code-reviewer, ...

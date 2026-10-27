@@ -284,6 +284,90 @@ out=$(printf 'not json' | hook; echo "rc=$?")
 assert_eq "non-JSON input exits 0 quietly" "rc=0" "$out"
 
 echo
+echo "# sessions.py (session list for restoring tmux windows)"
+
+SS="$TMP/ss"
+SESS="$ROOT/plugins/vh1981/scripts/sessions.py"
+mkdir -p "$SS/repo/.git/info" "$SS/repo/sub"
+printf 'ref: refs/heads/main\n' > "$SS/repo/.git/HEAD"
+{
+  printf '%s\n' '{"type":"user","message":{"role":"user","content":"old request"}}'
+  printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"Fixed the index. Tests pass."}]}}'
+  printf '%s\n' '{"type":"user","message":{"content":[{"type":"tool_result","content":"x"}]}}'
+  printf '%s\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"Deployed too."}]}}'
+} > "$SS/t.jsonl"
+sh_() { env -u TMUX -u TMUX_PANE "VH1981_STATE_DIR=$SS/state" VH1981_SUMMARY_LLM=off CLAUDE_CODE_ENTRYPOINT=cli "$@" python3 "$SESS" hook 2>&1; }
+ev() { python3 -c 'import json,sys;print(json.dumps({"session_id":sys.argv[1],"hook_event_name":sys.argv[2],"cwd":sys.argv[3],"transcript_path":sys.argv[4],"permission_mode":"acceptEdits","reason":sys.argv[5],"prompt":sys.argv[6]}))' "$1" "$2" "$SS/repo/sub" "$SS/t.jsonl" "${3:-}" "${4:-}"; }
+ev s1 SessionStart | sh_
+ev s1 UserPromptSubmit "" 'deploy it token=hunter2' | sh_
+out=$(ev s1 Stop | sh_; echo "rc=$?")
+assert_eq "the hook prints nothing and exits 0" "rc=0" "$out"
+md=$(cat "$SS/repo/.claude/sessions.md" 2>&1)
+assert_contains "the list lives at the repo top, not the session's subdirectory" "# Claude 세션 목록" "$md"
+assert_contains "the list names the session and its branch" "branch \`main\`" "$md"
+assert_contains "without an LLM the summary is the last request" "요청: deploy it token=[SECRET]" "$md"
+assert_contains "and the first sentence of the last reply" "결과: Fixed the index." "$md"
+assert_not_contains "requests are masked" "hunter2" "$(cat "$SS/repo/.claude/sessions/s1.json")"
+assert_contains "the list has a restore line" "&& claude " "$md"
+assert_contains "the restore line resumes this session" "--resume s1\`" "$md"
+assert_contains "session files are kept out of git" "/.claude/sessions/" "$(cat "$SS/repo/.git/info/exclude")"
+out=$(python3 -c "import importlib.util as u;s=u.spec_from_file_location('s','$SESS');m=u.module_from_spec(s);s.loader.exec_module(m);print(m.restore_argv({'session_id':'n','argv':['--model','opus','-r','old','--dangerously-skip-permissions','fix bug','-c']}))")
+assert_eq "restore keeps claude's flags and drops the old session and prompt" "['claude', '--model', 'opus', '--dangerously-skip-permissions', '--resume', 'n']" "$out"
+out=$(python3 -c "import importlib.util as u;s=u.spec_from_file_location('s','$SESS');m=u.module_from_spec(s);s.loader.exec_module(m);print(m.restore_argv({'session_id':'n','permission_mode':'acceptEdits'}))")
+assert_eq "restore carries the permission mode" "['claude', '--permission-mode', 'acceptEdits', '--resume', 'n']" "$out"
+
+ev s2 Stop | sh_
+# When the tests run inside Claude Code the hook finds that claude; make s1 a dead session.
+python3 - "$SS/repo/.claude/sessions/s1.json" "$SS/repo/.claude/sessions/s2.json" <<'PY'
+import json, os, sys
+r = json.load(open(sys.argv[1]))
+for k in ("pid", "pid_start", "argv"):
+    r.pop(k, None)
+json.dump(r, open(sys.argv[1], "w"))
+r = json.load(open(sys.argv[2]))
+st = open("/proc/%d/stat" % os.getppid()).read()
+r.update(pid=os.getppid(), pid_start=int(st[st.rindex(")") + 2:].split()[19]))
+json.dump(r, open(sys.argv[2], "w"))
+PY
+if [ -d /proc/self ]; then
+  out=$(env -u TMUX python3 "$SESS" restore "$SS/repo" --dry-run 2>&1)
+  assert_contains "restore --dry-run shows the command for a dead session" "claude-restore:+ sub  <-  cd $SS/repo/sub && claude --permission-mode acceptEdits --resume s1" "$out"
+  assert_contains "restore skips a session that is still running" "건너뜀 s2" "$out"
+  out=$(env -u TMUX python3 "$SESS" restore "$SS/repo" --dry-run --only s2,nomatch 2>&1)
+  assert_not_contains "restore --only picks sessions by id prefix" "resume s1" "$out"
+  out=$(cd "$SS/repo/sub" && python3 "$SESS" list 2>&1)
+  assert_contains "list defaults to the repo of the working directory" "$SS/repo  (" "$out"
+  assert_contains "list marks a dead session of this host" "s1  $(hostname -s | sed 's/[^A-Za-z0-9._-]/_/g')  [중단]" "$out"
+  assert_contains "list marks a live session" "[실행 중]" "$out"
+fi
+ev s2 SessionEnd prompt_input_exit | sh_
+assert_eq "an explicit exit drops the record" "s1.json" "$(ls "$SS/repo/.claude/sessions")"
+assert_eq "VH1981_SESSIONS=0 disables the hook" "s1.json" "$(ev s3 Stop | sh_ VH1981_SESSIONS=0; ls "$SS/repo/.claude/sessions")"
+assert_eq "a malformed session id is ignored" "s1.json" "$(ev ../x Stop | sh_; ls "$SS/repo/.claude/sessions")"
+assert_eq "headless runs (claude -p, SDK) are not listed" "s1.json" "$(ev s4 Stop | sh_ CLAUDE_CODE_ENTRYPOINT=sdk-cli; ls "$SS/repo/.claude/sessions")"
+
+# The summary comes from the LLM endpoint in a detached process.
+python3 - "$SS/port" <<'PY' &
+import http.server, json, sys
+class H(http.server.BaseHTTPRequestHandler):
+    def do_POST(self):
+        self.rfile.read(int(self.headers["Content-Length"]))
+        b = json.dumps({"choices": [{"message": {"content": "- 색인을 고쳤다.\n- 배포까지 마쳤다.\n"}}]}).encode()
+        self.send_response(200); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def log_message(self, *a): pass
+s = http.server.HTTPServer(("127.0.0.1", 0), H)
+open(sys.argv[1], "w").write(str(s.server_address[1]))
+s.handle_request()
+PY
+LLMPID=$!
+for _ in 1 2 3 4 5 6 7 8 9 10; do [ -s "$SS/port" ] && break; sleep 0.2; done
+ev s1 Stop | sh_ "VH1981_SUMMARY_LLM=http://127.0.0.1:$(cat "$SS/port")/v1 m"
+for _ in $(seq 1 25); do grep -q '배포까지' "$SS/repo/.claude/sessions.md" && break; sleep 0.2; done
+assert_contains "the LLM summary replaces the plain one, without list markers" "  - 색인을 고쳤다.
+  - 배포까지 마쳤다." "$(cat "$SS/repo/.claude/sessions.md")"
+kill "$LLMPID" 2>/dev/null; wait "$LLMPID" 2>/dev/null
+
+echo
 echo "# kb.py (devlog knowledge base)"
 
 KBPY="$ROOT/plugins/vh1981/skills/kb/scripts/kb.py"
